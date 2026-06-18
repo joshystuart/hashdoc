@@ -25,13 +25,23 @@ function strictCspPlugin(): Plugin {
       // Run AFTER Vite injects its own tags so we hash the final inline scripts.
       order: 'post',
       handler(html) {
-        const hashes = inlineScriptBodies(html).map(inlineScriptHash);
+        // issue-14: `base: './'` rewrites the static OG card path to
+        // `./og-card.png`. OG/Twitter crawlers resolve the image against the
+        // *page* URL, so for a Link (which carries a #fragment and may live at a
+        // subpath) a relative path is fragile. Force it back to root-relative
+        // `/og-card.png` so it always resolves against the deploy origin. The
+        // image is still self-hosted (same origin), so ADR 0002 holds.
+        let out = html.replace(
+          /(<meta[^>]+(?:og:image|twitter:image)["'][^>]+content=["'])\.?\/og-card\.png(["'])/gi,
+          '$1/og-card.png$2',
+        );
+        const hashes = inlineScriptBodies(out).map(inlineScriptHash);
         const meta = `<meta http-equiv="Content-Security-Policy" content="${buildCsp(hashes)}" />`;
-        if (html.includes(CSP_PLACEHOLDER)) {
-          return html.replace(CSP_PLACEHOLDER, meta);
+        if (out.includes(CSP_PLACEHOLDER)) {
+          return out.replace(CSP_PLACEHOLDER, meta);
         }
         // Fallback: insert right after <head> if the marker is missing.
-        return html.replace(/<head>/i, `<head>\n    ${meta}`);
+        return out.replace(/<head>/i, `<head>\n    ${meta}`);
       },
     },
   };

@@ -16,6 +16,34 @@
     <!--PORTABLEMD_CSP-->
     <title>portablemd</title>
     <!--
+      Static Open Graph / Twitter card (issue-14). Per-Link previews are
+      impossible: the Document lives in the URL fragment which no server ever
+      sees (ADR 0002), so crawlers cannot read it. These tags are therefore
+      STATIC and identical for every Link — a trustworthy, honest stand-in when
+      a Link is pasted into Slack/iMessage/Teams. The card is self-hosted at the
+      origin (/og-card.png, root-relative so it resolves against any deploy
+      origin); CSP img-src allows 'self', so no third-party request occurs.
+      Do NOT reference the fragment or any per-Link content here.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="portablemd" />
+    <meta property="og:title" content="portablemd" />
+    <meta
+      property="og:description"
+      content="Share beautifully-rendered markdown as a single link. Client-side only — nothing is stored on a server."
+    />
+    <meta property="og:image" content="/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="portablemd — the link is the document" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="portablemd" />
+    <meta
+      name="twitter:description"
+      content="Share beautifully-rendered markdown as a single link. Client-side only — nothing is stored on a server."
+    />
+    <meta name="twitter:image" content="/og-card.png" />
+    <!--
       No-flash theme init (issue-10). Runs synchronously in <head> BEFORE the
       bundle and before the body paints, so the page never flashes the wrong
       theme. Reads the reader's stored manual override, else the OS preference,
