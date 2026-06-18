@@ -1,5 +1,7 @@
 # Walking skeleton — view a Link
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · respects [ADR 0001](../../adr/0001-the-link-is-the-document.md), [ADR 0002](../../adr/0002-no-third-party-requests.md)
@@ -25,12 +27,12 @@ linkSizeWarning(characters: number): string | undefined
 
 ## Acceptance criteria
 
-- [ ] `pnpm install`, `pnpm build`, `pnpm test` work at the root; `core` / `web` / `mcp` workspaces exist.
-- [ ] `core` round-trips: for varied markdown (Unicode, code fences, GFM tables, inline HTML, large Documents), `decode(encode(x)) === x`.
-- [ ] Opening `/#<payload>` renders the Document as sanitized HTML; GFM tables, strikethrough, and task lists render.
-- [ ] A `<script>` or `onerror=` in the markdown does not execute and is stripped from the output.
-- [ ] The Viewer issues zero third-party network requests; Links are built origin-relative (no base-URL config in `web`).
-- [ ] The Payload carries the `1` version tag.
+- [x] `pnpm install`, `pnpm build`, `pnpm test` work at the root; `core` / `web` / `mcp` workspaces exist.
+- [x] `core` round-trips: for varied markdown (Unicode, code fences, GFM tables, inline HTML, large Documents), `decode(encode(x)) === x`.
+- [x] Opening `/#<payload>` renders the Document as sanitized HTML; GFM tables, strikethrough, and task lists render.
+- [x] A `<script>` or `onerror=` in the markdown does not execute and is stripped from the output.
+- [x] The Viewer issues zero third-party network requests; Links are built origin-relative (no base-URL config in `web`).
+- [x] The Payload carries the `1` version tag.
 
 ## Blocked by
 
