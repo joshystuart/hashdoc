@@ -1,5 +1,7 @@
 # Math (KaTeX)
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · respects [ADR 0002](../../adr/0002-no-third-party-requests.md)
@@ -14,10 +16,10 @@ Inline (`$…$`) and block (`$$…$$`) math render via **KaTeX**, lazy-loaded on
 
 ## Acceptance criteria
 
-- [ ] Inline and block math render correctly.
-- [ ] KaTeX loads only when math syntax is present.
-- [ ] KaTeX fonts/assets are self-hosted (no third-party request).
-- [ ] Renders in both Viewer and Editor preview.
+- [x] Inline and block math render correctly.
+- [x] KaTeX loads only when math syntax is present.
+- [x] KaTeX fonts/assets are self-hosted (no third-party request).
+- [x] Renders in both Viewer and Editor preview.
 
 ## Blocked by
 

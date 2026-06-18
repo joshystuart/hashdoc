@@ -51,6 +51,33 @@ describe('zero third-party requests (built output)', () => {
     }
   });
 
+  // issue-08: KaTeX's fonts must be self-hosted — bundled into dist, with the
+  // built CSS referencing them via LOCAL (relative/fingerprinted) urls, not a
+  // CDN. We only assert font presence when a KaTeX chunk was actually built.
+  it.runIf(built)('bundles KaTeX fonts locally (no CDN font requests)', () => {
+    const files = walk(distDir);
+    const css = files.filter((f) => f.endsWith('.css'));
+    const usesKatex = css.some((f) => /\.katex|katex-html|KaTeX_/.test(readFileSync(f, 'utf8')));
+    // If KaTeX CSS isn't in the build at all, there's nothing to self-host.
+    if (!usesKatex) {
+      return;
+    }
+    // KaTeX font files (woff2/woff/ttf named KaTeX_*) must be present in dist.
+    const fonts = files.filter((f) => /KaTeX_[^/]+\.(woff2?|ttf)$/.test(f));
+    expect(fonts.length, 'KaTeX font files should be bundled into dist').toBeGreaterThan(0);
+    // The KaTeX CSS must reference fonts via local url(), never a CDN.
+    for (const file of css) {
+      const text = readFileSync(file, 'utf8');
+      if (!/KaTeX_/.test(text)) {
+        continue;
+      }
+      const urls = text.match(/url\(([^)]+)\)/g) ?? [];
+      for (const u of urls) {
+        expect(u).not.toMatch(/https?:\/\//i);
+      }
+    }
+  });
+
   if (!built) {
     it('SKIPPED: dist not present — run `pnpm build` to enable the third-party audit', () => {
       expect(built).toBe(false);
