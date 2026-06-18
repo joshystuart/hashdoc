@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <title>portablemd</title>
+    <!--
+      No-flash theme init (issue-10). Runs synchronously in <head> BEFORE the
+      bundle and before the body paints, so the page never flashes the wrong
+      theme. Reads the reader's stored manual override, else the OS preference,
+      and sets `data-theme` on <html>. This mirrors resolveTheme() in
+      src/theme.ts (THEME_INIT_SCRIPT) — keep the two in sync.
+
+      CSP NOTE (issue-13): this is an inline same-origin script (nothing is
+      fetched, so ADR 0002 holds). A strict CSP without 'unsafe-inline' will
+      block it; issue-13 must add a hash/nonce for this script (or externalise
+      it) to keep no-flash working.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('portablemd-theme');
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <main id="app"></main>

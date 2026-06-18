@@ -1,5 +1,7 @@
 # Dark/light theme
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -14,10 +16,10 @@ A comfortable reading theme that respects the reader's environment.
 
 ## Acceptance criteria
 
-- [ ] First load matches the OS light/dark preference.
-- [ ] The manual toggle overrides and persists across reloads.
-- [ ] Highlighted code, diagrams, and math are legible in both themes.
-- [ ] No flash of the wrong theme on load.
+- [x] First load matches the OS light/dark preference.
+- [x] The manual toggle overrides and persists across reloads.
+- [x] Highlighted code, diagrams, and math are legible in both themes.
+- [x] No flash of the wrong theme on load.
 
 ## Blocked by
 

@@ -15,20 +15,36 @@
  */
 import mermaid from 'mermaid';
 
-let initialised = false;
+/** The `data-theme` last used to initialise Mermaid, so we can re-init on change. */
+let initialisedTheme: 'light' | 'dark' | null = null;
+
+/** Read the current resolved theme from <html data-theme> (defaults to light). */
+function currentTheme(): 'light' | 'dark' {
+  try {
+    return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
 
 function ensureInitialised(): void {
-  if (initialised) {
+  const theme = currentTheme();
+  if (initialisedTheme === theme) {
     return;
   }
   mermaid.initialize({
     startOnLoad: false,
+    // Match the reader's theme so diagrams stay legible in both (issue-10).
+    // Mermaid's 'dark' theme uses light strokes/labels on a transparent
+    // background; 'default' is the light theme. We read data-theme at render
+    // time so a diagram rendered after a theme is set comes out legible.
+    theme: theme === 'dark' ? 'dark' : 'default',
     // 'strict' sanitises text in diagram labels and forbids raw HTML/script —
     // never use 'loose'. This is the first line of defence; DOMPurify is the
     // second (see enhance()).
     securityLevel: 'strict',
   });
-  initialised = true;
+  initialisedTheme = theme;
 }
 
 /**

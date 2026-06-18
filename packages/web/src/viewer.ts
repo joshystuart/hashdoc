@@ -14,6 +14,7 @@ import {
   interceptInPageAnchors,
   firstHeadingText,
 } from './render.js';
+import { currentTheme, toggleTheme } from './theme.js';
 
 /** Fallback tab title when a Document has no H1 (issue-09). */
 const DEFAULT_TITLE = 'portablemd';
@@ -107,7 +108,12 @@ export function mountViewer(
         'Edit',
         'Edit a copy — your changes make a new link; this one stays unchanged',
       );
-      chrome.append(copySource, copyLink, edit);
+
+      // Theme toggle (issue-10): flips <html data-theme> and persists the choice.
+      // Lives in the always-on chrome so it is reachable while reading.
+      const themeToggle = makeThemeToggle();
+
+      chrome.append(themeToggle, copySource, copyLink, edit);
 
       const article = document.createElement('article');
       article.className = 'document';
@@ -150,6 +156,35 @@ export function mountViewer(
       break;
   }
   return state;
+}
+
+/**
+ * Build the theme toggle button (issue-10). It reflects the current theme in its
+ * icon and accessible label, and on click flips the theme, persists the choice,
+ * and updates its own label. A single toggle on the shared app shell recolours
+ * both the Viewer and the Editor.
+ */
+export function makeThemeToggle(): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'theme-toggle';
+
+  const sync = (): void => {
+    const theme = currentTheme();
+    // Show the icon for the theme you'd switch TO, with a matching label.
+    const goingDark = theme === 'light';
+    button.textContent = goingDark ? '\u{1F319}' : '☀️';
+    const label = goingDark ? 'Switch to dark theme' : 'Switch to light theme';
+    button.setAttribute('aria-label', label);
+    button.title = label;
+  };
+
+  sync();
+  button.addEventListener('click', () => {
+    toggleTheme();
+    sync();
+  });
+  return button;
 }
 
 /** Build a Viewer chrome action button with a shared class/look. */

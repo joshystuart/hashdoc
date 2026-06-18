@@ -3,6 +3,7 @@ import { encode, buildLink } from '@portablemd/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
+import { currentTheme, toggleTheme, type Theme } from '../theme.js';
 
 const STARTER_DOC = '# New document\n\nStart writing **markdown** here.\n';
 
@@ -40,6 +41,10 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  // Theme toggle (issue-10): mirror <html data-theme> in local state so the
+  // button label re-renders on click. A single toggle on the shared shell
+  // recolours both the Editor and the Viewer.
+  const [theme, setTheme] = useState<Theme>(() => currentTheme());
 
   // Create the CodeMirror instance once the host div is committed. A layout
   // effect (synchronous after render) ensures the source pane exists before any
@@ -108,6 +113,15 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
           ))}
         </div>
         <div class="editor__actions">
+          <button
+            type="button"
+            class="theme-toggle"
+            aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+            title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
+            onClick={() => setTheme(toggleTheme())}
+          >
+            {theme === 'light' ? '\u{1F319}' : '☀️'}
+          </button>
           <button type="button" class="editor__copy" onClick={() => void copyLink()}>
             {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
           </button>

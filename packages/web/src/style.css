@@ -1,11 +1,51 @@
+/* --- Theme tokens (issue-10) ------------------------------------------------
+   A `data-theme="light|dark"` attribute on <html> selects the palette. The
+   default :root values are the LIGHT palette; the [data-theme="dark"] block
+   overrides them for dark. Every colour below is expressed as a token so the
+   Viewer and the Editor (which share the app shell) recolour together. The
+   no-flash inline script in index.html sets data-theme before first paint. */
 :root {
   color-scheme: light dark;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   line-height: 1.6;
+
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: rgba(0, 0, 0, 0.55);
+  --link: #2563eb;
+  --border: rgba(0, 0, 0, 0.18);
+  --border-strong: rgba(0, 0, 0, 0.28);
+  --code-bg: rgba(127, 127, 127, 0.12);
+  --hover-bg: rgba(0, 0, 0, 0.06);
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-fg: #ffffff;
+  --danger: #b91c1c;
+}
+
+[data-theme='dark'] {
+  --bg: #0d1117;
+  --fg: #e6edf3;
+  --muted: rgba(255, 255, 255, 0.6);
+  --link: #6cb6ff;
+  --border: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.28);
+  --code-bg: rgba(255, 255, 255, 0.08);
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --accent: #2f81f7;
+  --accent-hover: #4493f8;
+  --accent-fg: #ffffff;
+  --danger: #ff7b72;
 }
 
 body {
   margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+a {
+  color: var(--link);
 }
 
 #app {
@@ -21,7 +61,7 @@ body {
 .document pre {
   overflow-x: auto;
   padding: 0.75rem 1rem;
-  background: rgba(127, 127, 127, 0.12);
+  background: var(--code-bg);
   border-radius: 6px;
 }
 
@@ -35,7 +75,7 @@ body {
 
 .document th,
 .document td {
-  border: 1px solid rgba(127, 127, 127, 0.4);
+  border: 1px solid var(--border-strong);
   padding: 0.35rem 0.6rem;
 }
 
@@ -59,7 +99,7 @@ body {
   padding: 0.5rem 1.1rem;
   font-size: 0.95rem;
   font-weight: 600;
-  border: 1px solid rgba(127, 127, 127, 0.4);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: transparent;
   color: inherit;
@@ -67,7 +107,7 @@ body {
 }
 
 .error__new:hover {
-  background: rgba(127, 127, 127, 0.15);
+  background: var(--hover-bg);
 }
 
 /* --- Viewer chrome (issue-03 / issue-09) -----------------------------------
@@ -86,7 +126,7 @@ body {
   padding: 0.35rem 0.85rem;
   font-size: 0.9rem;
   font-weight: 600;
-  border: 1px solid rgba(127, 127, 127, 0.4);
+  border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: transparent;
   color: inherit;
@@ -95,7 +135,26 @@ body {
 
 .viewer__action:hover,
 .viewer__edit:hover {
-  background: rgba(127, 127, 127, 0.15);
+  background: var(--hover-bg);
+}
+
+/* --- Theme toggle (issue-10) ----------------------------------------------
+   A small accessible button living in the always-on Viewer chrome and the
+   Editor bar. It flips <html data-theme> and persists the choice. A single
+   button affecting <html> recolours both modes since they share the shell. */
+.theme-toggle {
+  padding: 0.35rem 0.6rem;
+  font-size: 1rem;
+  line-height: 1;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--hover-bg);
 }
 
 /* --- Heading anchors (issue-09) -------------------------------------------
@@ -134,9 +193,9 @@ body {
   padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
   font-weight: 600;
-  border: 1px solid rgba(127, 127, 127, 0.4);
+  border: 1px solid var(--border-strong);
   border-radius: 5px;
-  background: rgba(127, 127, 127, 0.08);
+  background: var(--bg);
   color: inherit;
   cursor: pointer;
   opacity: 0;
@@ -173,7 +232,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  border-bottom: 1px solid var(--border);
 }
 
 .editor__toolbar {
@@ -185,7 +244,7 @@ body {
   min-width: 2rem;
   padding: 0.3rem 0.5rem;
   font-size: 0.9rem;
-  border: 1px solid rgba(127, 127, 127, 0.4);
+  border: 1px solid var(--border-strong);
   border-radius: 5px;
   background: transparent;
   color: inherit;
@@ -193,7 +252,7 @@ body {
 }
 
 .editor__tool:hover {
-  background: rgba(127, 127, 127, 0.15);
+  background: var(--hover-bg);
 }
 
 .editor__tool:nth-child(1) {
@@ -216,18 +275,18 @@ body {
   font-weight: 600;
   border: 1px solid transparent;
   border-radius: 6px;
-  background: #2563eb;
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-fg);
   cursor: pointer;
 }
 
 .editor__copy:hover {
-  background: #1d4ed8;
+  background: var(--accent-hover);
 }
 
 .editor__copy-status {
   font-size: 0.85rem;
-  color: #b91c1c;
+  color: var(--danger);
 }
 
 .editor__copy-status--ok {
@@ -244,7 +303,7 @@ body {
 
 .editor__source {
   overflow: auto;
-  border-right: 1px solid rgba(127, 127, 127, 0.3);
+  border-right: 1px solid var(--border);
 }
 
 .editor__source .cm-editor {
@@ -253,6 +312,30 @@ body {
 
 .editor__source .cm-scroller {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* CodeMirror ships a light default theme (white content, light gutter). In dark
+   mode recolour it from our tokens so the source pane is legible too (issue-10).
+   The markdown token colours from defaultHighlightStyle inherit acceptably. */
+[data-theme='dark'] .editor__source .cm-editor,
+[data-theme='dark'] .editor__source .cm-content {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+[data-theme='dark'] .editor__source .cm-gutters {
+  background: var(--bg);
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+}
+
+[data-theme='dark'] .editor__source .cm-activeLine,
+[data-theme='dark'] .editor__source .cm-activeLineGutter {
+  background: var(--hover-bg);
+}
+
+[data-theme='dark'] .editor__source .cm-cursor {
+  border-left-color: var(--fg);
 }
 
 .editor__preview {
@@ -269,7 +352,7 @@ body {
 
   .editor__source {
     border-right: none;
-    border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+    border-bottom: 1px solid var(--border);
   }
 }
 

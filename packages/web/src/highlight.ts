@@ -30,7 +30,11 @@ import java from 'highlight.js/lib/languages/java';
 import shell from 'highlight.js/lib/languages/shell';
 
 // Theme CSS, bundled locally into the app's stylesheet (no external request).
+// `github.css` is the LIGHT default (bare `.hljs` selectors); `highlight-dark.css`
+// re-declares the github-dark palette scoped under `[data-theme="dark"]` so code
+// stays legible in both themes (issue-10). Both are self-hosted — ADR 0002 holds.
 import 'highlight.js/styles/github.css';
+import './highlight-dark.css';
 
 hljs.registerLanguage('javascript', javascript);
 hljs.registerLanguage('typescript', typescript);
