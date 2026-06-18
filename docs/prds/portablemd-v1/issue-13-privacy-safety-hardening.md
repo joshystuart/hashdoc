@@ -1,5 +1,7 @@
 # Privacy & safety hardening — zero third-party + CSP + sanitization suite
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · enforces [ADR 0002](../../adr/0002-no-third-party-requests.md)
@@ -14,10 +16,10 @@ Lock the security and privacy posture the whole product rests on.
 
 ## Acceptance criteria
 
-- [ ] No network request leaves the origin on load (fonts/assets all self-hosted).
-- [ ] A strict CSP is present and does not break highlight.js / Mermaid / KaTeX / data-image rendering.
-- [ ] The sanitization suite proves common XSS vectors are neutralized.
-- [ ] External links open with `target="_blank" rel="noopener noreferrer"`.
+- [x] No network request leaves the origin on load (fonts/assets all self-hosted).
+- [x] A strict CSP is present and does not break highlight.js / Mermaid / KaTeX / data-image rendering.
+- [x] The sanitization suite proves common XSS vectors are neutralized.
+- [x] External links open with `target="_blank" rel="noopener noreferrer"`.
 
 ## Blocked by
 

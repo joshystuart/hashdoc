@@ -4,6 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
+    <!--
+      Strict Content-Security-Policy (issue-13). The portablemd-strict-csp Vite
+      plugin (see vite.config.ts) replaces the marker below with a CSP meta tag
+      whose script-src carries 'self' plus the SHA-256 hash of the inline
+      no-flash theme script. The hash is computed from the actual inline-script
+      bytes at build/serve time, so it can never drift from the script. CSP is
+      defence-in-depth behind DOMPurify; ADR 0002 (zero third-party requests) is
+      what the policy encodes.
+    -->
+    <!--PORTABLEMD_CSP-->
     <title>portablemd</title>
     <!--
       No-flash theme init (issue-10). Runs synchronously in <head> BEFORE the
@@ -13,9 +23,11 @@
       src/theme.ts (THEME_INIT_SCRIPT) — keep the two in sync.
 
       CSP NOTE (issue-13): this is an inline same-origin script (nothing is
-      fetched, so ADR 0002 holds). A strict CSP without 'unsafe-inline' will
-      block it; issue-13 must add a hash/nonce for this script (or externalise
-      it) to keep no-flash working.
+      fetched, so ADR 0002 holds). The strict CSP above has no 'unsafe-inline',
+      so this script is allowed via the SHA-256 of its exact bytes, which the
+      `portablemd-strict-csp` Vite plugin computes and injects into script-src.
+      If you edit this script the hash regenerates on the next build/serve —
+      keep the body intact and no-flash + CSP stay in sync.
     -->
     <script>
       (function () {
