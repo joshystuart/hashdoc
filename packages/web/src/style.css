@@ -21,6 +21,8 @@
   --accent-hover: #1d4ed8;
   --accent-fg: #ffffff;
   --danger: #b91c1c;
+  --warn: #92590b;
+  --warn-bg: rgba(180, 120, 10, 0.12);
 }
 
 [data-theme='dark'] {
@@ -36,6 +38,8 @@
   --accent-hover: #4493f8;
   --accent-fg: #ffffff;
   --danger: #ff7b72;
+  --warn: #e3b341;
+  --warn-bg: rgba(227, 179, 65, 0.12);
 }
 
 body {
@@ -294,6 +298,32 @@ a {
   opacity: 0.85;
 }
 
+/* Advisory warnings row (issue-11): the resulting Link's size, plus warnings
+   when the Link is long or the Document embeds images. Informational only —
+   never blocks Copy Link. */
+.editor__status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor__size {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.editor__warning {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  border-radius: 6px;
+}
+
 .editor__panes {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -374,6 +404,7 @@ a {
   .heading-anchor,
   .editor__bar,
   .editor__toolbar,
+  .editor__status,
   .editor__source {
     display: none !important;
   }

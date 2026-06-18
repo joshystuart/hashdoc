@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { encode, buildLink } from '@portablemd/core';
+import { encode, buildLink, linkSizeWarning } from '@portablemd/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
+import { classifyImages } from './images.js';
 import { currentTheme, toggleTheme, type Theme } from '../theme.js';
 
 const STARTER_DOC = '# New document\n\nStart writing **markdown** here.\n';
@@ -67,8 +68,13 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // The current Link, computed exactly as Copy Link does. Re-derived on every
+  // render (each keystroke re-renders the preview), so the size indicator and
+  // warnings below stay in lock-step with what Copy Link would actually copy.
+  // Documents are small, so encoding per keystroke is fine for v1.
+  const link = buildLink(encode(markdown), location.origin + location.pathname);
+
   async function copyLink(): Promise<void> {
-    const link = buildLink(encode(markdown), location.origin + location.pathname);
     try {
       await navigator.clipboard.writeText(link);
       setCopyState('copied');
@@ -76,6 +82,15 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
       setCopyState('failed');
     }
   }
+
+  // Size indicator + advisory warning. The threshold comes from core's shared
+  // linkSizeWarning so the Editor and the MCP agree on what counts as "long".
+  const characters = link.length;
+  const sizeWarning = linkSizeWarning(characters);
+
+  // Embedded-image warning. Detected from the markdown source (deterministic),
+  // covering both sharp edges: payload bloat and the remote-image IP leak.
+  const images = classifyImages(markdown);
 
   // The preview is the Viewer's exact output: same render(), same markup shape.
   const previewHtml = render(markdown);
@@ -139,6 +154,25 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
           ) : null}
         </div>
       </header>
+      <div class="editor__status">
+        <span class="editor__size">{characters.toLocaleString()} characters</span>
+        {sizeWarning ? (
+          <p class="editor__size-warning editor__warning" role="status">
+            {sizeWarning}
+          </p>
+        ) : null}
+        {images.any ? (
+          <p class="editor__image-warning editor__warning" role="status">
+            This Document embeds {images.data && !images.remote ? 'an image' : 'images'}.{' '}
+            {images.data
+              ? 'Inline (data-URI) images are stored inside the Link, so they inflate its size quickly. '
+              : 'Images add to the size of the Link. '}
+            {images.remote
+              ? 'Remote images are also the one exception to "no third-party requests" (ADR 0002): the reader’s browser fetches them, revealing the reader’s IP address to the image host.'
+              : ''}
+          </p>
+        ) : null}
+      </div>
       <div class="editor__panes">
         <div class="editor__source" ref={sourceHost} aria-label="Markdown source" />
         <article

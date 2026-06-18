@@ -1,5 +1,7 @@
 # Editor warnings — large Document + embedded images
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -14,10 +16,10 @@ Warn the Author before they share something that won't travel well — the URL i
 
 ## Acceptance criteria
 
-- [ ] The Editor shows the current Link size and a clear warning past the threshold.
-- [ ] Embedding an image surfaces a warning explaining size + privacy implications.
-- [ ] Warnings never block Copy Link.
-- [ ] Threshold logic comes from `core`'s shared helper (consistent with the MCP).
+- [x] The Editor shows the current Link size and a clear warning past the threshold.
+- [x] Embedding an image surfaces a warning explaining size + privacy implications.
+- [x] Warnings never block Copy Link.
+- [x] Threshold logic comes from `core`'s shared helper (consistent with the MCP).
 
 ## Blocked by
 
