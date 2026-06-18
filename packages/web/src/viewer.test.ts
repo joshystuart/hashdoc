@@ -5,8 +5,8 @@ import { resolveView, mountViewer } from './viewer.js';
 const ORIGIN = 'https://md.example/';
 
 describe('resolveView — fragment routing', () => {
-  it('shows the placeholder when there is no fragment', () => {
-    expect(resolveView(ORIGIN).kind).toBe('placeholder');
+  it('shows the Editor when there is no fragment', () => {
+    expect(resolveView(ORIGIN).kind).toBe('editor');
   });
 
   it('renders a Document from a Link fragment', () => {
@@ -57,8 +57,11 @@ describe('mountViewer — DOM mounting', () => {
     expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
   });
 
-  it('mounts the placeholder with no fragment', () => {
-    mountViewer(root, ORIGIN);
-    expect(root.querySelector('.placeholder')).not.toBeNull();
+  it('resolves to the Editor with no fragment (lazy-loaded)', () => {
+    const state = mountViewer(root, ORIGIN);
+    // The Editor module is loaded via dynamic import(); mountViewer returns the
+    // resolved state synchronously. The full DOM mount is exercised by the
+    // editor behaviour test, where the dynamic import is awaited.
+    expect(state.kind).toBe('editor');
   });
 });

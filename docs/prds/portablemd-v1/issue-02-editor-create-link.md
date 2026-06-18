@@ -1,5 +1,7 @@
 # Author creates a Link — Editor MVP
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -15,11 +17,11 @@ A person with no Link can author one and get a shareable Link back.
 
 ## Acceptance criteria
 
-- [ ] Visiting the site with no fragment shows the Editor (split source + preview).
-- [ ] Live preview output is identical to the Viewer's render of the same markdown.
-- [ ] Copy Link produces a Link whose fragment `decode`s back to exactly the typed markdown.
-- [ ] The Editor/CodeMirror bundle is lazy-loaded (absent from the initial Viewer payload).
-- [ ] A behaviour test drives type → Copy Link → re-open → rendered Document.
+- [x] Visiting the site with no fragment shows the Editor (split source + preview).
+- [x] Live preview output is identical to the Viewer's render of the same markdown.
+- [x] Copy Link produces a Link whose fragment `decode`s back to exactly the typed markdown.
+- [x] The Editor/CodeMirror bundle is lazy-loaded (absent from the initial Viewer payload).
+- [x] A behaviour test drives type → Copy Link → re-open → rendered Document.
 
 ## Blocked by
 

@@ -3,13 +3,12 @@ import { render } from './render.js';
 
 /**
  * What the app should show for a given URL. Routing is driven entirely by the
- * fragment (ADR 0001): a Payload present means Viewer; absent means the
- * temporary placeholder (the real self-describing example lands in a later
- * issue — keep this minimal).
+ * fragment (ADR 0001): a Payload present means Viewer; absent means the Editor
+ * in new mode (issue-02).
  */
 export type ViewerState =
   | { kind: 'document'; html: string }
-  | { kind: 'placeholder' }
+  | { kind: 'editor' }
   | { kind: 'error'; message: string };
 
 /**
@@ -19,16 +18,14 @@ export type ViewerState =
 export function resolveView(url: string): ViewerState {
   const payload = payloadFromUrl(url);
   if (payload === null) {
-    return { kind: 'placeholder' };
+    return { kind: 'editor' };
   }
   try {
     const markdown = decode(payload);
     return { kind: 'document', html: render(markdown) };
   } catch (e) {
     const message =
-      e instanceof DecodeError
-        ? e.message
-        : 'This Link could not be opened.';
+      e instanceof DecodeError ? e.message : 'This Link could not be opened.';
     return { kind: 'error', message };
   }
 }
@@ -36,15 +33,26 @@ export function resolveView(url: string): ViewerState {
 /**
  * Render the current URL's view into a mount element. Returns the resolved
  * state for callers/tests that want to assert on it.
+ *
+ * The Viewer paths (document/error) render synchronously and stay featherweight.
+ * The Editor is lazy-loaded: its module (Preact + CodeMirror) is pulled in via
+ * dynamic `import()` only when there is no fragment, so it is absent from the
+ * initial Viewer payload.
  */
-export function mountViewer(root: HTMLElement, url: string = window.location.href): ViewerState {
+export function mountViewer(
+  root: HTMLElement,
+  url: string = window.location.href,
+): ViewerState {
   const state = resolveView(url);
   switch (state.kind) {
     case 'document':
       root.innerHTML = `<article class="document">${state.html}</article>`;
       break;
-    case 'placeholder':
-      root.innerHTML = `<section class="placeholder"><h1>portablemd</h1><p>Open a Link to read a Document.</p></section>`;
+    case 'editor':
+      root.textContent = '';
+      void import('./editor/mount.js').then(({ mountEditor }) => {
+        mountEditor(root);
+      });
       break;
     case 'error':
       root.textContent = '';

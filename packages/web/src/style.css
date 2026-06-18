@@ -44,8 +44,127 @@ body {
   margin-left: -1.25rem;
 }
 
-.placeholder,
 .error {
   text-align: center;
   opacity: 0.85;
+}
+
+/* --- Editor (issue-02) ----------------------------------------------------
+   The Editor takes the full viewport: a toolbar bar on top, then a split
+   source/preview below. The shared #app max-width is overridden so the split
+   pane gets room; the preview reuses .document styling so it matches the
+   Viewer exactly. */
+#app:has(.editor) {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.editor__bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+.editor__toolbar {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.editor__tool {
+  min-width: 2rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.9rem;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.editor__tool:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
+.editor__tool:nth-child(1) {
+  font-weight: 700;
+}
+
+.editor__tool:nth-child(2) {
+  font-style: italic;
+}
+
+.editor__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.editor__copy {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.editor__copy:hover {
+  background: #1d4ed8;
+}
+
+.editor__copy-status {
+  font-size: 0.85rem;
+  color: #b91c1c;
+}
+
+.editor__panes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  min-height: 0;
+}
+
+.editor__source {
+  overflow: auto;
+  border-right: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+.editor__source .cm-editor {
+  height: 100%;
+}
+
+.editor__source .cm-scroller {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.editor__preview {
+  overflow: auto;
+  padding: 1rem 1.5rem;
+}
+
+/* On narrow screens, stack source over preview. */
+@media (max-width: 48rem) {
+  .editor__panes {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .editor__source {
+    border-right: none;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  }
 }
