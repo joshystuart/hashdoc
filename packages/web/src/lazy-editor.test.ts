@@ -17,6 +17,11 @@ const assetsDir = join(distDir, 'assets');
 // A token that only appears in CodeMirror's bundled source.
 const CODEMIRROR_MARKER = /cm-content|cm-editor|@codemirror/;
 
+// A token that only appears in highlight.js's bundled source. hljs's public API
+// names and its grammar metadata (`hljs`, `highlightAuto`, `case_insensitive`,
+// `contains:`) do not occur in our own source.
+const HLJS_MARKER = /highlightAuto|case_insensitive|grmr_|hljs-comment/;
+
 function jsFiles(dir: string): { name: string; text: string }[] {
   return readdirSync(dir)
     .filter((f) => f.endsWith('.js'))
@@ -40,6 +45,23 @@ describe('lazy-loaded Editor chunk (built output)', () => {
   it.runIf(built)('puts CodeMirror in a separate async chunk', () => {
     const withCodeMirror = jsFiles(assetsDir).filter((f) => CODEMIRROR_MARKER.test(f.text));
     expect(withCodeMirror.length).toBeGreaterThan(0);
+  });
+
+  // issue-06: highlight.js must also stay lazy — out of the Viewer entry chunk
+  // and only present in a separate async chunk loaded on demand.
+  it.runIf(built)('keeps highlight.js out of the entry chunk', () => {
+    const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
+    const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);
+    expect(entryMatch).not.toBeNull();
+    const entryName = entryMatch![1]!.split('/').pop()!;
+    const entry = jsFiles(assetsDir).find((f) => f.name === entryName);
+    expect(entry, `entry chunk ${entryName} should exist`).toBeDefined();
+    expect(entry!.text).not.toMatch(HLJS_MARKER);
+  });
+
+  it.runIf(built)('puts highlight.js in a separate async chunk', () => {
+    const withHljs = jsFiles(assetsDir).filter((f) => HLJS_MARKER.test(f.text));
+    expect(withHljs.length).toBeGreaterThan(0);
   });
 
   if (!built) {

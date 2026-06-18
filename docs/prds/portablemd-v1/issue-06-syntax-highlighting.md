@@ -1,5 +1,7 @@
 # Syntax highlighting
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -14,10 +16,10 @@ Code blocks render syntax-highlighted, without weighing down Documents that cont
 
 ## Acceptance criteria
 
-- [ ] Fenced code blocks with a language render highlighted.
-- [ ] `highlight.js` loads only when code blocks are present (verified absent otherwise).
-- [ ] Highlighting is identical in the Viewer and the Editor preview.
-- [ ] Highlighted output remains sanitized.
+- [x] Fenced code blocks with a language render highlighted.
+- [x] `highlight.js` loads only when code blocks are present (verified absent otherwise).
+- [x] Highlighting is identical in the Viewer and the Editor preview.
+- [x] Highlighted output remains sanitized.
 
 ## Blocked by
 

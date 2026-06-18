@@ -92,3 +92,75 @@ function hardenExternalLinks(html: string): string {
   }
   return doc.body.innerHTML;
 }
+
+/**
+ * Selector for fenced code blocks that {@link render} emits: markdown-it writes
+ * `<pre><code class="language-xxx">…escaped source…</code></pre>`.
+ */
+const CODE_BLOCK_SELECTOR = 'pre > code[class*="language-"]';
+
+/**
+ * True when the rendered HTML contains at least one fenced code block. Used to
+ * decide whether the heavy highlighter is worth loading at all.
+ */
+export function hasCodeBlocks(container: HTMLElement): boolean {
+  return container.querySelector(CODE_BLOCK_SELECTOR) !== null;
+}
+
+/**
+ * Shared post-render enhancement: syntax-highlight every fenced code block in
+ * `container`, in place. Used identically by the Viewer (after mount) and the
+ * Editor preview (after each render), so highlighted output can never diverge
+ * between the two — it is the single highlighting code path.
+ *
+ * highlight.js (and its theme CSS) is pulled in via dynamic `import()` ONLY when
+ * a code block is actually present, so it lands in a separate async chunk and
+ * Documents without code stay featherweight (it never enters the Viewer entry).
+ *
+ * Sanitization is preserved: highlight.js produces only structural `<span>`
+ * tokens, and we still run its output back through DOMPurify before it touches
+ * the live DOM — a malicious language name or `<script>`-laden code block can
+ * never inject executable markup.
+ */
+export async function enhance(container: HTMLElement): Promise<void> {
+  const blocks = Array.from(
+    container.querySelectorAll<HTMLElement>(CODE_BLOCK_SELECTOR),
+  );
+  if (blocks.length === 0) {
+    return;
+  }
+
+  const { highlightCode } = await import('./highlight.js');
+
+  for (const code of blocks) {
+    if (code.dataset.highlighted === 'yes') {
+      continue;
+    }
+    const language = languageOf(code);
+    // highlight() escapes its input and returns structural-span HTML. We still
+    // sanitize the result before assigning it — defence in depth, no bypass.
+    const tokenized = highlightCode(code.textContent ?? '', language);
+    code.innerHTML = DOMPurify.sanitize(tokenized, {
+      FORBID_TAGS: ['script', 'style', 'iframe', 'frame', 'object', 'embed'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+    });
+    code.classList.add('hljs');
+    code.dataset.highlighted = 'yes';
+  }
+}
+
+/**
+ * Extract the fence language from a code element's `language-xxx` class, if it
+ * is one highlight.js knows about. Returns `undefined` for unknown or absent
+ * languages so the caller can fall back to plain (un-highlighted) text rather
+ * than letting highlight.js guess.
+ */
+function languageOf(code: HTMLElement): string | undefined {
+  for (const cls of Array.from(code.classList)) {
+    const match = /^language-(.+)$/.exec(cls);
+    if (match) {
+      return match[1];
+    }
+  }
+  return undefined;
+}

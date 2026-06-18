@@ -5,7 +5,7 @@ import {
   classifyDecodeError,
   type DecodeErrorKind,
 } from '@portablemd/core';
-import { render } from './render.js';
+import { render, enhance } from './render.js';
 
 /**
  * What the app should show for a given URL. Routing is driven entirely by the
@@ -81,6 +81,11 @@ export function mountViewer(
       article.innerHTML = state.html;
 
       root.append(chrome, article);
+
+      // Syntax-highlight any code blocks via the shared enhance step — the exact
+      // path the Editor preview uses, so Viewer and preview can never diverge.
+      // highlight.js loads (async chunk) only if the Document actually has code.
+      void enhance(article);
 
       const markdown = state.markdown;
       edit.addEventListener('click', () => {

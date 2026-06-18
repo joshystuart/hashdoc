@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { encode, buildLink } from '@portablemd/core';
-import { render } from '../render.js';
+import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 
@@ -36,6 +36,7 @@ export interface EditorProps {
 export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorProps = {}): preact.JSX.Element {
   const initialDoc = initialMarkdown ?? STARTER_DOC;
   const sourceHost = useRef<HTMLDivElement>(null);
+  const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
@@ -73,6 +74,16 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
 
   // The preview is the Viewer's exact output: same render(), same markup shape.
   const previewHtml = render(markdown);
+
+  // After each preview render, run the shared enhance step so code blocks are
+  // syntax-highlighted exactly as the Viewer highlights them. Preact has
+  // committed the new innerHTML by the time this layout effect runs.
+  useLayoutEffect(() => {
+    const host = previewHost.current;
+    if (host) {
+      void enhance(host);
+    }
+  }, [previewHtml]);
 
   return (
     <div class="editor">
@@ -119,6 +130,7 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
         <article
           class="editor__preview document"
           aria-label="Preview"
+          ref={previewHost}
           // Preview HTML is already sanitized by render() (DOMPurify).
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
