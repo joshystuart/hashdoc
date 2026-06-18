@@ -79,7 +79,7 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     const view = getView(root);
     expect(view.state.doc.toString()).toBe(ORIGINAL_MD);
     // The preview reflects the seeded markdown.
-    expect(root.querySelector('.editor__preview')!.innerHTML).toContain('<h1>Shared note</h1>');
+    expect(root.querySelector('.editor__preview')!.innerHTML).toContain('Shared note</h1>');
   });
 
   it('view -> Edit -> change -> Copy Link: new Link reflects the edit; original is unaffected', async () => {

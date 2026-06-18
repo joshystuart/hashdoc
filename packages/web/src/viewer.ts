@@ -1,11 +1,22 @@
 import {
   decode,
+  encode,
+  buildLink,
   payloadFromUrl,
   DecodeError,
   classifyDecodeError,
   type DecodeErrorKind,
 } from '@portablemd/core';
-import { render, enhance } from './render.js';
+import {
+  render,
+  enhance,
+  copyText,
+  interceptInPageAnchors,
+  firstHeadingText,
+} from './render.js';
+
+/** Fallback tab title when a Document has no H1 (issue-09). */
+const DEFAULT_TITLE = 'portablemd';
 
 /**
  * What the app should show for a given URL. Routing is driven entirely by the
@@ -67,14 +78,36 @@ export function mountViewer(
       // Document's markdown; saving there produces a NEW Link. The Link being
       // viewed is an immutable string and is never mutated (issue-03).
       root.textContent = '';
+      const markdown = state.markdown;
+
       const chrome = document.createElement('div');
       chrome.className = 'viewer__chrome';
-      const edit = document.createElement('button');
-      edit.type = 'button';
-      edit.className = 'viewer__edit';
-      edit.textContent = 'Edit';
-      edit.title = 'Edit a copy — your changes make a new link; this one stays unchanged';
-      chrome.append(edit);
+
+      // Copy source: the Document's raw markdown. Copy Link: the current Link
+      // (rebuilt from the payload so it is always the canonical origin-relative
+      // string, independent of how the page was navigated to). Both go through
+      // the shared copyText() clipboard path (issue-09).
+      const copySource = makeChromeButton('viewer__copy-source', 'Copy source', 'Copy the raw markdown source');
+      copySource.addEventListener('click', () => {
+        void copyText(markdown).then((ok) => {
+          flash(copySource, ok ? 'Copied' : 'Copy failed', 'Copy source');
+        });
+      });
+
+      const copyLink = makeChromeButton('viewer__copy-link', 'Copy Link', 'Copy a link to this document');
+      copyLink.addEventListener('click', () => {
+        const link = buildLink(encode(markdown), location.origin + location.pathname);
+        void copyText(link).then((ok) => {
+          flash(copyLink, ok ? 'Link copied' : 'Copy failed', 'Copy Link');
+        });
+      });
+
+      const edit = makeChromeButton(
+        'viewer__edit',
+        'Edit',
+        'Edit a copy — your changes make a new link; this one stays unchanged',
+      );
+      chrome.append(copySource, copyLink, edit);
 
       const article = document.createElement('article');
       article.className = 'document';
@@ -82,12 +115,20 @@ export function mountViewer(
 
       root.append(chrome, article);
 
-      // Syntax-highlight any code blocks via the shared enhance step — the exact
-      // path the Editor preview uses, so Viewer and preview can never diverge.
-      // highlight.js loads (async chunk) only if the Document actually has code.
+      // Keep in-page heading anchors from clobbering the payload fragment: the
+      // entire Document lives in location.hash (ADR 0001), so we intercept
+      // `#slug` clicks and scrollIntoView instead of navigating the hash.
+      interceptInPageAnchors(article);
+
+      // Tab title from the Document's first H1, with a sensible fallback.
+      document.title = firstHeadingText(markdown) ?? DEFAULT_TITLE;
+
+      // Syntax-highlight code, render math/mermaid, and add copy-code buttons via
+      // the shared enhance step — the exact path the Editor preview uses, so
+      // Viewer and preview can never diverge. Heavy libs load (async chunk) only
+      // if the Document actually uses the corresponding feature.
       void enhance(article);
 
-      const markdown = state.markdown;
       edit.addEventListener('click', () => {
         // Lazy-import keeps CodeMirror out of the Viewer entry chunk.
         void import('./editor/mount.js').then(({ mountEditor }) => {
@@ -109,6 +150,24 @@ export function mountViewer(
       break;
   }
   return state;
+}
+
+/** Build a Viewer chrome action button with a shared class/look. */
+function makeChromeButton(className: string, label: string, title: string): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `viewer__action ${className}`;
+  button.textContent = label;
+  button.title = title;
+  return button;
+}
+
+/** Briefly show a status label on a button, then restore the original. */
+function flash(button: HTMLButtonElement, message: string, original: string): void {
+  button.textContent = message;
+  window.setTimeout(() => {
+    button.textContent = original;
+  }, 2000);
 }
 
 /**

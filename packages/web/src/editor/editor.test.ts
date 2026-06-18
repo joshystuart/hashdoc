@@ -113,7 +113,8 @@ describe('Editor — author creates a Link', () => {
     const state = mountViewer(viewerRoot, link);
     expect(state.kind).toBe('document');
     if (state.kind === 'document') {
-      expect(state.html).toContain('<h2>Round trip</h2>');
+      expect(state.html).toContain('<h2 id="round-trip">');
+      expect(state.html).toContain('Round trip</h2>');
       expect(state.html).toContain('href="https://example.com"');
     }
   });

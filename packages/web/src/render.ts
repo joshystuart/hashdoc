@@ -60,6 +60,67 @@ md.core.ruler.after('inline', 'portablemd_task_lists', (state) => {
   return true;
 });
 
+// --- Heading anchors (issue-09): give every heading a stable, unique slug `id`
+//     and a clickable `#` anchor. The anchor is a plain in-page `<a href="#slug">`
+//     — which WOULD clobber the payload fragment if the browser navigated it — so
+//     the Viewer intercepts in-page anchor clicks and uses scrollIntoView instead
+//     (see interceptInPageAnchors). Slugging happens at parse time so the markup
+//     still flows through DOMPurify (ids and the anchor element are allowed).
+installHeadingAnchors(md);
+
+/**
+ * Turn a heading's text into a URL slug: lowercase, spaces/punctuation to
+ * hyphens, collapsed and trimmed. Empty results fall back to `section`.
+ */
+export function slugify(text: string): string {
+  const slug = text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug.length > 0 ? slug : 'section';
+}
+
+/**
+ * Wire heading slug + anchor generation onto a markdown-it instance. Each
+ * `heading_open` gets a unique `id`; a `#` anchor linking to that id is injected
+ * at the START of the heading's inline content. Slugs are de-duplicated within a
+ * single render with `-2`, `-3`, … suffixes so deep-links stay stable.
+ */
+function installHeadingAnchors(instance: MarkdownIt): void {
+  instance.core.ruler.push('portablemd_heading_anchors', (state) => {
+    const tokens = state.tokens;
+    const seen = new Map<string, number>();
+    for (let i = 0; i < tokens.length; i++) {
+      const open = tokens[i]!;
+      if (open.type !== 'heading_open') {
+        continue;
+      }
+      const inline = tokens[i + 1];
+      if (!inline || inline.type !== 'inline') {
+        continue;
+      }
+      const base = slugify(inline.content);
+      const count = seen.get(base) ?? 0;
+      seen.set(base, count + 1);
+      const slug = count === 0 ? base : `${base}-${count + 1}`;
+      open.attrSet('id', slug);
+
+      // Prepend a `#` anchor to the heading's inline children. It is a normal
+      // in-page link; the Viewer intercepts its click to stay payload-safe.
+      const anchorOpen = new state.Token('link_open', 'a', 1);
+      anchorOpen.attrSet('href', `#${slug}`);
+      anchorOpen.attrSet('class', 'heading-anchor');
+      anchorOpen.attrSet('aria-label', 'Link to this section');
+      const anchorText = new state.Token('html_inline', '', 0);
+      anchorText.content = '#';
+      const anchorClose = new state.Token('link_close', 'a', -1);
+      inline.children = [anchorOpen, anchorText, anchorClose, ...(inline.children ?? [])];
+    }
+    return true;
+  });
+}
+
 // --- Math: parse `$…$` (inline) and `$$…$$` (block) into INERT placeholder
 //     elements carrying the raw TeX in `data-tex`. Parsing is cheap and sync;
 //     the heavy KaTeX library is NOT loaded here — enhanceMath() lazy-imports it
@@ -207,15 +268,24 @@ export function render(markdown: string): string {
     FORBID_TAGS: ['script', 'style', 'iframe', 'frame', 'object', 'embed'],
     FORBID_ATTR: ['onerror', 'onload', 'onclick'],
   });
-  return hardenExternalLinks(safe);
+  return postProcess(safe);
 }
 
 /**
- * Force external (`http(s)://`) anchors to open safely in a new tab. Runs on
- * the sanitized HTML so we only touch links DOMPurify already approved.
+ * Post-sanitize DOM pass over the HTML DOMPurify already approved:
+ *
+ * 1. Force external (`http(s)://`) anchors to open safely in a new tab.
+ * 2. Restore heading `id` slugs (issue-09). DOMPurify strips `id` attributes as
+ *    DOM-clobbering protection, and disabling that protection globally would
+ *    weaken sanitisation for the whole Document. Instead we re-derive each
+ *    heading's slug from the `#` anchor the markdown-it rule injected (its
+ *    `href="#slug"` survives sanitisation) and re-apply it as the heading `id`.
+ *    This keeps clobbering protection on everywhere else while giving headings
+ *    stable, deep-linkable ids.
  */
-function hardenExternalLinks(html: string): string {
+function postProcess(html: string): string {
   const doc = new DOMParser().parseFromString(html, 'text/html');
+
   for (const a of Array.from(doc.querySelectorAll('a[href]'))) {
     const href = a.getAttribute('href') ?? '';
     if (/^https?:\/\//i.test(href)) {
@@ -223,6 +293,18 @@ function hardenExternalLinks(html: string): string {
       a.setAttribute('rel', 'noopener noreferrer');
     }
   }
+
+  for (const heading of Array.from(
+    doc.querySelectorAll('h1, h2, h3, h4, h5, h6'),
+  )) {
+    const anchor = heading.querySelector(':scope > a.heading-anchor[href^="#"]');
+    const href = anchor?.getAttribute('href') ?? '';
+    const slug = href.slice(1);
+    if (slug !== '') {
+      heading.setAttribute('id', slug);
+    }
+  }
+
   return doc.body.innerHTML;
 }
 
@@ -295,6 +377,130 @@ export async function enhance(container: HTMLElement): Promise<void> {
   await enhanceMermaid(container);
   await enhanceHighlight(container);
   await enhanceMath(container);
+  enhanceCopyCode(container);
+}
+
+/**
+ * Give every fenced code block a one-click "Copy" button (issue-09). The button
+ * copies the block's RAW text (the un-highlighted source), so it round-trips
+ * exactly even after syntax highlighting has rewritten the markup into spans.
+ *
+ * Runs in {@link enhance}, so both the Viewer and the Editor preview get copy
+ * buttons through the single shared code path. The button is wrapped with the
+ * `<pre>` in a `.code-block` container so it can be positioned without touching
+ * the highlighted markup. Idempotent: a `<pre>` already wrapped is skipped, so
+ * repeated enhance() runs (the Editor re-renders on every keystroke) never
+ * stack duplicate buttons.
+ *
+ * Synchronous and zero-dependency: it loads nothing, so it stays in the entry
+ * chunk and never affects the lazy-load audits.
+ */
+export function enhanceCopyCode(container: HTMLElement): void {
+  const doc = container.ownerDocument;
+  for (const pre of Array.from(container.querySelectorAll<HTMLElement>('pre'))) {
+    const code = pre.querySelector('code');
+    if (!code || pre.parentElement?.classList.contains('code-block')) {
+      continue;
+    }
+    const wrapper = doc.createElement('div');
+    wrapper.className = 'code-block';
+    pre.replaceWith(wrapper);
+    const button = doc.createElement('button');
+    button.type = 'button';
+    button.className = 'code-block__copy';
+    button.textContent = 'Copy';
+    button.setAttribute('aria-label', 'Copy code');
+    button.addEventListener('click', () => {
+      const text = code.textContent ?? '';
+      void copyText(text).then((ok) => {
+        button.textContent = ok ? 'Copied' : 'Copy failed';
+        window.setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 2000);
+      });
+    });
+    wrapper.append(button, pre);
+  }
+}
+
+/**
+ * Copy `text` to the clipboard, resolving to whether it succeeded. Centralised
+ * so every copy action (code, source, link) shares one clipboard path and tests
+ * can mock `navigator.clipboard.writeText` once.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Intercept clicks on in-page anchors (`<a href="#…">`) inside `container` and
+ * scroll the target into view instead of letting the browser navigate the hash
+ * (issue-09).
+ *
+ * CRITICAL (ADR 0001): the entire Document Payload lives in `location.hash`.
+ * Letting a native `#slug` click through would overwrite that fragment and make
+ * the Document unreadable on the next decode. So we `preventDefault` and call
+ * `scrollIntoView` on the matching `id` — the URL fragment is never touched, the
+ * payload is preserved, and the heading still scrolls into view.
+ *
+ * Returns a disposer that removes the listener.
+ */
+export function interceptInPageAnchors(container: HTMLElement): () => void {
+  const onClick = (event: Event): void => {
+    const target = event.target as HTMLElement | null;
+    const anchor = target?.closest('a[href^="#"]') as HTMLAnchorElement | null;
+    if (!anchor || !container.contains(anchor)) {
+      return;
+    }
+    const href = anchor.getAttribute('href') ?? '';
+    const id = href.slice(1);
+    if (id === '') {
+      return;
+    }
+    // Never navigate the hash — that is the payload (ADR 0001).
+    event.preventDefault();
+    const dest = container.querySelector(`#${cssEscape(id)}`);
+    if (dest instanceof HTMLElement) {
+      dest.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+  container.addEventListener('click', onClick);
+  return () => container.removeEventListener('click', onClick);
+}
+
+/**
+ * Escape a string for use in a CSS id selector. Uses the platform `CSS.escape`
+ * when present (browsers, modern jsdom) and falls back to escaping characters
+ * outside the safe slug alphabet for older environments.
+ */
+function cssEscape(value: string): string {
+  const css = (globalThis as { CSS?: { escape?: (v: string) => string } }).CSS;
+  if (css && typeof css.escape === 'function') {
+    return css.escape(value);
+  }
+  return value.replace(/[^\w-]/g, (ch) => `\\${ch}`);
+}
+
+/**
+ * The text of the Document's first H1, or `null` when there is none. Used to set
+ * the browser tab title (issue-09). Parses the markdown's first ATX `# ` heading
+ * — robust to leading blank lines, and indifferent to inline formatting markers.
+ */
+export function firstHeadingText(markdown: string): string | null {
+  for (const rawLine of markdown.split('\n')) {
+    const line = rawLine.trim();
+    const match = /^#\s+(.+?)\s*#*\s*$/.exec(line);
+    if (match) {
+      // Strip the most common inline markdown markers for a clean title.
+      return match[1]!.replace(/[*_`~]/g, '').trim();
+    }
+  }
+  return null;
 }
 
 /**

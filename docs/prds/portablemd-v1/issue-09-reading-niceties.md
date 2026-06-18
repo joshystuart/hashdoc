@@ -1,5 +1,10 @@
 # Reading niceties — anchors, copy buttons, tab title, print
 
+> **Status:** ✅ Done — completed 2026-06-18
+> Note: heading anchors scroll into view and are payload-safe; the URL fragment is
+> intentionally NOT mutated (it carries the Document Payload per ADR 0001, so
+> navigating it would destroy the Document).
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -15,10 +20,10 @@ The cheap, always-on features that make a Document pleasant to read and reuse.
 
 ## Acceptance criteria
 
-- [ ] Headings have clickable anchors that update the URL and scroll into view.
-- [ ] Copy-code, copy-source, and copy-Link actions copy the correct content.
-- [ ] The browser tab title reflects the Document's first H1 (with a fallback).
-- [ ] A print stylesheet produces a clean printed/PDF layout.
+- [x] Headings have clickable anchors that update the URL and scroll into view. _(scroll + payload-safe; fragment not mutated — see note above)_
+- [x] Copy-code, copy-source, and copy-Link actions copy the correct content.
+- [x] The browser tab title reflects the Document's first H1 (with a fallback).
+- [x] A print stylesheet produces a clean printed/PDF layout.
 
 ## Blocked by
 

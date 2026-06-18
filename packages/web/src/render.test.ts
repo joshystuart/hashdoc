@@ -22,7 +22,9 @@ describe('render — GFM constructs', () => {
 
   it('renders headings, emphasis and code', () => {
     const html = render('# Title\n\n**bold** and `code`');
-    expect(html).toContain('<h1>Title</h1>');
+    // Headings now carry a slug id and a leading `#` anchor (issue-09).
+    expect(html).toContain('<h1 id="title">');
+    expect(html).toContain('Title</h1>');
     expect(html).toContain('<strong>bold</strong>');
     expect(html).toContain('<code>code</code>');
   });
@@ -74,5 +76,85 @@ describe('render — security (XSS) suite', () => {
   it('preserves author-embedded image URLs (author content, not infra)', () => {
     const html = render('![alt](https://cdn.example.com/pic.png)');
     expect(html).toContain('src="https://cdn.example.com/pic.png"');
+  });
+});
+
+describe('render — heading anchors (issue-09)', () => {
+  it('gives each heading a slug id', () => {
+    const html = render('# Hello World\n\n## A Section!');
+    expect(html).toContain('id="hello-world"');
+    expect(html).toContain('id="a-section"');
+  });
+
+  it('de-duplicates repeated heading slugs', () => {
+    const html = render('# Intro\n\n# Intro\n\n# Intro');
+    expect(html).toContain('id="intro"');
+    expect(html).toContain('id="intro-2"');
+    expect(html).toContain('id="intro-3"');
+  });
+
+  it('prepends a clickable in-page anchor to each heading', () => {
+    const html = render('# Title');
+    expect(html).toContain('class="heading-anchor"');
+    expect(html).toContain('href="#title"');
+  });
+
+  it('survives DOMPurify with the id and anchor intact', () => {
+    const html = render('## Keep Me');
+    expect(html).toMatch(/<h2[^>]*id="keep-me"/);
+    expect(html).toContain('aria-label="Link to this section"');
+  });
+});
+
+describe('firstHeadingText (issue-09)', () => {
+  it('returns the first H1 text', async () => {
+    const { firstHeadingText } = await import('./render.js');
+    expect(firstHeadingText('# My Doc\n\nbody')).toBe('My Doc');
+  });
+
+  it('ignores deeper headings and finds the H1 after blank lines', async () => {
+    const { firstHeadingText } = await import('./render.js');
+    expect(firstHeadingText('\n\n## sub\n\n# Real Title')).toBe('Real Title');
+  });
+
+  it('strips inline markdown markers from the title', async () => {
+    const { firstHeadingText } = await import('./render.js');
+    expect(firstHeadingText('# **Bold** `title`')).toBe('Bold title');
+  });
+
+  it('returns null when there is no H1', async () => {
+    const { firstHeadingText } = await import('./render.js');
+    expect(firstHeadingText('## only sub\n\nbody')).toBeNull();
+  });
+});
+
+describe('enhanceCopyCode (issue-09)', () => {
+  it('adds a Copy button to each code block and copies the raw source', async () => {
+    const { enhanceCopyCode } = await import('./render.js');
+    const container = document.createElement('div');
+    container.innerHTML = render('```js\nconst a = 1;\n```');
+
+    const writes: string[] = [];
+    Object.assign(navigator, {
+      clipboard: { writeText: (t: string) => { writes.push(t); return Promise.resolve(); } },
+    });
+
+    enhanceCopyCode(container);
+
+    const button = container.querySelector<HTMLButtonElement>('.code-block__copy');
+    expect(button).not.toBeNull();
+    expect(button!.getAttribute('aria-label')).toBe('Copy code');
+    button!.click();
+    await Promise.resolve();
+    expect(writes).toEqual(['const a = 1;\n']);
+  });
+
+  it('is idempotent — repeated runs do not stack buttons', async () => {
+    const { enhanceCopyCode } = await import('./render.js');
+    const container = document.createElement('div');
+    container.innerHTML = render('```\nx\n```');
+    enhanceCopyCode(container);
+    enhanceCopyCode(container);
+    expect(container.querySelectorAll('.code-block__copy').length).toBe(1);
   });
 });

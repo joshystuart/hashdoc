@@ -70,15 +70,18 @@ body {
   background: rgba(127, 127, 127, 0.15);
 }
 
-/* --- Viewer chrome (issue-03) ---------------------------------------------
-   A light action bar above the Document. "Edit" forks the Document into the
-   Editor: changes there produce a NEW Link; the viewed Link is never mutated. */
+/* --- Viewer chrome (issue-03 / issue-09) -----------------------------------
+   A light action bar above the Document: Copy source, Copy Link, and Edit.
+   "Edit" forks the Document into the Editor: changes there produce a NEW Link;
+   the viewed Link is never mutated. */
 .viewer__chrome {
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
+.viewer__action,
 .viewer__edit {
   padding: 0.35rem 0.85rem;
   font-size: 0.9rem;
@@ -90,8 +93,59 @@ body {
   cursor: pointer;
 }
 
+.viewer__action:hover,
 .viewer__edit:hover {
   background: rgba(127, 127, 127, 0.15);
+}
+
+/* --- Heading anchors (issue-09) -------------------------------------------
+   A `#` affordance prepended to each heading. Hidden until the heading is
+   hovered/focused to keep reading clean; clicking scrolls into view (the
+   Viewer intercepts the click so the payload fragment is never clobbered). */
+.document :is(h1, h2, h3, h4, h5, h6) {
+  position: relative;
+}
+
+.heading-anchor {
+  position: absolute;
+  left: -1.1em;
+  padding-right: 0.35em;
+  text-decoration: none;
+  opacity: 0;
+  color: inherit;
+  font-weight: 400;
+}
+
+.document :is(h1, h2, h3, h4, h5, h6):hover .heading-anchor,
+.heading-anchor:focus {
+  opacity: 0.5;
+}
+
+/* --- Copy-code buttons (issue-09) -----------------------------------------
+   Each fenced code block is wrapped so a Copy button can sit in its corner. */
+.code-block {
+  position: relative;
+}
+
+.code-block__copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 5px;
+  background: rgba(127, 127, 127, 0.08);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.1s ease-in;
+}
+
+.code-block:hover .code-block__copy,
+.code-block__copy:focus {
+  opacity: 1;
 }
 
 /* --- Editor (issue-02) ----------------------------------------------------
@@ -216,5 +270,48 @@ body {
   .editor__source {
     border-right: none;
     border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  }
+}
+
+/* --- Print (issue-09) ------------------------------------------------------
+   Browser Print -> PDF should yield a clean reading layout: no interactive
+   chrome, no copy buttons, no editor toolbar, and code blocks that wrap onto
+   the page instead of being clipped at the viewport edge. */
+@media print {
+  #app {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* Hide every interactive affordance — none of it belongs in a printout. */
+  .viewer__chrome,
+  .viewer__action,
+  .viewer__edit,
+  .code-block__copy,
+  .heading-anchor,
+  .editor__bar,
+  .editor__toolbar,
+  .editor__source {
+    display: none !important;
+  }
+
+  /* Code must wrap rather than clip — printers have no horizontal scrollbar. */
+  .document pre {
+    overflow: visible;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: transparent;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+  }
+
+  /* Avoid orphaned headings and split code/figures across page breaks. */
+  .document :is(h1, h2, h3, h4, h5, h6) {
+    break-after: avoid;
+  }
+
+  .document pre,
+  .document figure,
+  .document table {
+    break-inside: avoid;
   }
 }
