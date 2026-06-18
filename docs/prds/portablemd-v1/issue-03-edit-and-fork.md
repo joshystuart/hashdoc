@@ -1,5 +1,7 @@
 # Edit & fork a viewed Document
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -14,10 +16,10 @@ A Reader can amend a Document they received and share their own version, without
 
 ## Acceptance criteria
 
-- [ ] The Viewer shows an Edit action that opens the Editor pre-filled with the viewed Document.
-- [ ] Editing + Copy Link yields a different Link; the original Link still decodes to the original Document.
-- [ ] The UI communicates that a new Link was created.
-- [ ] Behaviour test: view → Edit → change → Copy Link → original Link unaffected, new Link reflects the change.
+- [x] The Viewer shows an Edit action that opens the Editor pre-filled with the viewed Document.
+- [x] Editing + Copy Link yields a different Link; the original Link still decodes to the original Document.
+- [x] The UI communicates that a new Link was created.
+- [x] Behaviour test: view → Edit → change → Copy Link → original Link unaffected, new Link reflects the change.
 
 ## Blocked by
 

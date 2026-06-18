@@ -6,6 +6,24 @@ import { TOOLBAR_ACTIONS } from './commands.js';
 
 const STARTER_DOC = '# New document\n\nStart writing **markdown** here.\n';
 
+/** Props for the Editor. */
+export interface EditorProps {
+  /**
+   * Markdown to seed the source pane with. When the Editor is opened fresh (no
+   * fragment) this is omitted and the starter doc is used. When opened from the
+   * Viewer's Edit action it is the decoded markdown of the viewed Document, so
+   * the Reader forks a copy (issue-03). Editing it never mutates the opened
+   * Link — saving produces a *new* Link.
+   */
+  initialMarkdown?: string;
+  /**
+   * True when the Editor was opened by editing an existing Document (a fork),
+   * as opposed to authoring a brand-new one. Drives the explicit "new link
+   * created — original unchanged" messaging after Copy Link.
+   */
+  forkedFromDocument?: boolean;
+}
+
 /**
  * The Editor: a CodeMirror source pane + formatting toolbar on the left, a live
  * preview on the right. The preview is produced by the shared {@link render}
@@ -15,10 +33,11 @@ const STARTER_DOC = '# New document\n\nStart writing **markdown** here.\n';
  * core's {@link encode}/{@link buildLink} and copies it to the clipboard. The
  * Link *is* the document: nothing is sent anywhere (ADR 0001/0002).
  */
-export function Editor(): preact.JSX.Element {
+export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorProps = {}): preact.JSX.Element {
+  const initialDoc = initialMarkdown ?? STARTER_DOC;
   const sourceHost = useRef<HTMLDivElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
-  const [markdown, setMarkdown] = useState<string>(STARTER_DOC);
+  const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   // Create the CodeMirror instance once the host div is committed. A layout
@@ -29,7 +48,7 @@ export function Editor(): preact.JSX.Element {
     if (!host) {
       return;
     }
-    const editor = createSourceEditor(host, STARTER_DOC, (doc) => {
+    const editor = createSourceEditor(host, initialDoc, (doc) => {
       setMarkdown(doc);
       setCopyState('idle');
     });
@@ -38,6 +57,8 @@ export function Editor(): preact.JSX.Element {
       editor.destroy();
       editorRef.current = null;
     };
+    // initialDoc is captured once at mount; CodeMirror owns the document after.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function copyLink(): Promise<void> {
@@ -79,6 +100,13 @@ export function Editor(): preact.JSX.Element {
           <button type="button" class="editor__copy" onClick={() => void copyLink()}>
             {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
           </button>
+          {copyState === 'copied' ? (
+            <span class="editor__copy-status editor__copy-status--ok" role="status">
+              {forkedFromDocument
+                ? 'New link created — your edits made a fresh link. The original link is unchanged.'
+                : 'New link created — copy it to share this document. Each save makes a fresh link.'}
+            </span>
+          ) : null}
           {copyState === 'failed' ? (
             <span class="editor__copy-status" role="alert">
               Copy failed — your browser blocked clipboard access.

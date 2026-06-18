@@ -49,6 +49,30 @@ body {
   opacity: 0.85;
 }
 
+/* --- Viewer chrome (issue-03) ---------------------------------------------
+   A light action bar above the Document. "Edit" forks the Document into the
+   Editor: changes there produce a NEW Link; the viewed Link is never mutated. */
+.viewer__chrome {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.viewer__edit {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.viewer__edit:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
 /* --- Editor (issue-02) ----------------------------------------------------
    The Editor takes the full viewport: a toolbar bar on top, then a split
    source/preview below. The shared #app max-width is overridden so the split
@@ -129,6 +153,11 @@ body {
 .editor__copy-status {
   font-size: 0.85rem;
   color: #b91c1c;
+}
+
+.editor__copy-status--ok {
+  color: inherit;
+  opacity: 0.85;
 }
 
 .editor__panes {

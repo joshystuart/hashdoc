@@ -7,7 +7,7 @@ import { render } from './render.js';
  * in new mode (issue-02).
  */
 export type ViewerState =
-  | { kind: 'document'; html: string }
+  | { kind: 'document'; html: string; markdown: string }
   | { kind: 'editor' }
   | { kind: 'error'; message: string };
 
@@ -22,7 +22,7 @@ export function resolveView(url: string): ViewerState {
   }
   try {
     const markdown = decode(payload);
-    return { kind: 'document', html: render(markdown) };
+    return { kind: 'document', html: render(markdown), markdown };
   } catch (e) {
     const message =
       e instanceof DecodeError ? e.message : 'This Link could not be opened.';
@@ -45,9 +45,37 @@ export function mountViewer(
 ): ViewerState {
   const state = resolveView(url);
   switch (state.kind) {
-    case 'document':
-      root.innerHTML = `<article class="document">${state.html}</article>`;
+    case 'document': {
+      // Viewer chrome: the rendered Document plus an Edit action. Editing is
+      // fork-and-share (glossary): Edit opens the Editor pre-filled with *this*
+      // Document's markdown; saving there produces a NEW Link. The Link being
+      // viewed is an immutable string and is never mutated (issue-03).
+      root.textContent = '';
+      const chrome = document.createElement('div');
+      chrome.className = 'viewer__chrome';
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'viewer__edit';
+      edit.textContent = 'Edit';
+      edit.title = 'Edit a copy — your changes make a new link; this one stays unchanged';
+      chrome.append(edit);
+
+      const article = document.createElement('article');
+      article.className = 'document';
+      article.innerHTML = state.html;
+
+      root.append(chrome, article);
+
+      const markdown = state.markdown;
+      edit.addEventListener('click', () => {
+        // Lazy-import keeps CodeMirror out of the Viewer entry chunk.
+        void import('./editor/mount.js').then(({ mountEditor }) => {
+          root.textContent = '';
+          mountEditor(root, { initialMarkdown: markdown, forkedFromDocument: true });
+        });
+      });
       break;
+    }
     case 'editor':
       root.textContent = '';
       void import('./editor/mount.js').then(({ mountEditor }) => {
