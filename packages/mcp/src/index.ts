@@ -1,13 +1,14 @@
 /**
- * @portablemd/mcp — placeholder.
+ * @portablemd/mcp — public module surface.
  *
- * The MCP server (create + read Links) is implemented in a later issue. This
- * stub exists so the workspace is wired into the monorepo and depends only on
- * `@portablemd/core` (the shared Link format), keeping the package tiny.
+ * Re-exports the pure tool handlers and the server factory so they can be
+ * imported by tests and embedders. The runnable stdio entry point lives in
+ * `bin.ts` (wired via the package `bin` field).
  */
-import { encode, decode } from '@portablemd/core';
-
-export const MCP_PLACEHOLDER = true;
-
-// Re-export the format so the eventual server has a single import surface.
-export { encode, decode };
+export {
+  createMarkdownLink,
+  readMarkdownLink,
+  type CreateMarkdownLinkResult,
+  type ReadMarkdownLinkResult,
+} from './handlers.js';
+export { createServer, resolveBaseUrl, DEFAULT_BASE_URL } from './server.js';

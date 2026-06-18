@@ -1,5 +1,7 @@
 # MCP — create & read Links
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · respects [ADR 0001](../../adr/0001-the-link-is-the-document.md)
@@ -21,12 +23,12 @@ read_markdown_link({ url }):        { markdown }
 
 ## Acceptance criteria
 
-- [ ] A stdio server (`npx`-runnable) exposes exactly `create_markdown_link` and `read_markdown_link`.
-- [ ] `create_markdown_link` returns a `url` whose fragment `decode`s (via `core`) to the input markdown; `characters` is the Link length; `warning` is set past the size threshold.
-- [ ] The `url` origin honours `PORTABLEMD_BASE_URL`.
-- [ ] `read_markdown_link` accepts a full URL or a bare Payload and returns the markdown; corrupt/truncated input fails gracefully (no crash).
-- [ ] The MCP makes zero network calls.
-- [ ] Tool-handler tests cover round-trip, base-URL override, warning threshold, and corrupt input.
+- [x] A stdio server (`npx`-runnable) exposes exactly `create_markdown_link` and `read_markdown_link`.
+- [x] `create_markdown_link` returns a `url` whose fragment `decode`s (via `core`) to the input markdown; `characters` is the Link length; `warning` is set past the size threshold.
+- [x] The `url` origin honours `PORTABLEMD_BASE_URL`.
+- [x] `read_markdown_link` accepts a full URL or a bare Payload and returns the markdown; corrupt/truncated input fails gracefully (no crash).
+- [x] The MCP makes zero network calls.
+- [x] Tool-handler tests cover round-trip, base-URL override, warning threshold, and corrupt input.
 
 ## Blocked by
 
