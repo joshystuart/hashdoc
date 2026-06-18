@@ -1,5 +1,7 @@
 # Self-describing example + bearer-access copy
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -13,9 +15,9 @@ Make the empty state teach the tool, and make the trust model honest.
 
 ## Acceptance criteria
 
-- [ ] Opening the site with no fragment shows a self-describing example Document in the Editor, ready to select-all and replace.
-- [ ] The example renders the headline constructs (headings, code, a table, etc.) as a live demo.
-- [ ] Bearer-access messaging appears at the point a Link is created/copied; "secure" is never used.
+- [x] Opening the site with no fragment shows a self-describing example Document in the Editor, ready to select-all and replace.
+- [x] The example renders the headline constructs (headings, code, a table, etc.) as a live demo.
+- [x] Bearer-access messaging appears at the point a Link is created/copied; "secure" is never used.
 
 ## Blocked by
 

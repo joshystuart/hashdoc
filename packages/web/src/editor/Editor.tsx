@@ -5,14 +5,14 @@ import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
 import { currentTheme, toggleTheme, type Theme } from '../theme.js';
-
-const STARTER_DOC = '# New document\n\nStart writing **markdown** here.\n';
+import { EXAMPLE_DOC } from './example.js';
 
 /** Props for the Editor. */
 export interface EditorProps {
   /**
    * Markdown to seed the source pane with. When the Editor is opened fresh (no
-   * fragment) this is omitted and the starter doc is used. When opened from the
+   * fragment) this is omitted and the self-describing example doc is used — it
+   * doubles as the landing page (issue-12). When opened from the
    * Viewer's Edit action it is the decoded markdown of the viewed Document, so
    * the Reader forks a copy (issue-03). Editing it never mutates the opened
    * Link — saving produces a *new* Link.
@@ -36,7 +36,10 @@ export interface EditorProps {
  * Link *is* the document: nothing is sent anywhere (ADR 0001/0002).
  */
 export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorProps = {}): preact.JSX.Element {
-  const initialDoc = initialMarkdown ?? STARTER_DOC;
+  // No initialMarkdown means the no-fragment new mode: seed the self-describing
+  // example Document (issue-12). When forking (initialMarkdown present), keep the
+  // forked content untouched — the example is only for a fresh start.
+  const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
   const sourceHost = useRef<HTMLDivElement>(null);
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
@@ -152,6 +155,9 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
               Copy failed — your browser blocked clipboard access.
             </span>
           ) : null}
+          {/* Bearer-access note (issue-12): quiet, accurate, always present at
+              the point a Link is created. Never describe a Link as "secure". */}
+          <span class="editor__bearer-note">Anyone with this link can read it.</span>
         </div>
       </header>
       <div class="editor__status">

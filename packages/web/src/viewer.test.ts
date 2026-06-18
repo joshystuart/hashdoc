@@ -69,6 +69,19 @@ describe('mountViewer — DOM mounting', () => {
     // editor behaviour test, where the dynamic import is awaited.
     expect(state.kind).toBe('editor');
   });
+
+  it('shows bearer-access messaging in the chrome; never says "secure" (issue-12)', () => {
+    const link = buildLink(encode('# Doc\n\nbody'), ORIGIN);
+    mountViewer(root, link);
+
+    const note = root.querySelector('.viewer__bearer-note');
+    expect(note).not.toBeNull();
+    expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
+
+    // Guard: the share/copy chrome must not describe the Link as "secure".
+    const chrome = root.querySelector('.viewer__chrome')!;
+    expect(chrome.textContent!.toLowerCase()).not.toContain('secure');
+  });
 });
 
 describe('mountViewer — graceful decode failures (issue-05)', () => {

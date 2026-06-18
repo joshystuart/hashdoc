@@ -119,6 +119,48 @@ describe('Editor — author creates a Link', () => {
     }
   });
 
+  it('seeds the self-describing example Document in no-fragment new mode (issue-12)', async () => {
+    mountEditor(root);
+    await flush();
+
+    // The CodeMirror doc carries the distinctive example text.
+    const view = getView(root);
+    const doc = view.state.doc.toString();
+    expect(doc).toContain('# portablemd');
+    expect(doc).toMatch(/select all/i);
+
+    // The live preview is a real demo: headline constructs render in the DOM.
+    const preview = root.querySelector('.editor__preview')!;
+    expect(preview.querySelector('h1')).not.toBeNull();
+    expect(preview.querySelector('table')).not.toBeNull();
+    expect(preview.querySelector('pre code')).not.toBeNull();
+    expect(preview.querySelector('input[type="checkbox"]')).not.toBeNull();
+  });
+
+  it('does NOT seed the example when forking (initialMarkdown provided) (issue-12)', async () => {
+    mountEditor(root, { initialMarkdown: '# Forked\n\nmine\n', forkedFromDocument: true });
+    await flush();
+
+    const view = getView(root);
+    const doc = view.state.doc.toString();
+    expect(doc).toBe('# Forked\n\nmine\n');
+    expect(doc).not.toContain('# portablemd');
+  });
+
+  it('shows bearer-access messaging at the Copy Link point; never says "secure" (issue-12)', async () => {
+    mountEditor(root);
+    await flush();
+
+    const note = root.querySelector('.editor__bearer-note');
+    expect(note).not.toBeNull();
+    expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
+
+    // Guard: the editor bar (toolbar + actions, where Link copy lives) must not
+    // describe the Link as "secure".
+    const bar = root.querySelector('.editor__bar')!;
+    expect(bar.textContent!.toLowerCase()).not.toContain('secure');
+  });
+
   it('toolbar bold action wraps text in the source and updates the preview', async () => {
     mountEditor(root);
     await flush();

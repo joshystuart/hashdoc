@@ -113,7 +113,14 @@ export function mountViewer(
       // Lives in the always-on chrome so it is reachable while reading.
       const themeToggle = makeThemeToggle();
 
-      chrome.append(themeToggle, copySource, copyLink, edit);
+      // Bearer-access note (issue-12): quiet, accurate messaging at the point a
+      // Link is copied/shared. The trust model is bearer-access — never describe
+      // a Link as "secure".
+      const bearerNote = document.createElement('span');
+      bearerNote.className = 'viewer__bearer-note';
+      bearerNote.textContent = 'Anyone with this link can read it.';
+
+      chrome.append(themeToggle, copySource, copyLink, edit, bearerNote);
 
       const article = document.createElement('article');
       article.className = 'document';

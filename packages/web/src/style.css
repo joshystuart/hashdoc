@@ -298,6 +298,15 @@ a {
   opacity: 0.85;
 }
 
+/* Bearer-access note (issue-12): quiet, secondary copy at the point a Link is
+   created. Accurate, not alarming — a Link is never described as "secure". */
+.editor__bearer-note,
+.viewer__bearer-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+  align-self: center;
+}
+
 /* Advisory warnings row (issue-11): the resulting Link's size, plus warnings
    when the Link is long or the Document embeds images. Informational only —
    never blocks Copy Link. */

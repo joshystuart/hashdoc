@@ -7,7 +7,7 @@ import { Editor, type EditorProps } from './Editor.js';
  * land in a separate async chunk and never bloat the Viewer entry.
  *
  * `props` carries the optional seed for the source pane: the no-fragment new
- * path omits it (starter doc); the Viewer's Edit action passes the decoded
+ * path omits it (self-describing example doc); the Viewer's Edit action passes the decoded
  * markdown of the viewed Document plus `forkedFromDocument` so the fork is
  * surfaced explicitly (issue-03).
  */
