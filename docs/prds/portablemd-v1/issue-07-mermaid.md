@@ -1,5 +1,7 @@
 # Mermaid diagrams
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · respects [ADR 0002](../../adr/0002-no-third-party-requests.md)
@@ -14,10 +16,10 @@
 
 ## Acceptance criteria
 
-- [ ] A ` ```mermaid ` block renders as a diagram in the Viewer.
-- [ ] Mermaid loads only when a mermaid block is present.
-- [ ] A hostile mermaid input cannot execute script (security-safe config, verified by test).
-- [ ] Renders in both Viewer and Editor preview.
+- [x] A ` ```mermaid ` block renders as a diagram in the Viewer.
+- [x] Mermaid loads only when a mermaid block is present.
+- [x] A hostile mermaid input cannot execute script (security-safe config, verified by test).
+- [x] Renders in both Viewer and Editor preview.
 
 ## Blocked by
 

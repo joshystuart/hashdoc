@@ -100,11 +100,31 @@ function hardenExternalLinks(html: string): string {
 const CODE_BLOCK_SELECTOR = 'pre > code[class*="language-"]';
 
 /**
+ * Selector for the `mermaid` fences markdown-it emits as
+ * `<pre><code class="language-mermaid">…escaped diagram source…</code></pre>`.
+ * These are NOT syntax-highlighted — they are rendered to diagrams instead.
+ */
+const MERMAID_BLOCK_SELECTOR = 'pre > code.language-mermaid';
+
+/**
  * True when the rendered HTML contains at least one fenced code block. Used to
  * decide whether the heavy highlighter is worth loading at all.
  */
 export function hasCodeBlocks(container: HTMLElement): boolean {
   return container.querySelector(CODE_BLOCK_SELECTOR) !== null;
+}
+
+/**
+ * True when the rendered HTML contains at least one ```mermaid block. Used to
+ * decide whether the heavy Mermaid library is worth loading at all.
+ */
+export function hasMermaidBlocks(container: HTMLElement): boolean {
+  return container.querySelector(MERMAID_BLOCK_SELECTOR) !== null;
+}
+
+/** Is this code element a ```mermaid fence (rendered as a diagram, not highlighted)? */
+function isMermaidBlock(code: HTMLElement): boolean {
+  return code.classList.contains('language-mermaid');
 }
 
 /**
@@ -123,9 +143,19 @@ export function hasCodeBlocks(container: HTMLElement): boolean {
  * never inject executable markup.
  */
 export async function enhance(container: HTMLElement): Promise<void> {
+  await enhanceMermaid(container);
+  await enhanceHighlight(container);
+}
+
+/**
+ * Syntax-highlight every fenced code block in `container`, in place — EXCEPT
+ * `mermaid` fences, which {@link enhanceMermaid} turns into diagrams. The heavy
+ * highlighter (async chunk) loads only if a non-mermaid code block is present.
+ */
+async function enhanceHighlight(container: HTMLElement): Promise<void> {
   const blocks = Array.from(
     container.querySelectorAll<HTMLElement>(CODE_BLOCK_SELECTOR),
-  );
+  ).filter((code) => !isMermaidBlock(code));
   if (blocks.length === 0) {
     return;
   }
@@ -146,6 +176,63 @@ export async function enhance(container: HTMLElement): Promise<void> {
     });
     code.classList.add('hljs');
     code.dataset.highlighted = 'yes';
+  }
+}
+
+/** A monotonically increasing counter for unique Mermaid render ids. */
+let mermaidSeq = 0;
+
+/**
+ * Render every ```mermaid block in `container` to an `<svg>` diagram, in place.
+ * Mermaid (a heavy library) is pulled in via dynamic `import()` ONLY when a
+ * mermaid block is actually present, so it lands in a separate async chunk and
+ * never enters the Viewer entry chunk.
+ *
+ * Security: the source is the code element's *text content* — already
+ * escaped/sanitized plain text from {@link render}. Mermaid runs with
+ * `securityLevel: 'strict'`, and the SVG it returns is STILL sanitized through
+ * DOMPurify (SVG profile) before insertion, so even Mermaid's own output can
+ * never smuggle `<script>` or `on*` handlers into the live DOM. A diagram that
+ * fails to parse is left as its original (inert, escaped) code block.
+ */
+async function enhanceMermaid(container: HTMLElement): Promise<void> {
+  const blocks = Array.from(
+    container.querySelectorAll<HTMLElement>(MERMAID_BLOCK_SELECTOR),
+  ).filter((code) => code.dataset.mermaid !== 'done');
+  if (blocks.length === 0) {
+    return;
+  }
+
+  const { renderMermaid } = await import('./mermaid.js');
+
+  for (const code of blocks) {
+    const pre = code.parentElement;
+    if (!pre) {
+      continue;
+    }
+    const source = code.textContent ?? '';
+    // Mark before awaiting so a concurrent re-run cannot double-process the
+    // same block; if rendering fails we leave the original block in place.
+    code.dataset.mermaid = 'done';
+    try {
+      const id = `portablemd-mermaid-${mermaidSeq++}`;
+      const rawSvg = await renderMermaid(id, source);
+      // Sanitize Mermaid's own output. SVG profile keeps legitimate diagram
+      // markup; scripts, event handlers and foreign HTML are stripped.
+      const safeSvg = DOMPurify.sanitize(rawSvg, {
+        USE_PROFILES: { svg: true, svgFilters: true },
+        FORBID_TAGS: ['script', 'style', 'foreignObject', 'iframe'],
+        FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+      });
+      const figure = container.ownerDocument.createElement('figure');
+      figure.className = 'mermaid';
+      figure.innerHTML = safeSvg;
+      pre.replaceWith(figure);
+    } catch {
+      // Malformed diagram: leave the inert escaped source visible rather than
+      // breaking the whole Document. Reset the marker so a later edit can retry.
+      delete code.dataset.mermaid;
+    }
   }
 }
 
