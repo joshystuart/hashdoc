@@ -1,5 +1,7 @@
 # Golden-fixture format freeze
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md) · enforces [ADR 0001](../../adr/0001-the-link-is-the-document.md)
@@ -14,9 +16,9 @@ Lock the permanence promise: a Link made today must open forever.
 
 ## Acceptance criteria
 
-- [ ] A set of golden `(markdown → exact v1 Payload)` fixtures exists in `core`'s tests.
-- [ ] CI fails if any v1 golden Payload changes.
-- [ ] A short note records that the v1 format is frozen and future changes require a new version tag.
+- [x] A set of golden `(markdown → exact v1 Payload)` fixtures exists in `core`'s tests.
+- [x] CI fails if any v1 golden Payload changes.
+- [x] A short note records that the v1 format is frozen and future changes require a new version tag.
 
 ## Blocked by
 
