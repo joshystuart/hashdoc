@@ -1,19 +1,32 @@
-import { decode, payloadFromUrl, DecodeError } from '@portablemd/core';
+import {
+  decode,
+  payloadFromUrl,
+  DecodeError,
+  classifyDecodeError,
+  type DecodeErrorKind,
+} from '@portablemd/core';
 import { render } from './render.js';
 
 /**
  * What the app should show for a given URL. Routing is driven entirely by the
  * fragment (ADR 0001): a Payload present means Viewer; absent means the Editor
  * in new mode (issue-02).
+ *
+ * The `error` state carries a {@link DecodeErrorKind} so the Viewer can show
+ * the right recovery story: a truncation-led message for corrupt Links, or a
+ * "newer version" message for unknown version tags (issue-05).
  */
 export type ViewerState =
   | { kind: 'document'; html: string; markdown: string }
   | { kind: 'editor' }
-  | { kind: 'error'; message: string };
+  | { kind: 'error'; errorKind: DecodeErrorKind };
 
 /**
  * Pure resolver: full URL -> what to render. Side-effect free so it is trivially
  * testable; the DOM mounting lives in {@link mountViewer}.
+ *
+ * A truly EMPTY fragment is treated as "no Link" and routes to the Editor — the
+ * decode path is only entered when there is an actual Payload to open.
  */
 export function resolveView(url: string): ViewerState {
   const payload = payloadFromUrl(url);
@@ -24,9 +37,12 @@ export function resolveView(url: string): ViewerState {
     const markdown = decode(payload);
     return { kind: 'document', html: render(markdown), markdown };
   } catch (e) {
-    const message =
-      e instanceof DecodeError ? e.message : 'This Link could not be opened.';
-    return { kind: 'error', message };
+    // Any decode failure must land on a visible, friendly state — never a
+    // white screen and never a console-only error. A non-DecodeError is
+    // unexpected, so treat it as a corrupt Link (the broader bucket).
+    const errorKind: DecodeErrorKind =
+      e instanceof DecodeError ? classifyDecodeError(e) : 'corrupt';
+    return { kind: 'error', errorKind };
   }
 }
 
@@ -84,17 +100,60 @@ export function mountViewer(
       break;
     case 'error':
       root.textContent = '';
-      {
-        const section = document.createElement('section');
-        section.className = 'error';
-        const h = document.createElement('h1');
-        h.textContent = 'Cannot open this Link';
-        const p = document.createElement('p');
-        p.textContent = state.message;
-        section.append(h, p);
-        root.append(section);
-      }
+      mountError(root, state.errorKind);
       break;
   }
   return state;
+}
+
+/**
+ * Render a friendly, recoverable error state. Every bad Link lands here rather
+ * than on a white screen.
+ *
+ * - `corrupt`: leads with the truncation explanation — the single most likely
+ *   real-world cause is a long Link getting cut off when pasted into chat or
+ *   email — and offers a New Document action that drops the fragment and opens
+ *   the Editor.
+ * - `unknown-version`: the Link was made by a newer portablemd; ask the reader
+ *   to update.
+ */
+function mountError(root: HTMLElement, errorKind: DecodeErrorKind): void {
+  const section = document.createElement('section');
+  section.className = 'error';
+
+  const h = document.createElement('h1');
+  const p = document.createElement('p');
+
+  if (errorKind === 'unknown-version') {
+    h.textContent = 'This Link needs a newer portablemd';
+    p.textContent =
+      'This Link was made with a newer version of portablemd than the one ' +
+      'running here. Try updating, or open it in the latest version.';
+    section.append(h, p);
+  } else {
+    h.textContent = "This Link didn't open";
+    p.textContent =
+      'Long links sometimes get cut off when pasted into chat or email, which ' +
+      'leaves the document unreadable. If someone sent you this Link, ask them ' +
+      'to copy and paste the whole thing again.';
+    section.append(h, p);
+
+    const actions = document.createElement('div');
+    actions.className = 'error__actions';
+    const fresh = document.createElement('button');
+    fresh.type = 'button';
+    fresh.className = 'error__new';
+    fresh.textContent = 'New Document';
+    fresh.title = 'Start a fresh document in the editor';
+    fresh.addEventListener('click', () => {
+      // Re-route to the no-fragment Editor without a hard reload (jsdom can't
+      // reload). Clearing the hash and re-mounting reuses the existing routing.
+      window.location.hash = '';
+      mountViewer(root, window.location.pathname + window.location.search);
+    });
+    actions.append(fresh);
+    section.append(actions);
+  }
+
+  root.append(section);
 }

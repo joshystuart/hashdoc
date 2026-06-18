@@ -1,5 +1,7 @@
 # Graceful errors — typed decode failures + recovery UI
 
+> **Status:** ✅ Done — completed 2026-06-18
+
 ## Parent
 
 [portablemd v1 — PRD](./PRD.md)
@@ -16,10 +18,10 @@ The decode path never white-screens — it explains. The most likely real-world 
 
 ## Acceptance criteria
 
-- [ ] `core` `decode` throws distinct typed errors for corrupt/truncated vs unknown-version.
-- [ ] A corrupted/truncated fragment shows the truncation-led error with a New Document action — no white screen, no console-only failure.
-- [ ] An unknown version tag shows the "newer version" message.
-- [ ] Behaviour tests cover each failure input → expected user-facing state.
+- [x] `core` `decode` throws distinct typed errors for corrupt/truncated vs unknown-version.
+- [x] A corrupted/truncated fragment shows the truncation-led error with a New Document action — no white screen, no console-only failure.
+- [x] An unknown version tag shows the "newer version" message.
+- [x] Behaviour tests cover each failure input → expected user-facing state.
 
 ## Blocked by
 

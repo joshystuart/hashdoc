@@ -49,6 +49,27 @@ body {
   opacity: 0.85;
 }
 
+.error__actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.error__new {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid rgba(127, 127, 127, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.error__new:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
+
 /* --- Viewer chrome (issue-03) ---------------------------------------------
    A light action bar above the Document. "Edit" forks the Document into the
    Editor: changes there produce a NEW Link; the viewed Link is never mutated. */
