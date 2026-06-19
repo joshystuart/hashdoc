@@ -31,8 +31,8 @@ describe('createMarkdownLink', () => {
   });
 
   it('sets warning past the size threshold for a large Document', () => {
-    // Pseudo-random (LCG) content so deflate cannot compress it away below the
-    // threshold — a periodic pattern would shrink to a few hundred bytes.
+
+
     let seed = 1;
     let markdown = '';
     for (let i = 0; i < 20_000; i += 1) {

@@ -1,14 +1,5 @@
-/**
- * base64url (RFC 4648 §5) encode/decode for raw bytes, without padding.
- *
- * Implemented without `atob`/`btoa` or Node `Buffer` so the helpers run
- * identically in the browser, Node, and the MCP server with no DOM or
- * platform dependency.
- */
-
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 
-// Reverse lookup: char code -> 6-bit value, or -1 for invalid.
 const LOOKUP: Int8Array = (() => {
   const table = new Int8Array(128).fill(-1);
   for (let i = 0; i < ALPHABET.length; i++) {
@@ -35,11 +26,6 @@ export function bytesToBase64url(bytes: Uint8Array): string {
   return out;
 }
 
-/**
- * Decode a base64url string (no padding) to bytes.
- * @throws Error if the input contains characters outside the base64url alphabet
- *         or has an impossible length.
- */
 export function base64urlToBytes(input: string): Uint8Array {
   const len = input.length;
   if (len % 4 === 1) {

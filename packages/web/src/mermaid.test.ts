@@ -1,22 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, hasMermaidBlocks } from './render.js';
 
-/**
- * issue-07: ```mermaid fences render to diagrams via the shared enhance step.
- *
- * render() stays synchronous and emits a bare
- * `<pre><code class="language-mermaid">…escaped source…</code></pre>`;
- * enhance() lazy-loads the Mermaid island and replaces each such block with a
- * sanitized `<svg>`. The Viewer and the Editor preview both call enhance(), so
- * diagram output is single-sourced.
- *
- * Mermaid relies on real browser layout (`getBBox`, etc.) that jsdom does not
- * implement, so the actual library cannot render here. We mock the lazy island
- * (`./mermaid.js`) to return a known SVG (or a hostile one) and assert that our
- * enhance() WIRING — block detection, source extraction, SVG sanitization, DOM
- * replacement — behaves correctly. That wiring is the security-critical part and
- * runs fine under jsdom.
- */
 function mount(markdown: string): HTMLElement {
   const el = document.createElement('div');
   el.innerHTML = render(markdown);
@@ -33,7 +17,7 @@ describe('render — mermaid fence shape', () => {
     const el = mount('```mermaid\ngraph TD; A-->B;\n```\n');
     const code = el.querySelector('pre > code.language-mermaid');
     expect(code).not.toBeNull();
-    // Source is preserved as text, not pre-rendered.
+
     expect(code!.textContent).toContain('graph TD; A-->B;');
     expect(el.querySelector('svg')).toBeNull();
   });
@@ -50,7 +34,7 @@ describe('enhance — mermaid rendering wiring (mocked island)', () => {
     vi.doMock('./mermaid.js', () => ({
       renderMermaid: vi.fn(async (id: string) => `<svg id="${id}"><g><text>A</text></g></svg>`),
     }));
-    // Re-import render so it picks up the mocked dynamic import target.
+
     const { render: r, enhance: e } = await import('./render.js');
     const el = document.createElement('div');
     el.innerHTML = r('```mermaid\ngraph TD; A-->B;\n```\n');
@@ -90,7 +74,7 @@ describe('enhance — mermaid rendering wiring (mocked island)', () => {
 
     await e(el);
 
-    // No SVG, but the original escaped source is still readable (not a crash).
+
     expect(el.querySelector('svg')).toBeNull();
     expect(el.querySelector('pre > code.language-mermaid')).not.toBeNull();
     expect(el.textContent).toContain('not a real diagram');
@@ -112,7 +96,7 @@ describe('enhance — mermaid output sanitization (no DOMPurify bypass)', () => 
 
     expect(el.querySelector('script')).toBeNull();
     expect(el.innerHTML).not.toMatch(/<script/i);
-    // Legitimate diagram content survives.
+
     expect(el.querySelector('figure.mermaid svg text')!.textContent).toBe('ok');
   });
 
@@ -165,9 +149,9 @@ describe('enhance — mermaid does not collide with highlight.js', () => {
 
     await e(el);
 
-    // The mermaid block became an SVG figure.
+
     expect(el.querySelector('figure.mermaid svg')).not.toBeNull();
-    // The js block was still highlighted as usual.
+
     const code = el.querySelector('pre > code');
     expect(code!.classList.contains('hljs')).toBe(true);
     expect(code!.innerHTML).toMatch(/hljs-/);

@@ -15,7 +15,6 @@ import {
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-/** Force `matchMedia('(prefers-color-scheme: dark)')` to a fixed result. */
 function mockPrefersDark(dark: boolean): void {
   vi.stubGlobal(
     'matchMedia',
@@ -44,9 +43,9 @@ describe('resolveTheme — pure resolution (OS pref + override)', () => {
   });
 
   it('a valid stored override wins over the OS preference', () => {
-    // OS prefers dark, but the reader chose light.
+
     expect(resolveTheme('light', true)).toBe('light');
-    // OS prefers light, but the reader chose dark.
+
     expect(resolveTheme('dark', false)).toBe('dark');
   });
 
@@ -99,8 +98,8 @@ describe('toggleTheme — persists a manual override', () => {
 
   it('a subsequent resolve reads the override over matchMedia', () => {
     applyTheme('light');
-    toggleTheme(); // -> dark, persisted
-    // Even though the OS now prefers LIGHT, the stored override (dark) wins.
+    toggleTheme();
+
     mockPrefersDark(false);
     expect(getStoredChoice()).toBe('dark');
     expect(resolveTheme(getStoredChoice(), false)).toBe('dark');
@@ -119,10 +118,10 @@ describe('no-flash inline script (index.html)', () => {
   it('index.html embeds a head script that sets data-theme synchronously', () => {
     const html = readFileSync(join(here, '..', 'index.html'), 'utf8');
     const head = html.slice(html.indexOf('<head'), html.indexOf('</head>'));
-    // A <script> lives in <head> (before the body paints).
+
     expect(head).toMatch(/<script>/);
-    // It reads the same storage key, consults prefers-color-scheme, and sets
-    // data-theme on <html> — the no-flash technique.
+
+
     expect(head).toContain(THEME_STORAGE_KEY);
     expect(head).toContain('prefers-color-scheme: dark');
     expect(head).toContain('documentElement.dataset.theme');
@@ -143,7 +142,7 @@ describe('style.css — both palettes and dark hljs exist', () => {
     expect(css).toMatch(/:root\s*\{[^}]*--bg/s);
     expect(css).toMatch(/--fg/);
     expect(css).toMatch(/\[data-theme=['"]dark['"]\]\s*\{/);
-    // Both palettes give distinct background values.
+
     const root = css.slice(css.indexOf(':root'));
     expect(root).toMatch(/--bg:\s*#fff/i);
   });

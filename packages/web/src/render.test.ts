@@ -22,7 +22,7 @@ describe('render — GFM constructs', () => {
 
   it('renders headings, emphasis and code', () => {
     const html = render('# Title\n\n**bold** and `code`');
-    // Headings now carry a slug id and a leading `#` anchor (issue-09).
+
     expect(html).toContain('<h1 id="title">');
     expect(html).toContain('Title</h1>');
     expect(html).toContain('<strong>bold</strong>');
@@ -48,7 +48,7 @@ describe('render — security (XSS) suite', () => {
 
   it('never produces an executable javascript: href (markdown link syntax)', () => {
     const html = render('[click](javascript:alert(1))');
-    // markdown-it refuses the unsafe scheme and leaves it as inert text — no anchor.
+
     expect(html).not.toMatch(/href=["']javascript:/i);
   });
 

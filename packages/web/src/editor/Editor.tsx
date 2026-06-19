@@ -7,52 +7,20 @@ import { classifyImages } from './images.js';
 import { currentTheme, toggleTheme, type Theme } from '../theme.js';
 import { EXAMPLE_DOC } from './example.js';
 
-/** Props for the Editor. */
 export interface EditorProps {
-  /**
-   * Markdown to seed the source pane with. When the Editor is opened fresh (no
-   * fragment) this is omitted and the self-describing example doc is used — it
-   * doubles as the landing page (issue-12). When opened from the
-   * Viewer's Edit action it is the decoded markdown of the viewed Document, so
-   * the Reader forks a copy (issue-03). Editing it never mutates the opened
-   * Link — saving produces a *new* Link.
-   */
   initialMarkdown?: string;
-  /**
-   * True when the Editor was opened by editing an existing Document (a fork),
-   * as opposed to authoring a brand-new one. Drives the explicit "new link
-   * created — original unchanged" messaging after Copy Link.
-   */
   forkedFromDocument?: boolean;
 }
 
-/**
- * The Editor: a CodeMirror source pane + formatting toolbar on the left, a live
- * preview on the right. The preview is produced by the shared {@link render}
- * module — the exact function the Viewer uses — so preview === reader output.
- *
- * "Copy Link" encodes the current document into an origin-relative Link via
- * core's {@link encode}/{@link buildLink} and copies it to the clipboard. The
- * Link *is* the document: nothing is sent anywhere (ADR 0001/0002).
- */
 export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorProps = {}): preact.JSX.Element {
-  // No initialMarkdown means the no-fragment new mode: seed the self-describing
-  // example Document (issue-12). When forking (initialMarkdown present), keep the
-  // forked content untouched — the example is only for a fresh start.
   const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
   const sourceHost = useRef<HTMLDivElement>(null);
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  // Theme toggle (issue-10): mirror <html data-theme> in local state so the
-  // button label re-renders on click. A single toggle on the shared shell
-  // recolours both the Editor and the Viewer.
   const [theme, setTheme] = useState<Theme>(() => currentTheme());
 
-  // Create the CodeMirror instance once the host div is committed. A layout
-  // effect (synchronous after render) ensures the source pane exists before any
-  // interaction — and keeps tests deterministic without waiting on rAF.
   useLayoutEffect(() => {
     const host = sourceHost.current;
     if (!host) {
@@ -67,14 +35,9 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
       editor.destroy();
       editorRef.current = null;
     };
-    // initialDoc is captured once at mount; CodeMirror owns the document after.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // The current Link, computed exactly as Copy Link does. Re-derived on every
-  // render (each keystroke re-renders the preview), so the size indicator and
-  // warnings below stay in lock-step with what Copy Link would actually copy.
-  // Documents are small, so encoding per keystroke is fine for v1.
   const link = buildLink(encode(markdown), location.origin + location.pathname);
 
   async function copyLink(): Promise<void> {
@@ -86,21 +49,11 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
     }
   }
 
-  // Size indicator + advisory warning. The threshold comes from core's shared
-  // linkSizeWarning so the Editor and the MCP agree on what counts as "long".
   const characters = link.length;
   const sizeWarning = linkSizeWarning(characters);
-
-  // Embedded-image warning. Detected from the markdown source (deterministic),
-  // covering both sharp edges: payload bloat and the remote-image IP leak.
   const images = classifyImages(markdown);
-
-  // The preview is the Viewer's exact output: same render(), same markup shape.
   const previewHtml = render(markdown);
 
-  // After each preview render, run the shared enhance step so code blocks are
-  // syntax-highlighted exactly as the Viewer highlights them. Preact has
-  // committed the new innerHTML by the time this layout effect runs.
   useLayoutEffect(() => {
     const host = previewHost.current;
     if (host) {
@@ -155,8 +108,6 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
               Copy failed — your browser blocked clipboard access.
             </span>
           ) : null}
-          {/* Bearer-access note (issue-12): quiet, accurate, always present at
-              the point a Link is created. Never describe a Link as "secure". */}
           <span class="editor__bearer-note">Anyone with this link can read it.</span>
         </div>
       </header>
@@ -185,7 +136,6 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
           class="editor__preview document"
           aria-label="Preview"
           ref={previewHost}
-          // Preview HTML is already sanitized by render() (DOMPurify).
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </div>

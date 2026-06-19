@@ -4,18 +4,11 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 
-/** A live CodeMirror source editor plus a teardown handle. */
 export interface SourceEditor {
   readonly view: EditorView;
   destroy(): void;
 }
 
-/**
- * Mount a CodeMirror 6 markdown editor inside `parent`, seeded with `doc`.
- * `onChange` fires with the full document text whenever it changes, driving the
- * live preview. CodeMirror is heavy, which is why this whole module (and its
- * imports) lives behind the Editor's dynamic import.
- */
 export function createSourceEditor(
   parent: HTMLElement,
   doc: string,

@@ -2,35 +2,17 @@ import { deflateSync, inflateSync } from 'fflate';
 import { base64urlToBytes, bytesToBase64url } from './base64url.js';
 import { DecodeError } from './errors.js';
 
-/**
- * The 1-character version tag prefixing every v1 Payload.
- *
- * The pipeline is fixed by ADR 0001:
- *   markdown -> UTF-8 bytes -> raw DEFLATE -> base64url (no padding) -> prefix tag.
- * The tag lets the format evolve without breaking Links already in the wild.
- */
 export const VERSION_TAG_V1 = '1';
 
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
 
-/**
- * Encode a Document's markdown into a Payload (the string carried in a Link's
- * fragment, including its leading version tag).
- */
 export function encode(markdown: string): string {
   const bytes = utf8Encoder.encode(markdown);
   const compressed = deflateSync(bytes);
   return VERSION_TAG_V1 + bytesToBase64url(compressed);
 }
 
-/**
- * Decode a Payload back into its Document's markdown.
- *
- * @throws {DecodeError} on an empty Payload, an unknown version tag, malformed
- *   base64url, corrupt/truncated DEFLATE data, or invalid UTF-8. Never returns
- *   garbage.
- */
 export function decode(payload: string): string {
   if (payload.length === 0) {
     throw new DecodeError('empty-payload', 'Payload is empty.');

@@ -1,19 +1,3 @@
-/**
- * The self-describing example Document (issue-12).
- *
- * When the Editor opens with no fragment (the no-fragment new mode), this seeds
- * the source pane. It doubles as the landing page: there is no separate
- * marketing site (the Link *is* the document). The example is itself a real
- * portablemd Document — genuine markdown exercising the headline constructs
- * (H1, prose, fenced code, a GFM table, a task list) so the live preview is a
- * real demonstration of what the tool renders.
- *
- * The Author can select-all (Cmd/Ctrl+A) and replace it to start writing.
- *
- * Kept deliberately concise so the landing is fast and the Link stays small
- * when an Author copies before editing. Not shown when forking an existing
- * Document (issue-03 passes initialMarkdown, which takes precedence).
- */
 export const EXAMPLE_DOC = `# portablemd
 
 **The link _is_ the document.** Everything you write lives inside the URL —

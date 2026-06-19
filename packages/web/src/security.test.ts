@@ -1,22 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, enhance } from './render.js';
 
-/**
- * First-class sanitization security suite (issue-13).
- *
- * DOMPurify is portablemd's primary XSS defence (CSP is defence-in-depth behind
- * it — see csp.test.ts). This suite is the single, comprehensive place that
- * proves the common XSS vectors are neutralized in `render()`'s output AND in
- * the lazy `enhance` islands (highlight / mermaid / katex), each of which runs
- * its own DOMPurify pass before touching the live DOM.
- *
- * "Neutralized" means: no executable construct survives into the final HTML —
- * no `<script>`, no `on*` handler, no `javascript:`/`data:text/html` URL that
- * could run, no `<iframe>`/frame, and no SVG script vector. We assert on the
- * sanitized STRING (and, for islands, the post-enhance DOM).
- */
-
-/** Mount rendered markdown into a detached container for enhance() tests. */
 function mount(markdown: string): HTMLElement {
   const el = document.createElement('div');
   el.innerHTML = render(markdown);
@@ -76,7 +60,6 @@ describe('render() — URL scheme vectors', () => {
 
   it('strips javascript: hrefs with embedded whitespace/entities', () => {
     const html = render('<a href="java\tscript:alert(1)">x</a>');
-    // The dangerous scheme must not survive as an executable href.
     const hrefs = html.match(/href=["']([^"']*)["']/gi) ?? [];
     for (const href of hrefs) {
       expect(href.replace(/\s/g, '').toLowerCase()).not.toContain('javascript:');
@@ -155,7 +138,6 @@ describe('render() — external link hardening', () => {
 describe('render() — malicious code-block content stays inert', () => {
   it('escapes <script> inside a fenced code block (rendered as text, not executed)', () => {
     const html = render('```\n<script>alert(1)</script>\n```');
-    // The angle brackets are HTML-escaped inside <code>, so no live <script>.
     expect(html).not.toMatch(/<script>alert/i);
     expect(html).toContain('&lt;script&gt;');
   });
@@ -163,7 +145,6 @@ describe('render() — malicious code-block content stays inert', () => {
   it('treats a malicious language name as an inert class, never a live element', () => {
     const html = render('```"><img src=x onerror=alert(1)>\ncode\n```');
     expect(html).not.toMatch(/onerror/i);
-    // The "><img…" must NOT escape the class attribute into a real element.
     const doc = new DOMParser().parseFromString(html, 'text/html');
     expect(doc.querySelector('img'), 'no live <img> may be injected').toBeNull();
   });
@@ -172,7 +153,6 @@ describe('render() — malicious code-block content stays inert', () => {
 describe('enhance islands — sanitize their own (possibly hostile) output', () => {
   it('highlight island: hostile highlighter output is sanitized before insertion', async () => {
     vi.doMock('./highlight.js', () => ({
-      // A compromised/abused highlighter returning script + handler markup.
       highlightCode: () => '<span onclick="alert(1)">x</span><script>alert(2)</script>',
     }));
     const { enhance: enhanceMocked, render: renderMocked } = await import('./render.js');
@@ -196,7 +176,6 @@ describe('enhance islands — sanitize their own (possibly hostile) output', () 
     await enhanceMocked(el);
     expect(el.innerHTML).not.toMatch(/<script/i);
     expect(el.innerHTML).not.toMatch(/onload/i);
-    // The legitimate svg shell still lands.
     expect(el.querySelector('svg')).not.toBeNull();
   });
 

@@ -3,31 +3,13 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/**
- * issue-02 acceptance: the Editor (CodeMirror 6 + Preact) is lazy-loaded so the
- * Viewer entry stays featherweight. We verify the *built* output: CodeMirror
- * must land in a separate async chunk, NOT the entry chunk.
- *
- * Skipped when dist is absent — run `pnpm build` first (CI builds before test).
- */
 const here = dirname(fileURLToPath(import.meta.url));
 const distDir = join(here, '..', 'dist');
 const assetsDir = join(distDir, 'assets');
 
-// A token that only appears in CodeMirror's bundled source.
 const CODEMIRROR_MARKER = /cm-content|cm-editor|@codemirror/;
-
-// A token that only appears in highlight.js's bundled source. hljs's public API
-// names and its grammar metadata (`hljs`, `highlightAuto`, `case_insensitive`,
-// `contains:`) do not occur in our own source.
 const HLJS_MARKER = /highlightAuto|case_insensitive|grmr_|hljs-comment/;
-
-// A token that only appears in Mermaid's bundled source. Mermaid's internal
-// diagram-type registry and class names do not occur in our own source.
 const MERMAID_MARKER = /mermaid-js|sequenceDiagram|flowchart-v2|\bgantt\b/;
-
-// A token that only appears in KaTeX's bundled source. KaTeX's internal class
-// names and error type do not occur in our own source.
 const KATEX_MARKER = /ParseError|katex-html|\bstrut\b|delimsizing/;
 
 function jsFiles(dir: string): { name: string; text: string }[] {
@@ -41,7 +23,7 @@ describe('lazy-loaded Editor chunk (built output)', () => {
 
   it.runIf(built)('keeps CodeMirror out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
-    // The entry chunk is the one referenced by a <script type="module"> in HTML.
+
     const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);
     expect(entryMatch).not.toBeNull();
     const entryName = entryMatch![1]!.split('/').pop()!;
@@ -55,8 +37,8 @@ describe('lazy-loaded Editor chunk (built output)', () => {
     expect(withCodeMirror.length).toBeGreaterThan(0);
   });
 
-  // issue-06: highlight.js must also stay lazy — out of the Viewer entry chunk
-  // and only present in a separate async chunk loaded on demand.
+
+
   it.runIf(built)('keeps highlight.js out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
     const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);
@@ -72,9 +54,9 @@ describe('lazy-loaded Editor chunk (built output)', () => {
     expect(withHljs.length).toBeGreaterThan(0);
   });
 
-  // issue-07: Mermaid must also stay lazy — out of the Viewer entry chunk and
-  // only present in a separate async chunk loaded on demand when a ```mermaid
-  // block is present.
+
+
+
   it.runIf(built)('keeps Mermaid out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
     const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);
@@ -90,8 +72,8 @@ describe('lazy-loaded Editor chunk (built output)', () => {
     expect(withMermaid.length).toBeGreaterThan(0);
   });
 
-  // issue-08: KaTeX must also stay lazy — out of the Viewer entry chunk and only
-  // present in a separate async chunk loaded on demand when math is present.
+
+
   it.runIf(built)('keeps KaTeX out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
     const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);

@@ -5,20 +5,10 @@ import { encode, buildLink, payloadFromUrl, decode, linkSizeWarning } from '@por
 import { mountEditor } from './mount.js';
 import { hasImages, classifyImages } from './images.js';
 
-/**
- * issue-11 behaviour: the Editor surfaces advisory warnings — current Link size
- * (with a threshold warning from core's linkSizeWarning) and an embedded-image
- * warning — while Copy Link keeps working regardless.
- */
 function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-/**
- * High-entropy markdown that resists the codec's compression, so the resulting
- * Link reliably clears the 8,000-char warn threshold. Repeated text compresses
- * away; a pseudo-random alphanumeric stream does not.
- */
 function bigMarkdown(): string {
   let s = '# Big document\n\n';
   let seed = 12345;
@@ -109,7 +99,7 @@ describe('Editor — advisory warnings (issue-11)', () => {
     await flush();
     typeIntoSource(root, '# tiny\n');
     await flush();
-    // Sanity: this is below the threshold.
+
     expect(linkSizeWarning(linkFor('# tiny\n').length)).toBeUndefined();
     expect(root.querySelector('.editor__size-warning')).toBeNull();
   });
@@ -117,7 +107,7 @@ describe('Editor — advisory warnings (issue-11)', () => {
   it('shows the size warning from core once past the threshold', async () => {
     mountEditor(root);
     await flush();
-    // A large document whose Link clears the 8,000-char warn threshold.
+
     const md = bigMarkdown();
     typeIntoSource(root, md);
     await flush();
@@ -140,9 +130,9 @@ describe('Editor — advisory warnings (issue-11)', () => {
     const warning = root.querySelector('.editor__image-warning');
     expect(warning).not.toBeNull();
     const text = warning!.textContent!.toLowerCase();
-    // size implication
+
     expect(text).toMatch(/size|larger|bigger|inflat|bloat|long/);
-    // privacy / IP implication
+
     expect(text).toMatch(/ip|privacy|address|reader|fetch/);
   });
 
@@ -165,7 +155,7 @@ describe('Editor — advisory warnings (issue-11)', () => {
   it('Copy Link still copies a valid Link while warnings are shown', async () => {
     mountEditor(root);
     await flush();
-    // Large + image: both warnings present.
+
     const md = '![alt](https://x/y.png)\n\n' + bigMarkdown();
     typeIntoSource(root, md);
     await flush();

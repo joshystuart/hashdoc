@@ -73,7 +73,7 @@ describe('MCP server', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0]!.text.length).toBeGreaterThan(0);
 
-    // The server is still alive and serving after a bad request.
+
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({
         name: 'create_markdown_link',

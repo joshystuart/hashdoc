@@ -4,25 +4,10 @@ import { EditorView } from '@codemirror/view';
 import { encode, decode, buildLink, payloadFromUrl } from '@portablemd/core';
 import { mountViewer } from '../viewer.js';
 
-/**
- * issue-03 behaviour test: view a Document -> Edit -> change -> Copy Link.
- *
- * The fork is the whole point: the produced Link must reflect the edit, while
- * the originally-viewed Link still decodes to the original markdown (it can't be
- * mutated — it's an immutable string — but we assert it through the real flow).
- *
- * Preact effects (which build the CodeMirror view) and re-renders run async, so
- * we flush() between steps; the dynamic import() of the Editor is also awaited.
- */
 function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-/**
- * Edit lazy-imports the Editor (dynamic import()) and Preact builds the
- * CodeMirror view in a layout effect — both async. Poll until the source pane
- * exists rather than guessing a fixed number of flushes.
- */
 async function clickEditAndWaitForEditor(root: HTMLElement): Promise<void> {
   (root.querySelector('.viewer__edit') as HTMLButtonElement).click();
   for (let i = 0; i < 50 && !root.querySelector('.cm-content'); i++) {
@@ -78,7 +63,7 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
 
     const view = getView(root);
     expect(view.state.doc.toString()).toBe(ORIGINAL_MD);
-    // The preview reflects the seeded markdown.
+
     expect(root.querySelector('.editor__preview')!.innerHTML).toContain('Shared note</h1>');
   });
 
@@ -86,7 +71,7 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-    // Reader amends the Document.
+
     const editedMd = '# Shared note\n\nFrom the **sender**, with my reply added.\n';
     const view = getView(root);
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: editedMd } });
@@ -98,11 +83,11 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     expect(copied).toHaveLength(1);
     const newLink = copied[0]!;
 
-    // The new Link is a different Link that decodes to the edited markdown.
+
     expect(newLink).not.toBe(originalLink);
     expect(decode(payloadFromUrl(newLink)!)).toBe(editedMd);
 
-    // The original Link is untouched: it still decodes to the original Document.
+
     expect(decode(payloadFromUrl(originalLink)!)).toBe(ORIGINAL_MD);
   });
 

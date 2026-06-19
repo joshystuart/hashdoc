@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, enhance, hasCodeBlocks } from './render.js';
 
-/**
- * issue-06: syntax highlighting via the shared enhance step. render() stays
- * synchronous (markdown -> sanitized HTML with bare `<pre><code>`); enhance()
- * lazy-loads highlight.js and tokenizes code blocks in place. The Viewer and the
- * Editor preview both call enhance(), so highlighted output is single-sourced.
- */
 function mount(markdown: string): HTMLElement {
   const el = document.createElement('div');
   el.innerHTML = render(markdown);
@@ -19,9 +13,9 @@ describe('enhance — syntax highlighting', () => {
     await enhance(el);
     const code = el.querySelector('pre > code')!;
     expect(code.classList.contains('hljs')).toBe(true);
-    // hljs emits structural spans with hljs-* classes for tokens.
+
     expect(code.innerHTML).toMatch(/<span class="hljs-/);
-    // The keyword `const` is tokenized.
+
     expect(code.innerHTML).toContain('hljs-keyword');
     expect(code.textContent).toContain('const x = 1;');
   });
@@ -42,7 +36,7 @@ describe('enhance — syntax highlighting', () => {
     expect(hasCodeBlocks(el)).toBe(false);
     const before = el.innerHTML;
     await enhance(el);
-    // enhance is a no-op when there are no code blocks: DOM is byte-identical.
+
     expect(el.innerHTML).toBe(before);
   });
 
@@ -58,7 +52,7 @@ describe('enhance — syntax highlighting', () => {
     const el = mount('```not-a-real-lang\n<b>plain</b> & "text"\n```\n');
     await enhance(el);
     const code = el.querySelector('pre > code')!;
-    // No raw element injected; the angle brackets are escaped text.
+
     expect(code.querySelector('b')).toBeNull();
     expect(code.textContent).toContain('<b>plain</b>');
   });
@@ -70,13 +64,13 @@ describe('enhance — sanitization holds (no DOMPurify bypass)', () => {
     await enhance(el);
     expect(el.querySelector('script')).toBeNull();
     expect(el.innerHTML).not.toMatch(/<script/i);
-    // The text is preserved (escaped) inside the code block, just inert.
+
     expect(el.textContent).toContain('window.__pwned = 1');
   });
 
   it('a malicious language name cannot inject attributes or tags', async () => {
-    // markdown-it derives the class from the fence info string; even a crafted
-    // language name lands as text in a class and is never executed.
+
+
     const el = mount('```js" onload="alert(1)\nconst x = 1;\n```\n');
     await enhance(el);
     expect(el.innerHTML).not.toMatch(/onload/i);
@@ -86,7 +80,7 @@ describe('enhance — sanitization holds (no DOMPurify bypass)', () => {
   it('an img/onerror payload smuggled in code is inert after enhance', async () => {
     const el = mount('```html\n<img src=x onerror="window.__pwned=1">\n```\n');
     await enhance(el);
-    // No live <img> element (it is escaped source text inside the code block).
+
     expect(el.querySelector('img')).toBeNull();
     expect(el.innerHTML).not.toMatch(/onerror=/i);
   });

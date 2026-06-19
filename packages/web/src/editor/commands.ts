@@ -1,22 +1,11 @@
 import type { EditorView } from '@codemirror/view';
 
-/**
- * Markdown editing actions used by the formatting toolbar. Each takes the live
- * CodeMirror view and mutates the document via a transaction, keeping the
- * selection sensible afterwards so typing can continue.
- *
- * These are deliberately simple but real: they wrap/insert literal markdown,
- * which the shared {@link render} pipeline then turns into HTML.
- */
-
-/** Wrap the current selection in `before`/`after`, or insert a placeholder. */
 function wrapSelection(view: EditorView, before: string, after: string, placeholder: string): void {
   const { state } = view;
   const range = state.selection.main;
   const selected = state.sliceDoc(range.from, range.to);
   const text = selected.length > 0 ? selected : placeholder;
   const insert = `${before}${text}${after}`;
-  // Select the inner text so the user can keep typing over the placeholder.
   const innerFrom = range.from + before.length;
   const innerTo = innerFrom + text.length;
   view.dispatch({
@@ -26,7 +15,6 @@ function wrapSelection(view: EditorView, before: string, after: string, placehol
   view.focus();
 }
 
-/** Ensure the current line starts with `prefix` (e.g. `## `). */
 function prefixLine(view: EditorView, prefix: string): void {
   const { state } = view;
   const range = state.selection.main;
@@ -61,7 +49,6 @@ export function insertLink(view: EditorView): void {
   const selected = state.sliceDoc(range.from, range.to);
   const text = selected.length > 0 ? selected : 'link text';
   const insert = `[${text}](https://)`;
-  // Put the caret inside the URL parentheses, ready for a paste.
   const urlPos = range.from + `[${text}](`.length;
   view.dispatch({
     changes: { from: range.from, to: range.to, insert },

@@ -1,19 +1,5 @@
-/**
- * Lazy syntax-highlighting island. This module (and everything it imports —
- * the highlight.js core, the bundled language grammars, and the theme CSS) is
- * only ever reached through a dynamic `import()` in {@link enhance}, so Vite
- * code-splits it into a separate async chunk. Documents with no code blocks
- * never load any of it, and it never enters the Viewer entry chunk.
- *
- * We use `highlight.js/lib/core` and register a curated language set rather than
- * the full bundle, keeping the async chunk lean while covering the common cases.
- * The theme is imported locally (no CDN) so ADR 0002 — zero third-party
- * requests — still holds.
- */
 import hljs from 'highlight.js/lib/core';
 
-// A pragmatic, common-case language set. Aliases (ts, js, py, sh, yml, …) are
-// registered by highlight.js itself, so `language-ts` etc. resolve correctly.
 import javascript from 'highlight.js/lib/languages/javascript';
 import typescript from 'highlight.js/lib/languages/typescript';
 import python from 'highlight.js/lib/languages/python';
@@ -29,10 +15,6 @@ import go from 'highlight.js/lib/languages/go';
 import java from 'highlight.js/lib/languages/java';
 import shell from 'highlight.js/lib/languages/shell';
 
-// Theme CSS, bundled locally into the app's stylesheet (no external request).
-// `github.css` is the LIGHT default (bare `.hljs` selectors); `highlight-dark.css`
-// re-declares the github-dark palette scoped under `[data-theme="dark"]` so code
-// stays legible in both themes (issue-10). Both are self-hosted — ADR 0002 holds.
 import 'highlight.js/styles/github.css';
 import './highlight-dark.css';
 
@@ -51,16 +33,10 @@ hljs.registerLanguage('go', go);
 hljs.registerLanguage('java', java);
 hljs.registerLanguage('shell', shell);
 
-/**
- * Highlight a single code block's plain-text source, returning structural-span
- * HTML. Unknown languages (and blocks with no language) are not guessed: the
- * source is HTML-escaped and returned verbatim, so the output is always safe.
- */
 export function highlightCode(source: string, language?: string): string {
   if (language && hljs.getLanguage(language)) {
     return hljs.highlight(source, { language, ignoreIllegals: true }).value;
   }
-  // No (or unknown) language: escape only, no auto-detection guessing.
   return escapeHtml(source);
 }
 

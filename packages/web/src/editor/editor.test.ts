@@ -6,17 +6,6 @@ import { mountEditor } from './mount.js';
 import { mountViewer } from '../viewer.js';
 import { render as renderMarkdown } from '../render.js';
 
-/**
- * issue-02 behaviour test: type -> Copy Link -> re-open -> rendered Document.
- *
- * Driving the source pane: rather than synthesising contenteditable key events
- * (unreliable under jsdom), we grab the live CodeMirror view from the mounted
- * DOM and dispatch a document change — the same path a keystroke takes — then
- * exercise the real Copy Link button and clipboard.
- *
- * Preact effects (which create the CodeMirror view) and re-renders (which update
- * the preview) are scheduled asynchronously, so we `flush()` between steps.
- */
 function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -53,7 +42,7 @@ describe('Editor — author creates a Link', () => {
   });
 
   afterEach(() => {
-    // Preact leaves the tree mounted between tests; unmount to avoid cross-talk.
+
     preactRender(null, root);
     root.remove();
   });
@@ -108,7 +97,7 @@ describe('Editor — author creates a Link', () => {
 
     const link = copied[0]!;
 
-    // Re-open the produced Link in the Viewer.
+
     const viewerRoot = document.createElement('div');
     const state = mountViewer(viewerRoot, link);
     expect(state.kind).toBe('document');
@@ -123,13 +112,13 @@ describe('Editor — author creates a Link', () => {
     mountEditor(root);
     await flush();
 
-    // The CodeMirror doc carries the distinctive example text.
+
     const view = getView(root);
     const doc = view.state.doc.toString();
     expect(doc).toContain('# portablemd');
     expect(doc).toMatch(/select all/i);
 
-    // The live preview is a real demo: headline constructs render in the DOM.
+
     const preview = root.querySelector('.editor__preview')!;
     expect(preview.querySelector('h1')).not.toBeNull();
     expect(preview.querySelector('table')).not.toBeNull();
@@ -155,8 +144,8 @@ describe('Editor — author creates a Link', () => {
     expect(note).not.toBeNull();
     expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
 
-    // Guard: the editor bar (toolbar + actions, where Link copy lives) must not
-    // describe the Link as "secure".
+
+
     const bar = root.querySelector('.editor__bar')!;
     expect(bar.textContent!.toLowerCase()).not.toContain('secure');
   });
@@ -167,7 +156,7 @@ describe('Editor — author creates a Link', () => {
     typeIntoSource(root, 'plain');
     await flush();
 
-    // Select all so the bold action wraps the whole doc.
+
     const view = getView(root);
     view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
 

@@ -56,7 +56,7 @@ describe('mountViewer — DOM mounting', () => {
   it('mounts a rendered Document and executes no scripts', () => {
     const link = buildLink(encode('# Doc\n\n<script>globalThis.__pwned = true</script>'), ORIGIN);
     mountViewer(root, link);
-    // The heading carries a leading `#` anchor affordance (issue-09).
+
     expect(root.querySelector('h1')?.textContent).toBe('#Doc');
     expect(root.querySelector('script')).toBeNull();
     expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
@@ -64,9 +64,9 @@ describe('mountViewer — DOM mounting', () => {
 
   it('resolves to the Editor with no fragment (lazy-loaded)', () => {
     const state = mountViewer(root, ORIGIN);
-    // The Editor module is loaded via dynamic import(); mountViewer returns the
-    // resolved state synchronously. The full DOM mount is exercised by the
-    // editor behaviour test, where the dynamic import is awaited.
+
+
+
     expect(state.kind).toBe('editor');
   });
 
@@ -78,7 +78,7 @@ describe('mountViewer — DOM mounting', () => {
     expect(note).not.toBeNull();
     expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
 
-    // Guard: the share/copy chrome must not describe the Link as "secure".
+
     const chrome = root.querySelector('.viewer__chrome')!;
     expect(chrome.textContent!.toLowerCase()).not.toContain('secure');
   });
@@ -91,8 +91,8 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
   });
 
   function corruptLink(): string {
-    // A real Link with its tail chopped off — the classic "pasted into chat
-    // and got cut off" failure.
+
+
     const full = buildLink(
       encode('# A document long enough to compress '.repeat(20)),
       ORIGIN,
@@ -106,10 +106,10 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
     expect(state.kind).toBe('error');
     if (state.kind === 'error') expect(state.errorKind).toBe('corrupt');
 
-    // A real, visible DOM state — not an empty root.
+
     expect(root.querySelector('section.error')).not.toBeNull();
     const text = root.textContent ?? '';
-    // Leads with the truncation explanation.
+
     expect(text.toLowerCase()).toContain('cut off');
     expect(text.toLowerCase()).toContain('chat or email');
 
@@ -128,7 +128,7 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
 
     expect(root.querySelector('section.error')).not.toBeNull();
     expect((root.textContent ?? '').toLowerCase()).toContain('newer version');
-    // The version case is not a truncation; no New Document action there.
+
     expect(root.querySelector('.error__new')).toBeNull();
   });
 
@@ -141,7 +141,7 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
     newDoc!.click();
 
     expect(window.location.hash).toBe('');
-    // Re-routing with no fragment resolves to the Editor.
+
     expect(resolveView(window.location.pathname + window.location.search).kind).toBe(
       'editor',
     );
@@ -175,8 +175,8 @@ describe('Viewer reading niceties (issue-09)', () => {
 
   it('heading anchor click scrolls into view and PRESERVES the payload fragment', () => {
     const md = '# Top\n\n## Deep Section\n\nbody';
-    // Drive routing off the real window.location so a click that (must not!)
-    // navigate the hash would be observable on location.href.
+
+
     const link = buildLink(encode(md), location.origin + location.pathname);
     const fragment = link.slice(link.indexOf('#'));
     window.location.hash = fragment;
@@ -184,7 +184,7 @@ describe('Viewer reading niceties (issue-09)', () => {
     const state = mountViewer(root, window.location.href);
     expect(state.kind).toBe('document');
 
-    // Record scrollIntoView calls (jsdom has no layout).
+
     const scrolled: string[] = [];
     for (const h of Array.from(root.querySelectorAll<HTMLElement>('h1,h2'))) {
       h.scrollIntoView = () => {
@@ -199,11 +199,11 @@ describe('Viewer reading niceties (issue-09)', () => {
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     anchor!.dispatchEvent(event);
 
-    // Click was intercepted (default prevented) and scroll targeted the heading.
+
     expect(event.defaultPrevented).toBe(true);
     expect(scrolled).toContain('deep-section');
 
-    // The fragment is still the original payload — decoding it round-trips.
+
     const payload = payloadFromUrl(window.location.href);
     expect(payload).not.toBeNull();
     expect(decode(payload!)).toBe(md);
@@ -263,12 +263,12 @@ describe('Print stylesheet (issue-09)', () => {
     const css = readFileSync(join(here, 'style.css'), 'utf8');
     expect(css).toMatch(/@media\s+print/);
     const printBlock = css.slice(css.indexOf('@media print'));
-    // Chrome / buttons / editor toolbar are hidden in print.
+
     expect(printBlock).toContain('.viewer__chrome');
     expect(printBlock).toContain('.code-block__copy');
     expect(printBlock).toContain('.editor__toolbar');
     expect(printBlock).toMatch(/display:\s*none/);
-    // Code wraps rather than clips.
+
     expect(printBlock).toContain('pre-wrap');
   });
 });

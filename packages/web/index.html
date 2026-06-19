@@ -4,27 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <!--
-      Strict Content-Security-Policy (issue-13). The portablemd-strict-csp Vite
-      plugin (see vite.config.ts) replaces the marker below with a CSP meta tag
-      whose script-src carries 'self' plus the SHA-256 hash of the inline
-      no-flash theme script. The hash is computed from the actual inline-script
-      bytes at build/serve time, so it can never drift from the script. CSP is
-      defence-in-depth behind DOMPurify; ADR 0002 (zero third-party requests) is
-      what the policy encodes.
-    -->
     <!--PORTABLEMD_CSP-->
     <title>portablemd</title>
-    <!--
-      Static Open Graph / Twitter card (issue-14). Per-Link previews are
-      impossible: the Document lives in the URL fragment which no server ever
-      sees (ADR 0002), so crawlers cannot read it. These tags are therefore
-      STATIC and identical for every Link — a trustworthy, honest stand-in when
-      a Link is pasted into Slack/iMessage/Teams. The card is self-hosted at the
-      origin (/og-card.png, root-relative so it resolves against any deploy
-      origin); CSP img-src allows 'self', so no third-party request occurs.
-      Do NOT reference the fragment or any per-Link content here.
-    -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="portablemd" />
     <meta property="og:title" content="portablemd" />
@@ -43,20 +24,6 @@
       content="Share beautifully-rendered markdown as a single link. Client-side only — nothing is stored on a server."
     />
     <meta name="twitter:image" content="/og-card.png" />
-    <!--
-      No-flash theme init (issue-10). Runs synchronously in <head> BEFORE the
-      bundle and before the body paints, so the page never flashes the wrong
-      theme. Reads the reader's stored manual override, else the OS preference,
-      and sets `data-theme` on <html>. This mirrors resolveTheme() in
-      src/theme.ts (THEME_INIT_SCRIPT) — keep the two in sync.
-
-      CSP NOTE (issue-13): this is an inline same-origin script (nothing is
-      fetched, so ADR 0002 holds). The strict CSP above has no 'unsafe-inline',
-      so this script is allowed via the SHA-256 of its exact bytes, which the
-      `portablemd-strict-csp` Vite plugin computes and injects into script-src.
-      If you edit this script the hash regenerates on the next build/serve —
-      keep the body intact and no-flash + CSP stay in sync.
-    -->
     <script>
       (function () {
         try {

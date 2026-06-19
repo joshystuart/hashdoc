@@ -32,11 +32,8 @@ import { decode, encode, VERSION_TAG_V1 } from './codec.js';
  */
 
 interface GoldenFixture {
-  /** Human-readable name describing the construct this fixture exercises. */
   readonly name: string;
-  /** The exact frozen markdown input. */
   readonly markdown: string;
-  /** The exact frozen v1 Payload `encode(markdown)` must produce, forever. */
   readonly payload: string;
 }
 

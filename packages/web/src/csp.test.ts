@@ -5,40 +5,19 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildCsp, inlineScriptBodies } from './csp.js';
 
-/**
- * Strict CSP (issue-13), defence-in-depth behind DOMPurify.
- *
- * jsdom/Vitest does NOT enforce CSP, so we verify the policy STRUCTURALLY
- * against the built `dist/index.html`:
- *   (a) the CSP <meta> exists with the required directives;
- *   (b) the inline no-flash theme script's SHA-256 — recomputed here from the
- *       script element's actual bytes — is present in `script-src` (proving the
- *       hash matches the script, so the browser would not block it);
- *   (c) `img-src` allows `data:` and `https:` (author images);
- *   (d) `style-src` permits inline styles (KaTeX/highlight injected <style>).
- *
- * The build must run first (root build runs before tests in CI; locally run
- * `pnpm build`). If dist is absent we skip with a loud reminder.
- */
 const here = dirname(fileURLToPath(import.meta.url));
 const distIndex = join(here, '..', 'dist', 'index.html');
 const built = existsSync(distIndex);
 
-/** Pull the `content="…"` of the CSP <meta http-equiv> out of the HTML. */
 function extractCsp(rawHtml: string): string {
-  // Strip comments: index.html documents the CSP in a comment containing the
-  // literal `<meta http-equiv="Content-Security-Policy">` string.
   const html = rawHtml.replace(/<!--[\s\S]*?-->/g, '');
   const meta = /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i.exec(html);
   expect(meta, 'a CSP <meta http-equiv> must be present').not.toBeNull();
-  // The CSP value itself contains single quotes ('self' etc.), so match a
-  // double-quoted content attribute and allow single quotes inside it.
   const content = /content="([^"]+)"/i.exec(meta![0]);
   expect(content, 'the CSP <meta> must have a content attribute').not.toBeNull();
   return content![1]!;
 }
 
-/** Parse a CSP string into a directive -> source-list map. */
 function parseCsp(csp: string): Map<string, string[]> {
   const map = new Map<string, string[]>();
   for (const part of csp.split(';')) {
@@ -59,7 +38,6 @@ describe('buildCsp (pure)', () => {
     expect(csp.get('object-src')).toEqual(["'none'"]);
     expect(csp.get('frame-src')).toEqual(["'none'"]);
     expect(csp.get('base-uri')).toEqual(["'self'"]);
-    // No 'unsafe-inline' / 'unsafe-eval' in script-src.
     expect(csp.get('script-src')).toEqual(["'self'"]);
   });
 
@@ -105,8 +83,6 @@ describe.runIf(built)('CSP meta in built dist/index.html', () => {
     expect(csp.get('base-uri')).toEqual(["'self'"]);
   });
 
-  // The crux: the inline no-flash theme script's hash must match its bytes, or
-  // the browser would block it and the page would flash the wrong theme.
   it("every inline script's SHA-256 is present in script-src (no-flash script allowed)", () => {
     const bodies = inlineScriptBodies(html);
     expect(bodies.length, 'the no-flash inline script must exist in built HTML').toBeGreaterThan(0);

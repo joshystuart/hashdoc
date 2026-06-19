@@ -1,13 +1,3 @@
-/**
- * The portablemd MCP server.
- *
- * Exposes exactly two pure-local tools — `create_markdown_link` and
- * `read_markdown_link` — over stdio. All encode/decode + size logic comes from
- * `@portablemd/core`; this layer only wires the pure handlers (see
- * `handlers.ts`) into MCP tool registrations and renders results / errors.
- *
- * Zero network: the only imports are the MCP SDK, zod, and `@portablemd/core`.
- */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
@@ -17,10 +7,8 @@ import {
   DecodeError,
 } from './handlers.js';
 
-/** Origin used when building Links if `PORTABLEMD_BASE_URL` is unset. */
 export const DEFAULT_BASE_URL = 'http://localhost:5173/';
 
-/** Read the configured base URL from the environment, falling back to local dev. */
 export function resolveBaseUrl(
   env: NodeJS.ProcessEnv = process.env,
 ): string {
@@ -41,12 +29,6 @@ function errorResult(message: string): CallToolResult {
   };
 }
 
-/**
- * Build an {@link McpServer} with the two tools registered against `baseUrl`.
- *
- * Separated from transport wiring so the registrations can be exercised
- * without a stdio subprocess.
- */
 export function createServer(baseUrl: string = resolveBaseUrl()): McpServer {
   const server = new McpServer({
     name: 'portablemd',
