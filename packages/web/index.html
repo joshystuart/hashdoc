@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <!--OPENARTIFACT_CSP-->
+    <title>openartifact</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="openartifact" />
+    <meta property="og:title" content="openartifact" />
+    <meta
+      property="og:description"
+      content="Share beautifully-rendered markdown as a single link. Client-side only — nothing is stored on a server."
+    />
+    <meta property="og:image" content="/og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="openartifact — the link is the document" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="openartifact" />
+    <meta
+      name="twitter:description"
+      content="Share beautifully-rendered markdown as a single link. Client-side only — nothing is stored on a server."
+    />
+    <meta name="twitter:image" content="/og-card.png" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('openartifact-theme');
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <main id="app"></main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

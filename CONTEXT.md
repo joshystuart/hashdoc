@@ -1,11 +1,11 @@
-# portablemd
+# openartifact
 
 A client-side-only web app for sharing markdown. A markdown document is compressed into a URL so it can be shared as a single link and rendered nicely by anyone who opens it — no account, no upload, nothing stored on a server.
 
 ## Language
 
 **Document**:
-A single markdown file shared through portablemd. The unit a person wants someone else to read.
+A single markdown file shared through openartifact. The unit a person wants someone else to read.
 _Avoid_: doc, file, snippet, paste, gist
 
 **Payload**:
