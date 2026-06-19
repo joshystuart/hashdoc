@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { decode } from '@portablemd/core';
+import { decode } from '@openartifact/core';
 import { createServer, resolveBaseUrl, DEFAULT_BASE_URL } from './server.js';
 
 async function connectedClient(baseUrl?: string): Promise<Client> {
@@ -22,13 +22,13 @@ function parseJsonResult<T>(result: TextResult): T {
 }
 
 describe('resolveBaseUrl', () => {
-  it('falls back to the local dev origin when unset', () => {
+  it('falls back to the default openartifact domain when unset', () => {
     expect(resolveBaseUrl({})).toBe(DEFAULT_BASE_URL);
   });
 
-  it('honours PORTABLEMD_BASE_URL', () => {
-    expect(resolveBaseUrl({ PORTABLEMD_BASE_URL: 'https://portable.md/' })).toBe(
-      'https://portable.md/',
+  it('honours OPENARTIFACT_BASE_URL', () => {
+    expect(resolveBaseUrl({ OPENARTIFACT_BASE_URL: 'https://openartifact.md/' })).toBe(
+      'https://openartifact.md/',
     );
   });
 });
@@ -42,7 +42,7 @@ describe('MCP server', () => {
   });
 
   it('create then read round-trips the markdown through the tools', async () => {
-    const client = await connectedClient('https://portable.md/');
+    const client = await connectedClient('https://openartifact.md/');
     const markdown = '# Via tools\n\nround trip body';
 
     const created = parseJsonResult<{ url: string; characters: number }>(
@@ -51,7 +51,7 @@ describe('MCP server', () => {
         arguments: { markdown },
       })) as TextResult,
     );
-    expect(created.url.startsWith('https://portable.md/#')).toBe(true);
+    expect(created.url.startsWith('https://openartifact.md/#')).toBe(true);
     expect(created.characters).toBe(created.url.length);
 
     const read = parseJsonResult<{ markdown: string }>(
@@ -67,7 +67,7 @@ describe('MCP server', () => {
     const client = await connectedClient();
     const result = (await client.callTool({
       name: 'read_markdown_link',
-      arguments: { url: 'https://portable.md/#totally-bogus!!!' },
+      arguments: { url: 'https://openartifact.md/#totally-bogus!!!' },
     })) as TextResult;
 
     expect(result.isError).toBe(true);

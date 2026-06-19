@@ -1,4 +1,4 @@
-# portablemd
+# openartifact
 
 Share beautifully-rendered markdown as a single link. The entire Document is
 compressed into the URL **fragment**, so opening a link reconstructs and renders
@@ -9,7 +9,7 @@ install, no account, no tracking.
 - **Agents** create links directly through the **MCP** server.
 - **Recipients** open the link, read the rendered Document, and can fork-and-edit it into their own new link.
 
-See [CONTEXT.md](CONTEXT.md) for the glossary and [docs/prds/portablemd-v1/PRD.md](docs/prds/portablemd-v1/PRD.md) for the full spec.
+See [CONTEXT.md](CONTEXT.md) for the glossary and [docs/prds/openartifact-v1/PRD.md](docs/prds/openartifact-v1/PRD.md) for the full spec.
 
 ## Repository layout
 
@@ -53,7 +53,7 @@ pnpm typecheck  # type-check all packages
 pnpm dev
 ```
 
-This starts the Vite dev server for `@portablemd/web` at **http://localhost:5173**.
+This starts the Vite dev server for `@openartifact/web` at **http://localhost:5173**.
 
 - Open the bare URL → the **Editor** loads with a self-describing example. Paste your
   markdown, then click **Copy Link** to get a shareable link.
@@ -63,8 +63,8 @@ This starts the Vite dev server for `@portablemd/web` at **http://localhost:5173
 ### Production build / preview
 
 ```bash
-pnpm --filter @portablemd/web build      # outputs packages/web/dist
-pnpm --filter @portablemd/web preview     # serves the built dist locally
+pnpm --filter @openartifact/web build      # outputs packages/web/dist
+pnpm --filter @openartifact/web preview     # serves the built dist locally
 ```
 
 The build is fully static and origin-relative (`base: './'`), so `packages/web/dist`
@@ -89,34 +89,33 @@ There is no `update` tool — editing is just another `create` (fork-and-share h
 ### Build it first
 
 ```bash
-pnpm --filter @portablemd/mcp build
+pnpm --filter @openartifact/mcp build
 ```
 
 This emits the runnable entry at `packages/mcp/dist/bin.js`.
 
 ### Configure the link origin
 
-Set `PORTABLEMD_BASE_URL` to the origin that produced links should point at.
-If unset, it defaults to `http://localhost:5173/` (handy for local testing
-against the dev server above).
+Set `OPENARTIFACT_BASE_URL` to the origin that produced links should point at.
+If unset, it defaults to `https://openartifact.md/`.
 
 ```bash
-export PORTABLEMD_BASE_URL="https://your-portablemd-domain/"
+export OPENARTIFACT_BASE_URL="https://openartifact.md/"
 ```
 
 ### Run / register it
 
-The binary is `portablemd-mcp` (entry: `packages/mcp/dist/bin.js`). Point your MCP
+The binary is `openartifact-mcp` (entry: `packages/mcp/dist/bin.js`). Point your MCP
 client at it. Example client config:
 
 ```json
 {
   "mcpServers": {
-    "portablemd": {
+    "openartifact": {
       "command": "node",
-      "args": ["/absolute/path/to/portablemd/packages/mcp/dist/bin.js"],
+      "args": ["/absolute/path/to/openartifact/packages/mcp/dist/bin.js"],
       "env": {
-        "PORTABLEMD_BASE_URL": "https://your-portablemd-domain/"
+        "OPENARTIFACT_BASE_URL": "https://openartifact.md/"
       }
     }
   }
@@ -126,10 +125,10 @@ client at it. Example client config:
 To run it directly (it then waits for an MCP client to talk to it over stdio):
 
 ```bash
-PORTABLEMD_BASE_URL="https://your-portablemd-domain/" node packages/mcp/dist/bin.js
+OPENARTIFACT_BASE_URL="https://openartifact.md/" node packages/mcp/dist/bin.js
 ```
 
-> Once published to npm, the intended distribution is `npx @portablemd/mcp`. While
+> Once published to npm, the intended distribution is `npx @openartifact/mcp`. While
 > developing from this repo, run the built `bin.js` directly as shown above.
 
 ---

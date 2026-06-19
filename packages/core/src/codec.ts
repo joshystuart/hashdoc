@@ -24,7 +24,7 @@ export function decode(payload: string): string {
   if (tag !== VERSION_TAG_V1) {
     throw new DecodeError(
       'unsupported-version',
-      `Unsupported Link version tag "${tag}". This Link was created by a newer or unknown version of portablemd.`,
+      `Unsupported Link version tag "${tag}". This Link was created by a newer or unknown version of openartifact.`,
     );
   }
 

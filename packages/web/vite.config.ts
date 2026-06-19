@@ -1,11 +1,11 @@
 import { defineConfig, type Plugin } from 'vite';
 import { buildCsp, inlineScriptBodies, inlineScriptHash } from './src/csp.js';
 
-const CSP_PLACEHOLDER = '<!--PORTABLEMD_CSP-->';
+const CSP_PLACEHOLDER = '<!--OPENARTIFACT_CSP-->';
 
 function strictCspPlugin(): Plugin {
   return {
-    name: 'portablemd-strict-csp',
+    name: 'openartifact-strict-csp',
     transformIndexHtml: {
       order: 'post',
       handler(html) {

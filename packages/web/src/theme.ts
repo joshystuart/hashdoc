@@ -2,7 +2,7 @@ export type Theme = 'light' | 'dark';
 
 export type ThemeChoice = Theme | 'system';
 
-export const THEME_STORAGE_KEY = 'portablemd-theme';
+export const THEME_STORAGE_KEY = 'openartifact-theme';
 
 export function resolveTheme(
   stored: string | null | undefined,

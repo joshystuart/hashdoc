@@ -1,9 +1,9 @@
 # The v1 Link format is FROZEN
 
-`@portablemd/core` owns the Link format and is the single source of truth for
+`@openartifact/core` owns the Link format and is the single source of truth for
 `encode`/`decode`. As of issue-15, **version 1 of the format is frozen.**
 
-portablemd's product promise is that **the Link IS the document, and a Link made
+openartifact's product promise is that **the Link IS the document, and a Link made
 today must open forever** (see [ADR 0001 — "the link is the
 document"](../../docs/adr/0001-the-link-is-the-document.md)). Durability is the
 product, not a nice-to-have.

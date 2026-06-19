@@ -5,7 +5,7 @@ import {
   payloadFromUrl,
   linkSizeWarning,
   DecodeError,
-} from '@portablemd/core';
+} from '@openartifact/core';
 
 export interface CreateMarkdownLinkResult {
   url: string;

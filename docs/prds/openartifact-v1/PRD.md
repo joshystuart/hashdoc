@@ -1,4 +1,4 @@
-# portablemd v1 — PRD
+# openartifact v1 — PRD
 
 > Status: ready-for-agent · Date: 2026-06-18
 > Glossary: [CONTEXT.md](../../../CONTEXT.md) (Document · Payload · Link · Viewer · Editor)
@@ -12,7 +12,7 @@ Existing "paste" services solve the rendering problem but introduce two new ones
 
 ## Solution
 
-**portablemd** is a client-side-only web app that renders shared markdown beautifully from a single Link. The entire Document is compressed and embedded in the URL **fragment**, so opening a Link reconstructs and renders the Document with **no server ever receiving or storing the content**. Anyone can open a Link in a browser — nothing to install, no account, no tracking.
+**openartifact** is a client-side-only web app that renders shared markdown beautifully from a single Link. The entire Document is compressed and embedded in the URL **fragment**, so opening a Link reconstructs and renders the Document with **no server ever receiving or storing the content**. Anyone can open a Link in a browser — nothing to install, no account, no tracking.
 
 - **People** create Links by pasting markdown into the **Editor** and copying the resulting Link.
 - **Agents** create Links directly through an **MCP** server, so they can hand a user a ready-to-share Link as part of their normal output.
@@ -58,7 +58,7 @@ Because the Link *is* the Document, Links are effectively permanent (nothing to 
 27. As an Agent, I want the tool to report the Link's size and warn me when it's large, so that I can advise the user before handing them a giant URL.
 28. As an Agent, I want to decode a Link a user gives me back into markdown, so that I can read and work with a shared Document.
 29. As an Agent, I want Link creation to need no network and no account, so that I can produce Links reliably, offline, and privately.
-30. As an Agent, I want produced Links to point at the user's configured portablemd domain, so that they open on the correct site.
+30. As an Agent, I want produced Links to point at the user's configured openartifact domain, so that they open on the correct site.
 
 **Developer (self-hoster / integrator)**
 31. As a Developer, I want to add the MCP with a single `npx` command and one env var, so that setup is trivial.
@@ -86,7 +86,7 @@ Because the Link *is* the Document, Links are effectively permanent (nothing to 
 - `decode` dispatches on the version tag; an unknown tag yields a typed "unsupported version" error rather than garbage.
 - Decision-encoding shape (from the design session):
   ```ts
-  // @portablemd/core — format only, no DOM, no rendering
+  // @openartifact/core — format only, no DOM, no rendering
   encode(markdown: string): string             // → fragment payload, incl. version tag
   decode(payload: string): string              // throws DecodeError on corrupt/truncated/unknown-version
   buildLink(payload: string, baseUrl: string): string
@@ -121,7 +121,7 @@ Because the Link *is* the Document, Links are effectively permanent (nothing to 
     { markdown: string }
   ```
 - `warning` is set when `characters` exceeds the "may not paste everywhere" threshold. There is **no `update` tool** — fork-and-share has no identity, so editing is just another `create`.
-- Distribution: **`npx @portablemd/mcp` over stdio**. **`PORTABLEMD_BASE_URL`** env var sets the origin used when building Links (defaults to a local dev URL for testing). `read_markdown_link` accepts a full URL or a bare Payload and fails gracefully on corrupt/truncated input. No hosted MCP.
+- Distribution: **`npx @openartifact/mcp` over stdio**. **`OPENARTIFACT_BASE_URL`** env var sets the origin used when building Links (defaults to a local dev URL for testing). `read_markdown_link` accepts a full URL or a bare Payload and fails gracefully on corrupt/truncated input. No hosted MCP.
 
 **Ops & privacy (ADR 0002)**
 - **Zero third-party requests**: no analytics, no error tracking, no CDN-hosted fonts or scripts; all assets bundled and self-hosted. Origin-relative; runs on any static host with **no serverless functions**.
@@ -149,7 +149,7 @@ Because the Link *is* the Document, Links are effectively permanent (nothing to 
    - Fork flow: Edit a viewed Document → new Link produced, original Link unaffected.
    - Testing Library + jsdom for component/integration; Playwright for true E2E of URL-driven behaviour and clipboard where warranted.
 4. **MCP seam — tool handlers.** Call `create_markdown_link` / `read_markdown_link` handlers directly:
-   - Created `url` decodes (via `core`) back to the input markdown; `url` honours `PORTABLEMD_BASE_URL`; `warning` appears past the threshold.
+   - Created `url` decodes (via `core`) back to the input markdown; `url` honours `OPENARTIFACT_BASE_URL`; `warning` appears past the threshold.
    - `read_markdown_link` round-trips and fails gracefully on corrupt input.
    - Highest seam below spinning up a real stdio client.
 

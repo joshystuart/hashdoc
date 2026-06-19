@@ -4,7 +4,7 @@
 
 ## Parent
 
-[portablemd v1 — PRD](./PRD.md) · enforces [ADR 0001](../../adr/0001-the-link-is-the-document.md)
+[openartifact v1 — PRD](./PRD.md) · enforces [ADR 0001](../../adr/0001-the-link-is-the-document.md)
 
 ## What to build
 

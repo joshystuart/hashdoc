@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { decode, payloadFromUrl } from '@portablemd/core';
+import { decode, payloadFromUrl } from '@openartifact/core';
 import { mountEditor } from './mount.js';
 import { mountViewer } from '../viewer.js';
 import { render as renderMarkdown } from '../render.js';
@@ -115,7 +115,7 @@ describe('Editor — author creates a Link', () => {
 
     const view = getView(root);
     const doc = view.state.doc.toString();
-    expect(doc).toContain('# portablemd');
+    expect(doc).toContain('# openartifact');
     expect(doc).toMatch(/select all/i);
 
 
@@ -133,7 +133,7 @@ describe('Editor — author creates a Link', () => {
     const view = getView(root);
     const doc = view.state.doc.toString();
     expect(doc).toBe('# Forked\n\nmine\n');
-    expect(doc).not.toContain('# portablemd');
+    expect(doc).not.toContain('# openartifact');
   });
 
   it('keeps the bar a clean action row: no bearer note, never says "secure"', async () => {

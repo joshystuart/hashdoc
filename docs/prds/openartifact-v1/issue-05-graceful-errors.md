@@ -4,7 +4,7 @@
 
 ## Parent
 
-[portablemd v1 — PRD](./PRD.md)
+[openartifact v1 — PRD](./PRD.md)
 
 ## What to build
 

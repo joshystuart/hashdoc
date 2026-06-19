@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { encode, decode, buildLink, payloadFromUrl } from '@portablemd/core';
+import { encode, decode, buildLink, payloadFromUrl } from '@openartifact/core';
 import { mountViewer } from '../viewer.js';
 
 function flush(): Promise<void> {

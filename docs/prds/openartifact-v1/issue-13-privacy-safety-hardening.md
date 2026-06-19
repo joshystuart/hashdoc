@@ -4,7 +4,7 @@
 
 ## Parent
 
-[portablemd v1 — PRD](./PRD.md) · enforces [ADR 0002](../../adr/0002-no-third-party-requests.md)
+[openartifact v1 — PRD](./PRD.md) · enforces [ADR 0002](../../adr/0002-no-third-party-requests.md)
 
 ## What to build
 

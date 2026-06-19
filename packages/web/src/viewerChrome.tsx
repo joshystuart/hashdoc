@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { encode, buildLink } from '@portablemd/core';
+import { encode, buildLink } from '@openartifact/core';
 import { AppHeader, HeaderButton, ThemeToggleButton } from './chrome.js';
 import { copyText } from './render.js';
 

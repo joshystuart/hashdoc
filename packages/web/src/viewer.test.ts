@@ -2,7 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { encode, decode, buildLink, payloadFromUrl } from '@portablemd/core';
+import { encode, decode, buildLink, payloadFromUrl } from '@openartifact/core';
 import { resolveView, mountViewer } from './viewer.js';
 
 const ORIGIN = 'https://md.example/';
@@ -251,9 +251,9 @@ describe('Viewer reading niceties (issue-09)', () => {
     expect(document.title).toBe('Quarterly Report');
   });
 
-  it('falls back to "portablemd" when the document has no H1', () => {
+  it('falls back to "openartifact" when the document has no H1', () => {
     mountViewer(root, buildLink(encode('## sub only\n\nbody'), 'https://md.example/'));
-    expect(document.title).toBe('portablemd');
+    expect(document.title).toBe('openartifact');
   });
 
   it('renders Copy source and Copy Link actions in the chrome', () => {

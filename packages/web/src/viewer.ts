@@ -4,7 +4,7 @@ import {
   DecodeError,
   classifyDecodeError,
   type DecodeErrorKind,
-} from '@portablemd/core';
+} from '@openartifact/core';
 import { h, render as preactRender } from 'preact';
 import {
   render,
@@ -14,7 +14,7 @@ import {
 } from './render.js';
 import { ViewerChrome } from './viewerChrome.js';
 
-const DEFAULT_TITLE = 'portablemd';
+const DEFAULT_TITLE = 'openartifact';
 
 export type ViewerState =
   | { kind: 'document'; html: string; markdown: string }
@@ -97,9 +97,9 @@ function mountError(root: HTMLElement, errorKind: DecodeErrorKind): void {
   const p = document.createElement('p');
 
   if (errorKind === 'unknown-version') {
-    h.textContent = 'This Link needs a newer portablemd';
+    h.textContent = 'This Link needs a newer openartifact';
     p.textContent =
-      'This Link was made with a newer version of portablemd than the one ' +
+      'This Link was made with a newer version of openartifact than the one ' +
       'running here. Try updating, or open it in the latest version.';
     section.append(h, p);
   } else {

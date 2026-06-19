@@ -4,13 +4,13 @@
 
 ## Parent
 
-[portablemd v1 — PRD](./PRD.md)
+[openartifact v1 — PRD](./PRD.md)
 
 ## What to build
 
 Make the empty state teach the tool, and make the trust model honest.
 
-- The no-fragment empty state is a **self-describing example Document** — itself a portablemd Document — that demonstrates rendering and explains what the tool does. It doubles as the landing page (there is no separate marketing site); the Author selects-all and replaces it to start.
+- The no-fragment empty state is a **self-describing example Document** — itself an openartifact Document — that demonstrates rendering and explains what the tool does. It doubles as the landing page (there is no separate marketing site); the Author selects-all and replaces it to start.
 - Add quiet **bearer-access** messaging where a Link is created/copied: "anyone with this link can read it." Never use the word "secure."
 
 ## Acceptance criteria

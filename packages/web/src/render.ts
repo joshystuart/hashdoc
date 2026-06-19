@@ -9,7 +9,7 @@ const md: MarkdownIt = new MarkdownIt({
 
 md.enable(['table', 'strikethrough']);
 
-md.core.ruler.after('inline', 'portablemd_task_lists', (state) => {
+md.core.ruler.after('inline', 'openartifact_task_lists', (state) => {
   const tokens = state.tokens;
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]!;
@@ -55,7 +55,7 @@ export function slugify(text: string): string {
 }
 
 function installHeadingAnchors(instance: MarkdownIt): void {
-  instance.core.ruler.push('portablemd_heading_anchors', (state) => {
+  instance.core.ruler.push('openartifact_heading_anchors', (state) => {
     const tokens = state.tokens;
     const seen = new Map<string, number>();
     for (let i = 0; i < tokens.length; i++) {
@@ -89,7 +89,7 @@ function installHeadingAnchors(instance: MarkdownIt): void {
 installMathRules(md);
 
 function installMathRules(instance: MarkdownIt): void {
-  instance.inline.ruler.after('escape', 'portablemd_math_inline', (state, silent) => {
+  instance.inline.ruler.after('escape', 'openartifact_math_inline', (state, silent) => {
     const start = state.pos;
     if (state.src.charCodeAt(start) !== 0x24) {
       return false;
@@ -134,7 +134,7 @@ function installMathRules(instance: MarkdownIt): void {
 
   instance.block.ruler.before(
     'fence',
-    'portablemd_math_block',
+    'openartifact_math_block',
     (state, startLine, endLine, silent) => {
       const startPos = state.bMarks[startLine]! + state.tShift[startLine]!;
       const maxPos = state.eMarks[startLine]!;
@@ -407,7 +407,7 @@ async function enhanceMermaid(container: HTMLElement): Promise<void> {
     const source = code.textContent ?? '';
     code.dataset.mermaid = 'done';
     try {
-      const id = `portablemd-mermaid-${mermaidSeq++}`;
+      const id = `openartifact-mermaid-${mermaidSeq++}`;
       const rawSvg = await renderMermaid(id, source);
       const safeSvg = DOMPurify.sanitize(rawSvg, {
         USE_PROFILES: { svg: true, svgFilters: true },

@@ -1,10 +1,10 @@
-export const EXAMPLE_DOC = `# portablemd
+export const EXAMPLE_DOC = `# openartifact
 
 **The link _is_ the document.** Everything you write lives inside the URL —
 nothing is stored on a server, and nothing is sent anywhere. Share the link and
 anyone who has it can read this, right in their browser.
 
-This page is itself a portablemd document. To write your own, select all
+This page is itself an openartifact document. To write your own, select all
 (Cmd/Ctrl+A) and replace it, then press **Copy Link**.
 
 ## What it does

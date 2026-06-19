@@ -9,6 +9,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error('portablemd MCP server failed to start:', error);
+  console.error('openartifact MCP server failed to start:', error);
   process.exit(1);
 });

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <!--
-    portablemd static Open Graph / Twitter card (issue-14).
+    openartifact static Open Graph / Twitter card (issue-14).
 
     DESIGN NOTES (for the human reviewer)
-    1. Static and identical for every Link. portablemd is client-side only and
+    1. Static and identical for every Link. openartifact is client-side only and
        the Document lives in the URL fragment, which no server ever sees
        (ADR 0002), so per-Link previews are impossible. This card is the
        trustworthy, honest stand-in shown wherever a Link is pasted.
@@ -40,7 +40,7 @@
 
   <!-- Wordmark -->
   <text x="216" y="222" font-size="64" font-weight="700" fill="#1a1a1a"
-        letter-spacing="-1">portablemd</text>
+        letter-spacing="-1">openartifact</text>
 
   <!-- Tagline -->
   <text x="96" y="320" font-size="40" font-weight="600" fill="#1a1a1a">the link is the document</text>
@@ -55,6 +55,6 @@
           stroke="rgba(0,0,0,0.18)" stroke-width="1"/>
     <text x="24" y="41" font-size="24" font-weight="500"
           font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
-          fill="rgba(0,0,0,0.55)">portablemd.app/#…your-document…</text>
+          fill="rgba(0,0,0,0.55)">openartifact.md/#…your-document…</text>
   </g>
 </svg>
