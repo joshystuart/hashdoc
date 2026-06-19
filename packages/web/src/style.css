@@ -58,6 +58,14 @@ a {
   padding: 2rem 1.25rem 6rem;
 }
 
+/* In the Viewer, drop #app's top padding so the sticky chrome sits flush at the
+   top of the page. With the padding in place the page scrolled up by 2rem
+   before the header pinned, making the header appear to "jump". The chrome's
+   own vertical padding still provides breathing room around the buttons. */
+#app:has(.viewer__chrome) {
+  padding-top: 0;
+}
+
 .document img {
   max-width: 100%;
 }
@@ -117,12 +125,25 @@ a {
 /* --- Viewer chrome (issue-03 / issue-09) -----------------------------------
    A light action bar above the Document: Copy source, Copy Link, and Edit.
    "Edit" forks the Document into the Editor: changes there produce a NEW Link;
-   the viewed Link is never mutated. */
+   the viewed Link is never mutated.
+
+   The bar is sticky so it stays fixed at the top of the page while reading a
+   long Document — matching the Editor, whose bar is always visible because its
+   panes scroll internally. An opaque background and bottom border keep the
+   Document content readable as it scrolls beneath the bar. */
 .viewer__chrome {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
+  padding: 1rem 0;
   margin-bottom: 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .viewer__action,
@@ -167,6 +188,8 @@ a {
    Viewer intercepts the click so the payload fragment is never clobbered). */
 .document :is(h1, h2, h3, h4, h5, h6) {
   position: relative;
+  /* Keep anchor jumps clear of the sticky Viewer chrome (issue-03/09). */
+  scroll-margin-top: 4rem;
 }
 
 .heading-anchor {
@@ -225,7 +248,12 @@ a {
 .editor {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  /* Pin the layout to the viewport so the toolbar/status header stays fixed at
+     the top and the source/preview panes scroll internally. With min-height the
+     editor grew past the viewport on long Documents, so the whole page scrolled
+     and the header scrolled away with it. */
+  height: 100vh;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
