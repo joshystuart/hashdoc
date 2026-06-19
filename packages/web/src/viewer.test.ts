@@ -70,17 +70,24 @@ describe('mountViewer — DOM mounting', () => {
     expect(state.kind).toBe('editor');
   });
 
-  it('shows bearer-access messaging in the chrome; never says "secure" (issue-12)', () => {
+  it('keeps the chrome a clean action row: no bearer note, never says "secure"', () => {
     const link = buildLink(encode('# Doc\n\nbody'), ORIGIN);
     mountViewer(root, link);
 
-    const note = root.querySelector('.viewer__bearer-note');
-    expect(note).not.toBeNull();
-    expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
-
+    expect(root.querySelector('.viewer__bearer-note')).toBeNull();
 
     const chrome = root.querySelector('.viewer__chrome')!;
     expect(chrome.textContent!.toLowerCase()).not.toContain('secure');
+  });
+
+  it('places the theme toggle last so it sits at the far right of the chrome', () => {
+    const link = buildLink(encode('# Doc\n\nbody'), ORIGIN);
+    mountViewer(root, link);
+
+    const buttons = Array.from(
+      root.querySelectorAll<HTMLButtonElement>('.viewer__chrome button'),
+    );
+    expect(buttons.at(-1)?.classList.contains('theme-toggle')).toBe(true);
   });
 });
 

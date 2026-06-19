@@ -1,17 +1,3 @@
-/*
- * Dark-theme highlight.js token colours (issue-10).
- *
- * highlight.js ships `github.css` (light) and `github-dark.css` (dark), but BOTH
- * declare their colours on the same bare `.hljs` selectors — importing both would
- * let whichever loads last win for every theme. To keep BOTH legible we bundle
- * `github.css` as-is (the light default) and re-declare the github-dark token
- * palette here, scoped under `[data-theme="dark"]`, so dark only takes over when
- * the reader's resolved theme is dark.
- *
- * Colours are taken verbatim from `highlight.js/styles/github-dark.css` (GitHub
- * Dark). Kept self-hosted/bundled — no CDN, ADR 0002 still holds. If the upstream
- * github-dark palette changes, mirror the change here.
- */
 [data-theme='dark'] .hljs {
   color: #c9d1d9;
   background: transparent;

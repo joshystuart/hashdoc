@@ -1,9 +1,3 @@
-/* --- Theme tokens (issue-10) ------------------------------------------------
-   A `data-theme="light|dark"` attribute on <html> selects the palette. The
-   default :root values are the LIGHT palette; the [data-theme="dark"] block
-   overrides them for dark. Every colour below is expressed as a token so the
-   Viewer and the Editor (which share the app shell) recolour together. The
-   no-flash inline script in index.html sets data-theme before first paint. */
 :root {
   color-scheme: light dark;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -58,12 +52,16 @@ a {
   padding: 2rem 1.25rem 6rem;
 }
 
-/* In the Viewer, drop #app's top padding so the sticky chrome sits flush at the
-   top of the page. With the padding in place the page scrolled up by 2rem
-   before the header pinned, making the header appear to "jump". The chrome's
-   own vertical padding still provides breathing room around the buttons. */
 #app:has(.viewer__chrome) {
-  padding-top: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.viewer__content {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 0 1.25rem 6rem;
 }
 
 .document img {
@@ -122,55 +120,49 @@ a {
   background: var(--hover-bg);
 }
 
-/* --- Viewer chrome (issue-03 / issue-09) -----------------------------------
-   A light action bar above the Document: Copy source, Copy Link, and Edit.
-   "Edit" forks the Document into the Editor: changes there produce a NEW Link;
-   the viewed Link is never mutated.
-
-   The bar is sticky so it stays fixed at the top of the page while reading a
-   long Document — matching the Editor, whose bar is always visible because its
-   panes scroll internally. An opaque background and bottom border keep the
-   Document content readable as it scrolls beneath the bar. */
-.viewer__chrome {
+.app-header {
   position: sticky;
   top: 0;
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 1rem 0;
-  margin-bottom: 1rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
-.viewer__action,
-.viewer__edit {
-  padding: 0.35rem 0.85rem;
+.app-header__leading,
+.app-header__actions,
+.app-header__toolbar {
+  display: flex;
+  align-items: center;
+}
+
+.app-header__actions {
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.app-header__toolbar {
+  gap: 0.25rem;
+}
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  padding: 0 0.85rem;
+  box-sizing: border-box;
   font-size: 0.9rem;
   font-weight: 600;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.viewer__action:hover,
-.viewer__edit:hover {
-  background: var(--hover-bg);
-}
-
-/* --- Theme toggle (issue-10) ----------------------------------------------
-   A small accessible button living in the always-on Viewer chrome and the
-   Editor bar. It flips <html data-theme> and persists the choice. A single
-   button affecting <html> recolours both modes since they share the shell. */
-.theme-toggle {
-  padding: 0.35rem 0.6rem;
-  font-size: 1rem;
   line-height: 1;
+  white-space: nowrap;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: transparent;
@@ -178,17 +170,33 @@ a {
   cursor: pointer;
 }
 
-.theme-toggle:hover {
+.app-button:hover {
   background: var(--hover-bg);
 }
 
-/* --- Heading anchors (issue-09) -------------------------------------------
-   A `#` affordance prepended to each heading. Hidden until the heading is
-   hovered/focused to keep reading clean; clicking scrolls into view (the
-   Viewer intercepts the click so the payload fragment is never clobbered). */
+.app-button--primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.app-button--primary:hover {
+  background: var(--accent-hover);
+}
+
+.app-button--icon {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.viewer__chrome {
+  margin-bottom: 1rem;
+}
+
 .document :is(h1, h2, h3, h4, h5, h6) {
   position: relative;
-  /* Keep anchor jumps clear of the sticky Viewer chrome (issue-03/09). */
   scroll-margin-top: 4rem;
 }
 
@@ -207,8 +215,6 @@ a {
   opacity: 0.5;
 }
 
-/* --- Copy-code buttons (issue-09) -----------------------------------------
-   Each fenced code block is wrapped so a Copy button can sit in its corner. */
 .code-block {
   position: relative;
 }
@@ -234,11 +240,6 @@ a {
   opacity: 1;
 }
 
-/* --- Editor (issue-02) ----------------------------------------------------
-   The Editor takes the full viewport: a toolbar bar on top, then a split
-   source/preview below. The shared #app max-width is overridden so the split
-   pane gets room; the preview reuses .document styling so it matches the
-   Viewer exactly. */
 #app:has(.editor) {
   max-width: none;
   margin: 0;
@@ -248,43 +249,17 @@ a {
 .editor {
   display: flex;
   flex-direction: column;
-  /* Pin the layout to the viewport so the toolbar/status header stays fixed at
-     the top and the source/preview panes scroll internally. With min-height the
-     editor grew past the viewport on long Documents, so the whole page scrolled
-     and the header scrolled away with it. */
   height: 100vh;
   overflow: hidden;
   box-sizing: border-box;
 }
 
 .editor__bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.editor__toolbar {
-  display: flex;
-  gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .editor__tool {
-  min-width: 2rem;
-  padding: 0.3rem 0.5rem;
-  font-size: 0.9rem;
-  border: 1px solid var(--border-strong);
   border-radius: 5px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-
-.editor__tool:hover {
-  background: var(--hover-bg);
 }
 
 .editor__tool:nth-child(1) {
@@ -301,43 +276,11 @@ a {
   align-items: center;
 }
 
-.editor__copy {
-  padding: 0.4rem 0.9rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: var(--accent);
-  color: var(--accent-fg);
-  cursor: pointer;
-}
-
-.editor__copy:hover {
-  background: var(--accent-hover);
-}
-
 .editor__copy-status {
   font-size: 0.85rem;
   color: var(--danger);
 }
 
-.editor__copy-status--ok {
-  color: inherit;
-  opacity: 0.85;
-}
-
-/* Bearer-access note (issue-12): quiet, secondary copy at the point a Link is
-   created. Accurate, not alarming — a Link is never described as "secure". */
-.editor__bearer-note,
-.viewer__bearer-note {
-  font-size: 0.8rem;
-  color: var(--muted);
-  align-self: center;
-}
-
-/* Advisory warnings row (issue-11): the resulting Link's size, plus warnings
-   when the Link is long or the Document embeds images. Informational only —
-   never blocks Copy Link. */
 .editor__status {
   display: flex;
   flex-direction: column;
@@ -381,9 +324,6 @@ a {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* CodeMirror ships a light default theme (white content, light gutter). In dark
-   mode recolour it from our tokens so the source pane is legible too (issue-10).
-   The markdown token colours from defaultHighlightStyle inherit acceptably. */
 [data-theme='dark'] .editor__source .cm-editor,
 [data-theme='dark'] .editor__source .cm-content {
   background: var(--bg);
@@ -410,7 +350,6 @@ a {
   padding: 1rem 1.5rem;
 }
 
-/* On narrow screens, stack source over preview. */
 @media (max-width: 48rem) {
   .editor__panes {
     grid-template-columns: 1fr;
@@ -423,17 +362,13 @@ a {
   }
 }
 
-/* --- Print (issue-09) ------------------------------------------------------
-   Browser Print -> PDF should yield a clean reading layout: no interactive
-   chrome, no copy buttons, no editor toolbar, and code blocks that wrap onto
-   the page instead of being clipped at the viewport edge. */
 @media print {
-  #app {
+  #app,
+  .viewer__content {
     max-width: none;
     padding: 0;
   }
 
-  /* Hide every interactive affordance — none of it belongs in a printout. */
   .viewer__chrome,
   .viewer__action,
   .viewer__edit,
@@ -446,7 +381,6 @@ a {
     display: none !important;
   }
 
-  /* Code must wrap rather than clip — printers have no horizontal scrollbar. */
   .document pre {
     overflow: visible;
     white-space: pre-wrap;
@@ -455,7 +389,6 @@ a {
     border: 1px solid rgba(0, 0, 0, 0.2);
   }
 
-  /* Avoid orphaned headings and split code/figures across page breaks. */
   .document :is(h1, h2, h3, h4, h5, h6) {
     break-after: avoid;
   }

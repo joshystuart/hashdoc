@@ -136,15 +136,11 @@ describe('Editor — author creates a Link', () => {
     expect(doc).not.toContain('# portablemd');
   });
 
-  it('shows bearer-access messaging at the Copy Link point; never says "secure" (issue-12)', async () => {
+  it('keeps the bar a clean action row: no bearer note, never says "secure"', async () => {
     mountEditor(root);
     await flush();
 
-    const note = root.querySelector('.editor__bearer-note');
-    expect(note).not.toBeNull();
-    expect(note!.textContent).toMatch(/anyone with (this|the) link can read it/i);
-
-
+    expect(root.querySelector('.editor__bearer-note')).toBeNull();
 
     const bar = root.querySelector('.editor__bar')!;
     expect(bar.textContent!.toLowerCase()).not.toContain('secure');

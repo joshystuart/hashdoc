@@ -1,20 +1,18 @@
 import {
   decode,
-  encode,
-  buildLink,
   payloadFromUrl,
   DecodeError,
   classifyDecodeError,
   type DecodeErrorKind,
 } from '@portablemd/core';
+import { h, render as preactRender } from 'preact';
 import {
   render,
   enhance,
-  copyText,
   interceptInPageAnchors,
   firstHeadingText,
 } from './render.js';
-import { currentTheme, toggleTheme } from './theme.js';
+import { ViewerChrome } from './viewerChrome.js';
 
 const DEFAULT_TITLE = 'portablemd';
 
@@ -49,53 +47,32 @@ export function mountViewer(
       const markdown = state.markdown;
 
       const chrome = document.createElement('div');
-      chrome.className = 'viewer__chrome';
-
-      const copySource = makeChromeButton('viewer__copy-source', 'Copy source', 'Copy the raw markdown source');
-      copySource.addEventListener('click', () => {
-        void copyText(markdown).then((ok) => {
-          flash(copySource, ok ? 'Copied' : 'Copy failed', 'Copy source');
-        });
-      });
-
-      const copyLink = makeChromeButton('viewer__copy-link', 'Copy Link', 'Copy a link to this document');
-      copyLink.addEventListener('click', () => {
-        const link = buildLink(encode(markdown), location.origin + location.pathname);
-        void copyText(link).then((ok) => {
-          flash(copyLink, ok ? 'Link copied' : 'Copy failed', 'Copy Link');
-        });
-      });
-
-      const edit = makeChromeButton(
-        'viewer__edit',
-        'Edit',
-        'Edit a copy — your changes make a new link; this one stays unchanged',
+      preactRender(
+        h(ViewerChrome, {
+          markdown,
+          onEdit: () => {
+            void import('./editor/mount.js').then(({ mountEditor }) => {
+              root.textContent = '';
+              mountEditor(root, { initialMarkdown: markdown, forkedFromDocument: true });
+            });
+          },
+        }),
+        chrome,
       );
-
-      const themeToggle = makeThemeToggle();
-
-      const bearerNote = document.createElement('span');
-      bearerNote.className = 'viewer__bearer-note';
-      bearerNote.textContent = 'Anyone with this link can read it.';
-
-      chrome.append(themeToggle, copySource, copyLink, edit, bearerNote);
 
       const article = document.createElement('article');
       article.className = 'document';
       article.innerHTML = state.html;
 
-      root.append(chrome, article);
+      const content = document.createElement('div');
+      content.className = 'viewer__content';
+      content.append(article);
+
+      root.append(chrome, content);
 
       interceptInPageAnchors(article);
       document.title = firstHeadingText(markdown) ?? DEFAULT_TITLE;
       void enhance(article);
-
-      edit.addEventListener('click', () => {
-        void import('./editor/mount.js').then(({ mountEditor }) => {
-          root.textContent = '';
-          mountEditor(root, { initialMarkdown: markdown, forkedFromDocument: true });
-        });
-      });
       break;
     }
     case 'editor':
@@ -110,44 +87,6 @@ export function mountViewer(
       break;
   }
   return state;
-}
-
-export function makeThemeToggle(): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'theme-toggle';
-
-  const sync = (): void => {
-    const theme = currentTheme();
-    const goingDark = theme === 'light';
-    button.textContent = goingDark ? '\u{1F319}' : '☀️';
-    const label = goingDark ? 'Switch to dark theme' : 'Switch to light theme';
-    button.setAttribute('aria-label', label);
-    button.title = label;
-  };
-
-  sync();
-  button.addEventListener('click', () => {
-    toggleTheme();
-    sync();
-  });
-  return button;
-}
-
-function makeChromeButton(className: string, label: string, title: string): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = `viewer__action ${className}`;
-  button.textContent = label;
-  button.title = title;
-  return button;
-}
-
-function flash(button: HTMLButtonElement, message: string, original: string): void {
-  button.textContent = message;
-  window.setTimeout(() => {
-    button.textContent = original;
-  }, 2000);
 }
 
 function mountError(root: HTMLElement, errorKind: DecodeErrorKind): void {

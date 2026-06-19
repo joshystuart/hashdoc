@@ -1,25 +1,26 @@
+import { render as preactRender } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { encode, buildLink, linkSizeWarning } from '@portablemd/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
-import { currentTheme, toggleTheme, type Theme } from '../theme.js';
 import { EXAMPLE_DOC } from './example.js';
+import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton } from '../chrome.js';
 
 export interface EditorProps {
   initialMarkdown?: string;
   forkedFromDocument?: boolean;
 }
 
-export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorProps = {}): preact.JSX.Element {
+export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Element {
   const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
+  const rootRef = useRef<HTMLDivElement>(null);
   const sourceHost = useRef<HTMLDivElement>(null);
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [theme, setTheme] = useState<Theme>(() => currentTheme());
 
   useLayoutEffect(() => {
     const host = sourceHost.current;
@@ -49,6 +50,18 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
     }
   }
 
+  function openView(): void {
+    const root = rootRef.current?.parentElement;
+    if (!root) {
+      return;
+    }
+    history.pushState(null, '', link);
+    preactRender(null, root);
+    void import('../viewer.js').then(({ mountViewer }) => {
+      mountViewer(root, link);
+    });
+  }
+
   const characters = link.length;
   const sizeWarning = linkSizeWarning(characters);
   const images = classifyImages(markdown);
@@ -62,57 +75,48 @@ export function Editor({ initialMarkdown, forkedFromDocument = false }: EditorPr
   }, [previewHtml]);
 
   return (
-    <div class="editor">
-      <header class="editor__bar">
-        <div class="editor__toolbar" role="toolbar" aria-label="Formatting">
-          {TOOLBAR_ACTIONS.map((action) => (
-            <button
-              key={action.id}
-              type="button"
-              class="editor__tool"
-              title={action.title}
-              aria-label={action.title}
-              onClick={() => {
-                const view = editorRef.current?.view;
-                if (view) {
-                  action.run(view);
-                }
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
+    <div class="editor" ref={rootRef}>
+      <AppHeader
+        class="editor__bar"
+        leading={
+          <HeaderToolbar class="editor__toolbar" role="toolbar" aria-label="Formatting">
+            {TOOLBAR_ACTIONS.map((action) => (
+              <HeaderButton
+                key={action.id}
+                variant="icon"
+                class="editor__tool"
+                title={action.title}
+                aria-label={action.title}
+                onClick={() => {
+                  const view = editorRef.current?.view;
+                  if (view) {
+                    action.run(view);
+                  }
+                }}
+              >
+                {action.label}
+              </HeaderButton>
+            ))}
+          </HeaderToolbar>
+        }
+      >
         <div class="editor__actions">
-          <button
-            type="button"
-            class="theme-toggle"
-            aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
-            title={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
-            onClick={() => setTheme(toggleTheme())}
-          >
-            {theme === 'light' ? '\u{1F319}' : '☀️'}
-          </button>
-          <button type="button" class="editor__copy" onClick={() => void copyLink()}>
+          <HeaderButton variant="primary" class="editor__copy" onClick={() => void copyLink()}>
             {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
-          </button>
-          {copyState === 'copied' ? (
-            <span class="editor__copy-status editor__copy-status--ok" role="status">
-              {forkedFromDocument
-                ? 'New link created — your edits made a fresh link. The original link is unchanged.'
-                : 'New link created — copy it to share this document. Each save makes a fresh link.'}
-            </span>
-          ) : null}
-          {copyState === 'failed' ? (
-            <span class="editor__copy-status" role="alert">
-              Copy failed — your browser blocked clipboard access.
-            </span>
-          ) : null}
-          <span class="editor__bearer-note">Anyone with this link can read it.</span>
+          </HeaderButton>
+          <HeaderButton class="editor__view" onClick={openView}>
+            View
+          </HeaderButton>
+          <ThemeToggleButton />
         </div>
-      </header>
+      </AppHeader>
       <div class="editor__status">
         <span class="editor__size">{characters.toLocaleString()} characters</span>
+        {copyState === 'failed' ? (
+          <span class="editor__copy-status" role="alert">
+            Copy failed — your browser blocked clipboard access.
+          </span>
+        ) : null}
         {sizeWarning ? (
           <p class="editor__size-warning editor__warning" role="status">
             {sizeWarning}

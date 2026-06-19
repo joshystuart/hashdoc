@@ -1,36 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decode, encode, VERSION_TAG_V1 } from './codec.js';
 
-/**
- * ============================================================================
- * THE v1 LINK FORMAT IS FROZEN.
- * ============================================================================
- *
- * portablemd's product promise is that the Link IS the document, and a Link
- * made today must open forever (ADR 0001 — "the link is the document").
- *
- * The fixtures below pin a representative set of `markdown -> exact v1 Payload`
- * mappings. The expected Payloads are HARDCODED LITERALS, captured once from
- * `encode` and never recomputed in the assertion — recomputing would be
- * circular and could never catch drift. If `encode`'s output for any of these
- * inputs ever changes, this test FAILS, and that is the point: it is a
- * tripwire against silently breaking every Link already in the wild.
- *
- * The v1 pipeline (fixed): markdown -> UTF-8 bytes -> raw DEFLATE (fflate
- * `deflateSync`) -> base64url (no padding) -> prefix version tag `1`.
- *
- * The freeze is tied to fflate's compression output. fflate `deflateSync` is
- * deterministic for a given input and library version (currently fflate
- * 0.8.x). A future fflate change that altered its DEFLATE output would
- * (correctly) break these tests. That is NOT a bug to "fix" by re-capturing
- * the literals — it is a FORMAT CHANGE, and the only permitted response is to
- * ship the new encoding under a NEW version tag (e.g. `2`) routed through
- * `decode`'s version dispatch. The v1 tag `1` and its bytes must NEVER change.
- *
- * Do not edit these literals. Do not add `encode(...)` to the expected side.
- * ============================================================================
- */
-
 interface GoldenFixture {
   readonly name: string;
   readonly markdown: string;

@@ -91,16 +91,50 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     expect(decode(payloadFromUrl(originalLink)!)).toBe(ORIGINAL_MD);
   });
 
-  it('makes the fork explicit after Copy Link (new link created, original unchanged)', async () => {
+  it('confirms Copy Link via the button label and shows no fork status message', async () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-    (root.querySelector('.editor__copy') as HTMLButtonElement).click();
+    const copyButton = root.querySelector('.editor__copy') as HTMLButtonElement;
+    copyButton.click();
     await flush();
 
-    const status = root.querySelector('.editor__copy-status');
-    expect(status).not.toBeNull();
-    expect(status!.textContent).toMatch(/new link/i);
-    expect(status!.textContent).toMatch(/original/i);
+    expect(copyButton.textContent).toMatch(/link copied/i);
+    expect(root.querySelector('.editor__copy-status--ok')).toBeNull();
+  });
+
+  it('View returns to the rendered Document even when nothing was edited', async () => {
+    mountViewer(root, originalLink);
+    await clickEditAndWaitForEditor(root);
+
+    const view = root.querySelector('.editor__view') as HTMLButtonElement;
+    expect(view).not.toBeNull();
+    expect(view.textContent).toMatch(/view/i);
+
+    view.click();
+    for (let i = 0; i < 50 && !root.querySelector('.viewer__chrome'); i++) {
+      await flush();
+    }
+
+    expect(root.querySelector('.viewer__chrome')).not.toBeNull();
+    expect(root.querySelector('.cm-content')).toBeNull();
+    expect(root.querySelector('.document')!.textContent).toContain('Shared note');
+  });
+
+  it('View reflects in-Editor edits in the rendered Document', async () => {
+    mountViewer(root, originalLink);
+    await clickEditAndWaitForEditor(root);
+
+    const editedMd = '# Shared note\n\nFrom the **sender**, plus a fresh paragraph.\n';
+    const view = getView(root);
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: editedMd } });
+    await flush();
+
+    (root.querySelector('.editor__view') as HTMLButtonElement).click();
+    for (let i = 0; i < 50 && !root.querySelector('.viewer__chrome'); i++) {
+      await flush();
+    }
+
+    expect(root.querySelector('.document')!.textContent).toContain('fresh paragraph');
   });
 });

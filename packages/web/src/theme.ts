@@ -20,9 +20,7 @@ export function getStoredChoice(): ThemeChoice {
     if (value === 'light' || value === 'dark') {
       return value;
     }
-  } catch {
-    // localStorage unavailable
-  }
+  } catch {}
   return 'system';
 }
 
@@ -45,9 +43,7 @@ export function applyTheme(theme: Theme): void {
 function storeChoice(theme: Theme): void {
   try {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // best-effort persistence
-  }
+  } catch {}
 }
 
 export function initTheme(): Theme {

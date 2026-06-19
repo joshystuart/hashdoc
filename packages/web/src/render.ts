@@ -91,7 +91,7 @@ installMathRules(md);
 function installMathRules(instance: MarkdownIt): void {
   instance.inline.ruler.after('escape', 'portablemd_math_inline', (state, silent) => {
     const start = state.pos;
-    if (state.src.charCodeAt(start) !== 0x24 /* $ */) {
+    if (state.src.charCodeAt(start) !== 0x24) {
       return false;
     }
     if (state.src.charCodeAt(start + 1) === 0x24) {
@@ -106,11 +106,11 @@ function installMathRules(instance: MarkdownIt): void {
     let found = -1;
     while (pos < max) {
       const code = state.src.charCodeAt(pos);
-      if (code === 0x5c /* \ */) {
+      if (code === 0x5c) {
         pos += 2;
         continue;
       }
-      if (code === 0x24 /* $ */) {
+      if (code === 0x24) {
         found = pos;
         break;
       }
@@ -215,7 +215,6 @@ function postProcess(html: string): string {
     }
   }
 
-  // DOMPurify strips `id` as DOM-clobbering protection; re-derive from anchor href.
   for (const heading of Array.from(
     doc.querySelectorAll('h1, h2, h3, h4, h5, h6'),
   )) {
@@ -306,7 +305,6 @@ export function interceptInPageAnchors(container: HTMLElement): () => void {
     if (id === '') {
       return;
     }
-    // location.hash holds the document payload — never navigate it.
     event.preventDefault();
     const dest = container.querySelector(`#${cssEscape(id)}`);
     if (dest instanceof HTMLElement) {
