@@ -7,6 +7,10 @@ that Link reconstructs and renders the Document entirely in the browser. The
 Document is compressed into the URL fragment, so no server receives or stores
 the content. There is nothing to install, no account, and no tracking.
 
+![HashDoc Editor](./docs/imgs/hashdoc-edit.png)
+
+![HashDoc Viewer](./docs/imgs/hashdoc-view.png)
+
 Agents can also create Links directly through the HashDoc MCP server.
 
 ## What Is HashDoc?
