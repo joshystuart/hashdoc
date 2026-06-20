@@ -46,7 +46,11 @@ export function mountViewer(
       root.textContent = '';
       const markdown = state.markdown;
 
+      const viewer = document.createElement('div');
+      viewer.className = 'viewer';
+
       const chrome = document.createElement('div');
+      chrome.className = 'viewer__chrome-host';
       preactRender(
         h(ViewerChrome, {
           markdown,
@@ -68,7 +72,8 @@ export function mountViewer(
       content.className = 'viewer__content';
       content.append(article);
 
-      root.append(chrome, content);
+      viewer.append(chrome, content);
+      root.append(viewer);
 
       interceptInPageAnchors(article);
       document.title = firstHeadingText(markdown) ?? DEFAULT_TITLE;

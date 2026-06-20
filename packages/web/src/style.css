@@ -56,16 +56,30 @@ a {
   padding: 2rem 1.25rem 6rem;
 }
 
-#app:has(.viewer__chrome) {
+#app:has(.viewer) {
   max-width: none;
   margin: 0;
   padding: 0;
 }
 
+.viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
 .viewer__content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.viewer__content .document {
   max-width: 48rem;
   margin: 0 auto;
-  padding: 0 1.25rem 6rem;
+  padding: 1.5rem 1.25rem 6rem;
 }
 
 .document img {
@@ -211,8 +225,12 @@ a {
   font-size: 1rem;
 }
 
+.viewer__chrome-host {
+  display: contents;
+}
+
 .viewer__chrome {
-  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .document :is(h1, h2, h3, h4, h5, h6) {
