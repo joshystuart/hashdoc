@@ -7,6 +7,9 @@ anyone who has it can read this, right in their browser.
 This page is itself an HashDoc document. To write your own, select all
 (Cmd/Ctrl+A) and replace it, then press **Copy Link**.
 
+HashDoc is open source on [GitHub](https://github.com/joshystuart/openartifact).
+If you find it useful, please star the project to help more people discover it.
+
 ## What it does
 
 - Renders Markdown (GFM): headings, **bold**, _italic_, lists, tables, code.
