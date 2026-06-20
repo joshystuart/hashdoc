@@ -342,6 +342,44 @@ a {
   border-radius: 6px;
 }
 
+.editor__protect {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.editor__protect-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+
+.editor__protect-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor__password,
+.editor__confirm {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.editor__protect-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 .editor__panes {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { decode, payloadFromUrl } from '@hashdoc/core';
+import { decode, decodeProtected, payloadFromUrl } from '@hashdoc/core';
 import { mountEditor } from './mount.js';
 import { mountViewer } from '../viewer.js';
 import { render as renderMarkdown } from '../render.js';
@@ -21,6 +21,31 @@ function getView(root: HTMLElement): EditorView {
 function typeIntoSource(root: HTMLElement, text: string): void {
   const view = getView(root);
   view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+}
+
+function setInput(el: HTMLInputElement, value: string): void {
+  el.value = value;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function toggleProtect(root: HTMLElement): void {
+  const toggle = root.querySelector('.editor__protect-checkbox') as HTMLInputElement;
+  expect(toggle, 'protect toggle should exist').not.toBeNull();
+  toggle.checked = true;
+  toggle.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+async function copyResolvedLink(root: HTMLElement, copied: string[]): Promise<string> {
+  const button = root.querySelector('.editor__copy') as HTMLButtonElement;
+  const before = copied.length;
+  for (let i = 0; i < 100; i++) {
+    button.click();
+    await flush();
+    if (copied.length > before) {
+      return copied[copied.length - 1]!;
+    }
+  }
+  throw new Error('Copy Link never produced a Link');
 }
 
 describe('Editor — author creates a Link', () => {
@@ -144,6 +169,118 @@ describe('Editor — author creates a Link', () => {
 
     const bar = root.querySelector('.editor__bar')!;
     expect(bar.textContent!.toLowerCase()).not.toContain('secure');
+  });
+
+  it('Protect toggle reveals password + confirm inputs and the threat-model copy', async () => {
+    mountEditor(root);
+    await flush();
+
+    expect(root.querySelector('.editor__password')).toBeNull();
+    expect(root.querySelector('.editor__confirm')).toBeNull();
+
+    toggleProtect(root);
+    await flush();
+
+    expect(root.querySelector('.editor__password')).not.toBeNull();
+    expect(root.querySelector('.editor__confirm')).not.toBeNull();
+
+    const note = root.querySelector('.editor__protect-note')!;
+    const text = note.textContent!.toLowerCase();
+    expect(text).toContain('separately');
+    expect(text).toContain('unrecoverable');
+  });
+
+  it('Protection ON: Copy Link produces a 2… Link that decodeProtected reverses', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Secret\n\nThis is *protected*.\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    toggleProtect(root);
+    await flush();
+    setInput(root.querySelector('.editor__password') as HTMLInputElement, 'hunter2');
+    setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'hunter2');
+    await flush();
+
+    const link = await copyResolvedLink(root, copied);
+    const payload = payloadFromUrl(link);
+    expect(payload).not.toBeNull();
+    expect(payload![0]).toBe('2');
+    expect(await decodeProtected(payload!, 'hunter2')).toBe(md);
+  });
+
+  it('Protection ON: View opens the protected Link to the Viewer locked prompt', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Locked\n\ncontents\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    toggleProtect(root);
+    await flush();
+    setInput(root.querySelector('.editor__password') as HTMLInputElement, 'correct horse');
+    setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'correct horse');
+    await flush();
+
+    const link = await copyResolvedLink(root, copied);
+
+    const viewerRoot = document.createElement('div');
+    const state = mountViewer(viewerRoot, link);
+    expect(state.kind).toBe('locked');
+    expect(viewerRoot.querySelector('.unlock__password')).not.toBeNull();
+  });
+
+  it('size indicator reflects the protected Link length when protection is on', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Size\n\nsome body text here\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    toggleProtect(root);
+    await flush();
+    setInput(root.querySelector('.editor__password') as HTMLInputElement, 'pw-123');
+    setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'pw-123');
+    await flush();
+
+    const link = await copyResolvedLink(root, copied);
+    const size = root.querySelector('.editor__size')!;
+    expect(size.textContent).toContain(link.length.toLocaleString());
+  });
+
+  it('does not copy a protected Link while password and confirm mismatch', async () => {
+    mountEditor(root);
+    await flush();
+    typeIntoSource(root, '# Mismatch\n');
+    await flush();
+
+    toggleProtect(root);
+    await flush();
+    setInput(root.querySelector('.editor__password') as HTMLInputElement, 'one');
+    setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'two');
+    await flush();
+
+    expect(root.querySelector('.editor__protect-error')).not.toBeNull();
+
+    (root.querySelector('.editor__copy') as HTMLButtonElement).click();
+    await flush();
+    expect(copied).toHaveLength(0);
+  });
+
+  it('live preview renders without a password in both states', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Preview\n\n**bold** and `code`.\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    const preview = root.querySelector('.editor__preview')!;
+    expect(preview.innerHTML).toBe(renderMarkdown(md));
+
+    toggleProtect(root);
+    await flush();
+    expect(preview.innerHTML).toBe(renderMarkdown(md));
   });
 
   it('toolbar bold action wraps text in the source and updates the preview', async () => {

@@ -1,8 +1,8 @@
 import { render as preactRender } from 'preact';
 import type { ComponentType } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
-import { encode, buildLink, linkSizeWarning } from '@hashdoc/core';
+import { encode, encodeProtected, buildLink, linkSizeWarning } from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
@@ -31,6 +31,10 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [protect, setProtect] = useState<boolean>(false);
+  const [password, setPassword] = useState<string>('');
+  const [confirm, setConfirm] = useState<string>('');
+  const [protectedLink, setProtectedLink] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     const host = sourceHost.current;
@@ -49,9 +53,40 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const link = buildLink(encode(markdown), location.origin + location.pathname);
+  const base = location.origin + location.pathname;
+  const unprotectedLink = buildLink(encode(markdown), base);
+  const passwordReady = protect && password.length > 0 && password === confirm;
+
+  useEffect(() => {
+    if (!passwordReady) {
+      setProtectedLink(null);
+      return;
+    }
+    let ignore = false;
+    void encodeProtected(markdown, password).then((payload) => {
+      if (!ignore) {
+        setProtectedLink(buildLink(payload, base));
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [passwordReady, markdown, password, base]);
+
+  const link = protect ? protectedLink : unprotectedLink;
+
+  const protectMessage = !protect
+    ? null
+    : password.length === 0
+      ? 'Enter a password to protect this Document.'
+      : password !== confirm
+        ? 'Passwords do not match.'
+        : null;
 
   async function copyLink(): Promise<void> {
+    if (link === null) {
+      return;
+    }
     try {
       await navigator.clipboard.writeText(link);
       setCopyState('copied');
@@ -61,6 +96,9 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   }
 
   function openView(): void {
+    if (link === null) {
+      return;
+    }
     const root = rootRef.current?.parentElement;
     if (!root) {
       return;
@@ -72,7 +110,7 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     });
   }
 
-  const characters = link.length;
+  const characters = (link ?? unprotectedLink).length;
   const sizeWarning = linkSizeWarning(characters);
   const images = classifyImages(markdown);
   const previewHtml = render(markdown);
@@ -126,6 +164,57 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         </div>
       </AppHeader>
       <div class="editor__status">
+        <div class="editor__protect">
+          <label class="editor__protect-toggle">
+            <input
+              type="checkbox"
+              class="editor__protect-checkbox"
+              checked={protect}
+              onChange={(event) => {
+                setProtect((event.target as HTMLInputElement).checked);
+                setCopyState('idle');
+              }}
+            />
+            Protect with password
+          </label>
+          {protect ? (
+            <div class="editor__protect-fields">
+              <input
+                type="password"
+                class="editor__password"
+                aria-label="Password"
+                placeholder="Password"
+                autocomplete="new-password"
+                value={password}
+                onInput={(event) => {
+                  setPassword((event.target as HTMLInputElement).value);
+                  setCopyState('idle');
+                }}
+              />
+              <input
+                type="password"
+                class="editor__confirm"
+                aria-label="Confirm password"
+                placeholder="Confirm password"
+                autocomplete="new-password"
+                value={confirm}
+                onInput={(event) => {
+                  setConfirm((event.target as HTMLInputElement).value);
+                  setCopyState('idle');
+                }}
+              />
+              <p class="editor__protect-note">
+                Share this password separately from the Link — never send both in the same message.
+                If the password is lost, the Document is unrecoverable.
+              </p>
+              {protectMessage ? (
+                <p class="editor__protect-error editor__warning" role="alert">
+                  {protectMessage}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
         <span class="editor__size">{characters.toLocaleString()} characters</span>
         {copyState === 'failed' ? (
           <span class="editor__copy-status" role="alert">

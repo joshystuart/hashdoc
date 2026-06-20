@@ -1,5 +1,7 @@
 # Editor protect toggle (web create path)
 
+> **Status:** ✅ Done — completed 2026-06-20
+
 ## Parent
 
 [Password-protected (encrypted) Links PRD](./PRD.md)
@@ -30,19 +32,19 @@ unprotected state rather than removing it.
 
 ## Acceptance criteria
 
-- [ ] With protection off, "Copy Link" produces a `1…` Link and all existing
+- [x] With protection off, "Copy Link" produces a `1…` Link and all existing
       Editor tests pass unchanged.
-- [ ] A "Protect with password" toggle reveals password + confirm inputs and
+- [x] A "Protect with password" toggle reveals password + confirm inputs and
       threat-model copy (share password separately; unrecoverable if lost).
-- [ ] With protection on and a password set, "Copy Link" produces a `2…` Link
+- [x] With protection on and a password set, "Copy Link" produces a `2…` Link
       that `decodeProtected` reverses back to the typed markdown with that
       password.
-- [ ] "View" with protection on opens the protected Link through the Viewer
+- [x] "View" with protection on opens the protected Link through the Viewer
       (which then prompts for the password).
-- [ ] The size/character indicator reflects the protected Link length when
+- [x] The size/character indicator reflects the protected Link length when
       protection is on.
-- [ ] Live preview renders without a password in both states.
-- [ ] The "never says secure" guardrail still holds for the unprotected state;
+- [x] Live preview renders without a password in both states.
+- [x] The "never says secure" guardrail still holds for the unprotected state;
       the protected state is allowed to use security language.
 
 ## Blocked by
