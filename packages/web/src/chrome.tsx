@@ -5,6 +5,8 @@ import { currentTheme, toggleTheme, type Theme } from './theme.js';
 
 export const HEADER_ICON_SIZE = 18;
 
+const LOGO_SRC = `${import.meta.env.BASE_URL}hashdoc-logo.svg`;
+
 type HeaderButtonVariant = 'primary' | 'secondary' | 'icon';
 
 interface AppHeaderProps {
@@ -20,9 +22,20 @@ interface HeaderButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> 
 export function AppHeader({ children, leading, class: className = '' }: AppHeaderProps): JSX.Element {
   return (
     <header class={['app-header', className].filter(Boolean).join(' ')}>
-      {leading ? <div class="app-header__leading">{leading}</div> : null}
+      <div class="app-header__leading">
+        <HeaderLogo />
+        {leading}
+      </div>
       <div class="app-header__actions">{children}</div>
     </header>
+  );
+}
+
+export function HeaderLogo(): JSX.Element {
+  return (
+    <div class="app-header__logo" aria-hidden="true">
+      <img src={LOGO_SRC} alt="" width={36} height={36} decoding="async" />
+    </div>
   );
 }
 

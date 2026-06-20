@@ -49,6 +49,14 @@ function strictCspPlugin(): Plugin {
           /(<meta[^>]+(?:og:image|twitter:image)["'][^>]+content=["'])\.?\/og-card\.png(["'])/gi,
           '$1/og-card.png$2',
         );
+        out = out.replace(
+          /(<link[^>]+href=["'])\.\/(favicon[^"']*|apple-touch-icon\.png|site\.webmanifest)(["'])/gi,
+          '$1/$2$3',
+        );
+        out = out.replace(
+          /(<meta[^>]+name=["']msapplication-config["'][^>]+content=["'])\.\/(browserconfig\.xml)(["'])/gi,
+          '$1/$2$3',
+        );
         const hashes = inlineScriptBodies(out).map(inlineScriptHash);
         const meta = `<meta http-equiv="Content-Security-Policy" content="${buildCsp(hashes)}" />`;
         if (out.includes(CSP_PLACEHOLDER)) {
