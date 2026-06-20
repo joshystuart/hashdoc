@@ -38,3 +38,20 @@ export function buildCsp(scriptHashes: readonly string[]): string {
     `form-action 'self'`,
   ].join('; ');
 }
+
+export function securityHeaders(): Record<string, string> {
+  return {
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+    'Strict-Transport-Security': 'max-age=63072000',
+  };
+}
+
+export function renderNetlifyHeaders(headers: Record<string, string>): string {
+  const lines = Object.entries(headers).map(([name, value]) => `  ${name}: ${value}`);
+  return `/*\n${lines.join('\n')}\n`;
+}

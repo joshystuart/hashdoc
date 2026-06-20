@@ -4,6 +4,9 @@ import { DecodeError } from './errors.js';
 
 export const VERSION_TAG_V1 = '1';
 
+const MAX_COMPRESSED_BYTES = 512 * 1024;
+const MAX_DECOMPRESSED_BYTES = 8 * 1024 * 1024;
+
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
 
@@ -35,11 +38,19 @@ export function decode(payload: string): string {
     throw new DecodeError('malformed-base64', 'Payload is not valid base64url.', { cause });
   }
 
+  if (compressed.length > MAX_COMPRESSED_BYTES) {
+    throw new DecodeError('too-large', 'Payload is too large to decode safely.');
+  }
+
   let bytes: Uint8Array;
   try {
-    bytes = inflateSync(compressed);
+    bytes = inflateSync(compressed, { out: new Uint8Array(MAX_DECOMPRESSED_BYTES + 1) });
   } catch (cause) {
     throw new DecodeError('corrupt-deflate', 'Payload data is corrupt or truncated.', { cause });
+  }
+
+  if (bytes.length > MAX_DECOMPRESSED_BYTES) {
+    throw new DecodeError('too-large', 'Decoded Document exceeds the maximum supported size.');
   }
 
   try {

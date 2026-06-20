@@ -3,6 +3,7 @@ export type DecodeErrorReason =
   | 'empty-payload'
   | 'malformed-base64'
   | 'corrupt-deflate'
+  | 'too-large'
   | 'invalid-utf8';
 
 export class DecodeError extends Error {

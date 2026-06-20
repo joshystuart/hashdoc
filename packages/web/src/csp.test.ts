@@ -3,10 +3,11 @@ import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildCsp, inlineScriptBodies } from './csp.js';
+import { buildCsp, inlineScriptBodies, renderNetlifyHeaders, securityHeaders } from './csp.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distIndex = join(here, '..', 'dist', 'index.html');
+const distHeaders = join(here, '..', 'dist', '_headers');
 const built = existsSync(distIndex);
 
 function extractCsp(rawHtml: string): string {
@@ -47,6 +48,28 @@ describe('buildCsp (pure)', () => {
   });
 });
 
+describe('securityHeaders (response headers — clickjacking & sniffing defenses)', () => {
+  it('denies framing via both frame-ancestors and X-Frame-Options', () => {
+    const headers = securityHeaders();
+    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'none'");
+    expect(headers['X-Frame-Options']).toBe('DENY');
+  });
+
+  it('pins nosniff, no-referrer, COOP, and HSTS', () => {
+    const headers = securityHeaders();
+    expect(headers['X-Content-Type-Options']).toBe('nosniff');
+    expect(headers['Referrer-Policy']).toBe('no-referrer');
+    expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
+    expect(headers['Strict-Transport-Security']).toBe('max-age=63072000');
+  });
+
+  it('renders a static-host _headers file applying to every path', () => {
+    const rendered = renderNetlifyHeaders(securityHeaders());
+    expect(rendered.startsWith('/*\n')).toBe(true);
+    expect(rendered).toMatch(/^ {2}X-Frame-Options: DENY$/m);
+  });
+});
+
 describe.runIf(built)('CSP meta in built dist/index.html', () => {
   const html = built ? readFileSync(distIndex, 'utf8') : '';
   const cspString = built ? extractCsp(html) : '';
@@ -81,6 +104,14 @@ describe.runIf(built)('CSP meta in built dist/index.html', () => {
     expect(csp.get('object-src')).toEqual(["'none'"]);
     expect(csp.get('frame-src')).toEqual(["'none'"]);
     expect(csp.get('base-uri')).toEqual(["'self'"]);
+  });
+
+  it('emits a static-host _headers file with clickjacking + sniffing defenses', () => {
+    expect(existsSync(distHeaders), 'dist/_headers must be emitted by the build').toBe(true);
+    const text = readFileSync(distHeaders, 'utf8');
+    expect(text).toMatch(/X-Frame-Options: DENY/);
+    expect(text).toMatch(/X-Content-Type-Options: nosniff/);
+    expect(text).toMatch(/frame-ancestors 'none'/);
   });
 
   it("every inline script's SHA-256 is present in script-src (no-flash script allowed)", () => {

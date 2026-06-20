@@ -120,6 +120,11 @@ describe('render() — frame & object injection', () => {
     const html = render('<base href="https://evil.example/">');
     expect(html).not.toMatch(/<base/i);
   });
+
+  it('strips <form> (phishing / credential-capture vector)', () => {
+    const html = render('<form action="https://evil.example"><input name="pw"></form>');
+    expect(html).not.toMatch(/<form/i);
+  });
 });
 
 describe('render() — external link hardening', () => {
