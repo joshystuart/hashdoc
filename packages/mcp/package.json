@@ -1,6 +1,7 @@
 {
   "name": "@hashdoc/mcp",
   "version": "0.0.0",
+  "description": "HashDoc MCP server for creating and reading markdown links over stdio.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
