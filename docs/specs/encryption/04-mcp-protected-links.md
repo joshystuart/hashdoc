@@ -1,5 +1,7 @@
 # MCP protected create/read
 
+> **Status:** ✅ Done — completed 2026-06-20
+
 ## Parent
 
 [Password-protected (encrypted) Links PRD](./PRD.md)
@@ -23,15 +25,15 @@ and must be conveyed out-of-band.
 
 ## Acceptance criteria
 
-- [ ] `create_markdown_link` with a `password` returns a protected Link that
+- [x] `create_markdown_link` with a `password` returns a protected Link that
       `read_markdown_link` + the same password reverses to the original markdown.
-- [ ] `create_markdown_link` without a `password` is unchanged (tag `1`), with the
+- [x] `create_markdown_link` without a `password` is unchanged (tag `1`), with the
       same result shape and size warning behavior.
-- [ ] `read_markdown_link` on a protected Link with no password returns a typed
+- [x] `read_markdown_link` on a protected Link with no password returns a typed
       `password-required` error result.
-- [ ] `read_markdown_link` on a protected Link with a wrong password returns a
+- [x] `read_markdown_link` on a protected Link with a wrong password returns a
       typed `wrong-password` error result.
-- [ ] `read_markdown_link` on an unprotected Link is unchanged.
+- [x] `read_markdown_link` on an unprotected Link is unchanged.
 
 ## Blocked by
 
