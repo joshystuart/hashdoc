@@ -5,7 +5,7 @@ import {
   payloadFromUrl,
   linkSizeWarning,
   DecodeError,
-} from '@openartifact/core';
+} from '@hashdoc/core';
 
 export interface CreateMarkdownLinkResult {
   url: string;

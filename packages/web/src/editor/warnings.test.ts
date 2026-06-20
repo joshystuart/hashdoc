@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { encode, buildLink, payloadFromUrl, decode, linkSizeWarning } from '@openartifact/core';
+import { encode, buildLink, payloadFromUrl, decode, linkSizeWarning } from '@hashdoc/core';
 import { mountEditor } from './mount.js';
 import { hasImages, classifyImages } from './images.js';
 

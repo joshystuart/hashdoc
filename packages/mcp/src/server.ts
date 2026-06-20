@@ -7,12 +7,12 @@ import {
   DecodeError,
 } from './handlers.js';
 
-export const DEFAULT_BASE_URL = 'https://openartifact.md/';
+export const DEFAULT_BASE_URL = 'https://hashdoc.ghost7.org/';
 
 export function resolveBaseUrl(
   env: NodeJS.ProcessEnv = process.env,
 ): string {
-  const value = env.OPENARTIFACT_BASE_URL?.trim();
+  const value = env.HASHDOC_BASE_URL?.trim();
   return value && value.length > 0 ? value : DEFAULT_BASE_URL;
 }
 
@@ -31,14 +31,14 @@ function errorResult(message: string): CallToolResult {
 
 export function createServer(baseUrl: string = resolveBaseUrl()): McpServer {
   const server = new McpServer({
-    name: 'openartifact',
+    name: 'HashDoc',
     version: '0.0.0',
   });
 
   server.registerTool(
     'create_markdown_link',
     {
-      title: 'Create an openartifact Link',
+      title: 'Create an HashDoc Link',
       description:
         'Compress markdown into a shareable Link whose entire content lives in the URL fragment. Nothing is sent to any server.',
       inputSchema: {
@@ -51,13 +51,13 @@ export function createServer(baseUrl: string = resolveBaseUrl()): McpServer {
   server.registerTool(
     'read_markdown_link',
     {
-      title: 'Read an openartifact Link',
+      title: 'Read an HashDoc Link',
       description:
-        'Recover the markdown from an openartifact Link. Accepts either a full Link URL or a bare Payload.',
+        'Recover the markdown from an HashDoc Link. Accepts either a full Link URL or a bare Payload.',
       inputSchema: {
         url: z
           .string()
-          .describe('A full openartifact Link URL, or a bare Payload from a Link fragment.'),
+          .describe('A full HashDoc Link URL, or a bare Payload from a Link fragment.'),
       },
     },
     (args) => {

@@ -14,7 +14,7 @@ describe('branded OG card (built output)', () => {
   it.runIf(built)('built index.html has the static Open Graph meta tags', () => {
     const html = readFileSync(indexHtml, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
     expect(html).toMatch(/<meta[^>]+property=["']og:type["'][^>]+content=["']website["']/i);
-    expect(html).toMatch(/<meta[^>]+property=["']og:title["'][^>]+content=["']openartifact["']/i);
+    expect(html).toMatch(/<meta[^>]+property=["']og:title["'][^>]+content=["']HashDoc["']/i);
     expect(html).toMatch(/<meta[^>]+property=["']og:description["'][^>]+content=["'][^"']+["']/i);
     expect(html).toMatch(/<meta[^>]+property=["']og:site_name["']/i);
     expect(html).toMatch(
@@ -27,7 +27,7 @@ describe('branded OG card (built output)', () => {
     expect(html).toMatch(
       /<meta[^>]+name=["']twitter:card["'][^>]+content=["']summary_large_image["']/i,
     );
-    expect(html).toMatch(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']openartifact["']/i);
+    expect(html).toMatch(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']HashDoc["']/i);
     expect(html).toMatch(/<meta[^>]+name=["']twitter:description["']/i);
     expect(html).toMatch(
       new RegExp(`<meta[^>]+name=["']twitter:image["'][^>]+content=["']${OG_IMAGE_PATH}["']`, 'i'),

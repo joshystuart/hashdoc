@@ -1,12 +1,12 @@
 {
-  "name": "@openartifact/mcp",
+  "name": "@hashdoc/mcp",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "openartifact-mcp": "./dist/bin.js"
+    "HashDoc-mcp": "./dist/bin.js"
   },
   "files": ["dist"],
   "scripts": {
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@openartifact/core": "workspace:*",
+    "@hashdoc/core": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -30,7 +30,7 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.29.0
         version: 1.29.0(zod@4.4.3)
-      '@openartifact/core':
+      '@hashdoc/core':
         specifier: workspace:*
         version: link:../core
       zod:
@@ -64,7 +64,7 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.1
         version: 6.43.1
-      '@openartifact/core':
+      '@hashdoc/core':
         specifier: workspace:*
         version: link:../core
       dompurify:

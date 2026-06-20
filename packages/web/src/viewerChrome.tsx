@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { Copy, Link2, SquarePen } from 'lucide-preact';
-import { encode, buildLink } from '@openartifact/core';
+import { encode, buildLink } from '@hashdoc/core';
 import { AppHeader, HeaderButton, ThemeToggleButton, HEADER_ICON_SIZE } from './chrome.js';
 import { copyText } from './render.js';
 

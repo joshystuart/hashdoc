@@ -1,11 +1,11 @@
 import { defineConfig, type Plugin } from 'vite';
 import { buildCsp, inlineScriptBodies, inlineScriptHash } from './src/csp.js';
 
-const CSP_PLACEHOLDER = '<!--OPENARTIFACT_CSP-->';
+const CSP_PLACEHOLDER = '<!--HASHDOC_CSP-->';
 
 function strictCspPlugin(): Plugin {
   return {
-    name: 'openartifact-strict-csp',
+    name: 'HashDoc-strict-csp',
     transformIndexHtml: {
       order: 'post',
       handler(html) {

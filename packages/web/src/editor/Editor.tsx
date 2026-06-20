@@ -2,7 +2,7 @@ import { render as preactRender } from 'preact';
 import type { ComponentType } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
-import { encode, buildLink, linkSizeWarning } from '@openartifact/core';
+import { encode, buildLink, linkSizeWarning } from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
