@@ -89,6 +89,18 @@ describe('mountViewer — DOM mounting', () => {
     );
     expect(buttons.at(-1)?.classList.contains('theme-toggle')).toBe(true);
   });
+
+  it('shows the HashDoc logo at the far left of the chrome', () => {
+    const link = buildLink(encode('# Doc\n\nbody'), ORIGIN);
+    mountViewer(root, link);
+
+    const chrome = root.querySelector('.viewer__chrome')!;
+    const leading = chrome.querySelector('.app-header__leading')!;
+    const logo = leading.querySelector('.app-header__logo')!;
+    expect(logo).not.toBeNull();
+    expect(leading.firstElementChild).toBe(logo);
+    expect(logo.querySelector('img')?.getAttribute('src')).toContain('hashdoc-logo.svg');
+  });
 });
 
 describe('mountViewer — graceful decode failures (issue-05)', () => {
