@@ -141,7 +141,7 @@ X-Content-Type-Options: nosniff
 Referrer-Policy: no-referrer
 Cross-Origin-Opener-Policy: same-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
-Strict-Transport-Security: max-age=63072000; includeSubDomains
+Strict-Transport-Security: max-age=63072000
 ```
 
 `pnpm --filter @hashdoc/web preview` serves these headers locally so the

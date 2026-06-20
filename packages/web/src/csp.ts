@@ -47,7 +47,7 @@ export function securityHeaders(): Record<string, string> {
     'Referrer-Policy': 'no-referrer',
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
-    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
+    'Strict-Transport-Security': 'max-age=63072000',
   };
 }
 

@@ -60,7 +60,7 @@ describe('securityHeaders (response headers — clickjacking & sniffing defenses
     expect(headers['X-Content-Type-Options']).toBe('nosniff');
     expect(headers['Referrer-Policy']).toBe('no-referrer');
     expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
-    expect(headers['Strict-Transport-Security']).toMatch(/max-age=\d+/);
+    expect(headers['Strict-Transport-Security']).toBe('max-age=63072000');
   });
 
   it('renders a static-host _headers file applying to every path', () => {
