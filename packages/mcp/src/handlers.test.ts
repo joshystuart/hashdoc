@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { decode, payloadFromUrl } from '@openartifact/core';
+import { decode, payloadFromUrl } from '@hashdoc/core';
 import { createMarkdownLink, readMarkdownLink, DecodeError } from './handlers.js';
 
-const BASE = 'https://openartifact.md/';
+const BASE = 'https://hashdoc.ghost7.org/';
 
 describe('createMarkdownLink', () => {
   it('produces a url whose fragment decodes back to the input markdown', () => {
@@ -60,7 +60,7 @@ describe('readMarkdownLink', () => {
   });
 
   it('throws a typed DecodeError on corrupt / garbage input', () => {
-    expect(() => readMarkdownLink({ url: 'https://openartifact.md/#not-a-real-payload!!!' })).toThrow(
+    expect(() => readMarkdownLink({ url: 'https://hashdoc.ghost7.org/#not-a-real-payload!!!' })).toThrow(
       DecodeError,
     );
     expect(() => readMarkdownLink({ url: 'total garbage' })).toThrow(DecodeError);

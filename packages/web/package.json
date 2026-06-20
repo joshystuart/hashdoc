@@ -1,5 +1,5 @@
 {
-  "name": "@openartifact/web",
+  "name": "@hashdoc/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,10 +16,11 @@
     "@codemirror/language": "^6.12.3",
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.43.1",
-    "@openartifact/core": "workspace:*",
+    "@hashdoc/core": "workspace:*",
     "dompurify": "^3.2.3",
     "highlight.js": "^11.11.1",
     "katex": "^0.17.0",
+    "lucide-preact": "^1.21.0",
     "markdown-it": "^14.1.0",
     "mermaid": "^11.4.1",
     "preact": "^10.29.2"

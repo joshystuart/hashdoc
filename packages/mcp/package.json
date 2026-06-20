@@ -1,22 +1,29 @@
 {
-  "name": "@openartifact/mcp",
+  "name": "@hashdoc/mcp",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "openartifact-mcp": "./dist/bin.js"
+    "hashdoc-mcp": "./dist/bin.js"
   },
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshystuart/openartifact.git",
+    "directory": "packages/mcp"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@openartifact/core": "workspace:*",
+    "@hashdoc/core": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

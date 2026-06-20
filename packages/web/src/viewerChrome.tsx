@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
-import { encode, buildLink } from '@openartifact/core';
-import { AppHeader, HeaderButton, ThemeToggleButton } from './chrome.js';
+import { Copy, Link2, SquarePen } from 'lucide-preact';
+import { encode, buildLink } from '@hashdoc/core';
+import { AppHeader, HeaderButton, ThemeToggleButton, HEADER_ICON_SIZE } from './chrome.js';
 import { copyText } from './render.js';
 
 interface ViewerChromeProps {
@@ -37,6 +38,7 @@ export function ViewerChrome({ markdown, onEdit }: ViewerChromeProps) {
           });
         }}
       >
+        <Copy size={HEADER_ICON_SIZE} />
         {sourceLabel}
       </HeaderButton>
       <HeaderButton
@@ -50,6 +52,7 @@ export function ViewerChrome({ markdown, onEdit }: ViewerChromeProps) {
           });
         }}
       >
+        <Link2 size={HEADER_ICON_SIZE} />
         {linkLabel}
       </HeaderButton>
       <HeaderButton
@@ -57,6 +60,7 @@ export function ViewerChrome({ markdown, onEdit }: ViewerChromeProps) {
         title="Edit a copy — your changes make a new link; this one stays unchanged"
         onClick={onEdit}
       >
+        <SquarePen size={HEADER_ICON_SIZE} />
         Edit
       </HeaderButton>
       <ThemeToggleButton />

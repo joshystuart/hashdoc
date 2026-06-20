@@ -1,12 +1,22 @@
 import { render as preactRender } from 'preact';
+import type { ComponentType } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { encode, buildLink, linkSizeWarning } from '@openartifact/core';
+import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
+import { encode, buildLink, linkSizeWarning } from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
 import { EXAMPLE_DOC } from './example.js';
-import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton } from '../chrome.js';
+import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton, HEADER_ICON_SIZE } from '../chrome.js';
+
+const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
+  bold: Bold,
+  italic: Italic,
+  heading: Heading,
+  link: Link2,
+  code: Code,
+};
 
 export interface EditorProps {
   initialMarkdown?: string;
@@ -80,31 +90,36 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         class="editor__bar"
         leading={
           <HeaderToolbar class="editor__toolbar" role="toolbar" aria-label="Formatting">
-            {TOOLBAR_ACTIONS.map((action) => (
-              <HeaderButton
-                key={action.id}
-                variant="icon"
-                class="editor__tool"
-                title={action.title}
-                aria-label={action.title}
-                onClick={() => {
-                  const view = editorRef.current?.view;
-                  if (view) {
-                    action.run(view);
-                  }
-                }}
-              >
-                {action.label}
-              </HeaderButton>
-            ))}
+            {TOOLBAR_ACTIONS.map((action) => {
+              const Icon = TOOLBAR_ICONS[action.id];
+              return (
+                <HeaderButton
+                  key={action.id}
+                  variant="icon"
+                  class="editor__tool"
+                  title={action.title}
+                  aria-label={action.title}
+                  onClick={() => {
+                    const view = editorRef.current?.view;
+                    if (view) {
+                      action.run(view);
+                    }
+                  }}
+                >
+                  {Icon ? <Icon size={HEADER_ICON_SIZE} /> : action.label}
+                </HeaderButton>
+              );
+            })}
           </HeaderToolbar>
         }
       >
         <div class="editor__actions">
           <HeaderButton variant="primary" class="editor__copy" onClick={() => void copyLink()}>
+            <Link2 size={HEADER_ICON_SIZE} />
             {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
           </HeaderButton>
           <HeaderButton class="editor__view" onClick={openView}>
+            <Eye size={HEADER_ICON_SIZE} />
             View
           </HeaderButton>
           <ThemeToggleButton />

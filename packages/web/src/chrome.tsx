@@ -1,6 +1,9 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { useState } from 'preact/hooks';
+import { Moon, Sun } from 'lucide-preact';
 import { currentTheme, toggleTheme, type Theme } from './theme.js';
+
+export const HEADER_ICON_SIZE = 18;
 
 type HeaderButtonVariant = 'primary' | 'secondary' | 'icon';
 
@@ -65,7 +68,7 @@ export function ThemeToggleButton(): JSX.Element {
       title={label}
       onClick={() => setTheme(toggleTheme())}
     >
-      {theme === 'light' ? '\u{1F319}' : '☀️'}
+      {theme === 'light' ? <Moon size={HEADER_ICON_SIZE} /> : <Sun size={HEADER_ICON_SIZE} />}
     </HeaderButton>
   );
 }

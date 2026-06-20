@@ -1,38 +1,110 @@
-# openartifact
+# HashDoc
 
-Share beautifully-rendered markdown as a single link. The entire Document is
-compressed into the URL **fragment**, so opening a link reconstructs and renders
-it client-side — **no server ever receives or stores the content**. Nothing to
-install, no account, no tracking.
+HashDoc turns markdown into a single shareable Link.
 
-- **People** create links by pasting markdown into the **Editor** and copying the link.
-- **Agents** create links directly through the **MCP** server.
-- **Recipients** open the link, read the rendered Document, and can fork-and-edit it into their own new link.
+Paste markdown into the Editor, copy the Link, and send it to someone. Opening
+that Link reconstructs and renders the Document entirely in the browser. The
+Document is compressed into the URL fragment, so no server receives or stores
+the content. There is nothing to install, no account, and no tracking.
 
-See [CONTEXT.md](CONTEXT.md) for the glossary and [docs/prds/openartifact-v1/PRD.md](docs/prds/openartifact-v1/PRD.md) for the full spec.
+Agents can also create Links directly through the HashDoc MCP server.
 
-## Repository layout
+## What Is HashDoc?
 
-A pnpm + TypeScript monorepo with three packages:
+HashDoc is a client-side-only web app for sharing markdown as a Link:
 
-| Package | What it is |
-|---|---|
-| [`packages/core`](packages/core) | The Link **format only** — `encode`/`decode`, version-tag handling, link/size helpers. No DOM, no rendering. Single source of truth shared by `web` and `mcp`. The v1 format is **frozen** ([FORMAT.md](packages/core/FORMAT.md)). |
-| [`packages/web`](packages/web) | The Viewer + Editor + shared render module (Vite, Preact, CodeMirror). |
-| [`packages/mcp`](packages/mcp) | The MCP server exposing two tools over stdio. |
+- **People** create Links by pasting markdown into the Editor and copying the result.
+- **Agents** create Links through the MCP server.
+- **Recipients** open the Link, read the rendered Document, and can fork-and-edit it into a new Link.
 
-## Prerequisites
+Because the Document lives in the URL fragment, browsers do not send it to the  
+origin server in requests or `Referer` headers. Links are still bearer-access:  
+anyone with the Link can read the Document.
 
-- **Node.js** ≥ 20 (developed on 24)
-- **pnpm** (this repo pins `pnpm@10` via `packageManager`; install with `corepack enable`)
+## Getting Started Online
 
-## Install
+Open [hashdoc.ghost7.org](https://hashdoc.ghost7.org/).
+
+To create a Link:
+
+1. Paste or write markdown in the Editor.
+2. Preview the rendered Document.
+3. Click **Copy Link**.
+4. Share the copied Link.
+
+To read a Link, open it in a browser. To edit what you received, use the Editor
+to create a new Link. Editing never mutates the Link you opened.
+
+## Using The MCP Server
+
+The published MCP package lets agents create and read HashDoc Links without
+running this repository locally.
+
+Example MCP client configuration:
+
+```json
+{
+  "mcpServers": {
+    "HashDoc": {
+      "command": "npx",
+      "args": ["-y", "@hashdoc/mcp"],
+      "env": {
+        "HASHDOC_BASE_URL": "https://hashdoc.ghost7.org/"
+      }
+    }
+  }
+}
+```
+
+`HASHDOC_BASE_URL` controls the origin used for generated Links. If unset,
+it defaults to `https://hashdoc.ghost7.org/`.
+
+The server speaks stdio, makes zero network calls, and exposes two tools:
+
+
+| Tool                   | Input                               | Result                          |
+| ---------------------- | ----------------------------------- | ------------------------------- |
+| `create_markdown_link` | `{ markdown }`                      | `{ url, characters, warning? }` |
+| `read_markdown_link`   | `{ url }` full Link or bare Payload | `{ markdown }`                  |
+
+
+There is no update tool. Editing is another create operation that produces a
+new Link.
+
+## Running HashDoc Locally
+
+This is a pnpm and TypeScript monorepo with three packages:
+
+
+| Package                          | What it is                                                                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[packages/core](packages/core)` | The Link format: `encode`/`decode`, version-tag handling, and link/size helpers. Shared by `web` and `mcp`. The v1 format is frozen in [FORMAT.md](packages/core/FORMAT.md). |
+| `[packages/web](packages/web)`   | The Viewer, Editor, and shared render module built with Vite, Preact, and CodeMirror.                                                                                        |
+| `[packages/mcp](packages/mcp)`   | The MCP server exposing HashDoc tools over stdio.                                                                                                                            |
+
+
+Prerequisites:
+
+- Node.js >= 20
+- pnpm 10 via Corepack
+
+Install dependencies:
 
 ```bash
+corepack enable
 pnpm install
 ```
 
-Root scripts fan out to every workspace:
+Run the web app with live reload:
+
+```bash
+pnpm dev
+```
+
+This starts the Vite dev server for `@hashdoc/web` at
+`http://localhost:5173`.
+
+Build, test, and type-check all packages:
 
 ```bash
 pnpm build      # build all packages
@@ -40,103 +112,61 @@ pnpm test       # run all tests
 pnpm typecheck  # type-check all packages
 ```
 
-> Note: `web` type-checks against `core`'s built output, so run `pnpm build`
-> before a cold `pnpm typecheck` (or just run `pnpm build` first).
+`web` type-checks against `core`'s built output, so run `pnpm build` before a
+cold `pnpm typecheck`.
 
----
-
-## Running the website
-
-### Development (live reload)
+Build and preview the static website:
 
 ```bash
-pnpm dev
+pnpm --filter @hashdoc/web build      # outputs packages/web/dist
+pnpm --filter @hashdoc/web preview     # serves the built dist locally
 ```
 
-This starts the Vite dev server for `@openartifact/web` at **http://localhost:5173**.
+The build is fully static and origin-relative (`base: './'`), so
+`packages/web/dist` can be dropped onto any static host. Everything is bundled
+and self-hosted, including fonts, highlight.js, Mermaid, and KaTeX.
 
-- Open the bare URL → the **Editor** loads with a self-describing example. Paste your
-  markdown, then click **Copy Link** to get a shareable link.
-- Open a URL with a fragment (`http://localhost:5173/#<payload>`) → the **Viewer**
-  renders that Document.
-
-### Production build / preview
+Build and run the local MCP server:
 
 ```bash
-pnpm --filter @openartifact/web build      # outputs packages/web/dist
-pnpm --filter @openartifact/web preview     # serves the built dist locally
+pnpm --filter @hashdoc/mcp build
+HASHDOC_BASE_URL="http://localhost:5173/" node packages/mcp/dist/bin.js
 ```
 
-The build is fully static and origin-relative (`base: './'`), so `packages/web/dist`
-can be dropped onto **any static host** with zero configuration — no serverless
-functions, no backend. Everything (fonts, highlight.js, Mermaid, KaTeX) is bundled
-and self-hosted; the app makes **zero third-party requests**.
-
----
-
-## Running the MCP server
-
-The MCP server is pure-local and makes **zero network calls**. It speaks **stdio**
-and exposes two tools:
-
-| Tool | Input | Result |
-|---|---|---|
-| `create_markdown_link` | `{ markdown }` | `{ url, characters, warning? }` |
-| `read_markdown_link` | `{ url }` (full link **or** bare payload) | `{ markdown }` |
-
-There is no `update` tool — editing is just another `create` (fork-and-share has no identity).
-
-### Build it first
-
-```bash
-pnpm --filter @openartifact/mcp build
-```
-
-This emits the runnable entry at `packages/mcp/dist/bin.js`.
-
-### Configure the link origin
-
-Set `OPENARTIFACT_BASE_URL` to the origin that produced links should point at.
-If unset, it defaults to `https://openartifact.md/`.
-
-```bash
-export OPENARTIFACT_BASE_URL="https://openartifact.md/"
-```
-
-### Run / register it
-
-The binary is `openartifact-mcp` (entry: `packages/mcp/dist/bin.js`). Point your MCP
-client at it. Example client config:
+Or point an MCP client at the local build:
 
 ```json
 {
   "mcpServers": {
-    "openartifact": {
+    "HashDoc": {
       "command": "node",
-      "args": ["/absolute/path/to/openartifact/packages/mcp/dist/bin.js"],
+      "args": ["/absolute/path/to/HashDoc/packages/mcp/dist/bin.js"],
       "env": {
-        "OPENARTIFACT_BASE_URL": "https://openartifact.md/"
+        "HASHDOC_BASE_URL": "https://hashdoc.ghost7.org/"
       }
     }
   }
 }
 ```
 
-To run it directly (it then waits for an MCP client to talk to it over stdio):
+## Contributing
+
+Keep changes aligned with the core product promise: the Link is the Document.
+The app should remain client-side only, with no accounts, uploads, analytics, or
+third-party runtime requests.
+
+Useful references:
+
+- [CONTEXT.md](CONTEXT.md) defines the project vocabulary.
+- [packages/core/FORMAT.md](packages/core/FORMAT.md) documents the frozen v1 Link format.
+- [docs/adr/0001-the-link-is-the-document.md](docs/adr/0001-the-link-is-the-document.md) explains why the Document lives in the URL fragment.
+- [docs/adr/0002-no-third-party-requests.md](docs/adr/0002-no-third-party-requests.md) explains the zero third-party requests constraint.
+
+Before opening a change, run:
 
 ```bash
-OPENARTIFACT_BASE_URL="https://openartifact.md/" node packages/mcp/dist/bin.js
+pnpm build
+pnpm test
+pnpm typecheck
 ```
 
-> Once published to npm, the intended distribution is `npx @openartifact/mcp`. While
-> developing from this repo, run the built `bin.js` directly as shown above.
-
----
-
-## Privacy & safety
-
-- The Document lives in the URL **fragment**, which browsers never transmit to a
-  server (not in requests, not in `Referer`). ([ADR 0001](docs/adr/0001-the-link-is-the-document.md))
-- **Zero third-party requests** — no analytics, no CDN; everything bundled. ([ADR 0002](docs/adr/0002-no-third-party-requests.md))
-- Rendering is sanitized through DOMPurify with a strict CSP as defense-in-depth.
-- Links are **bearer-access**: anyone with the link can read it. A link is never "secure."

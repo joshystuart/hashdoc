@@ -1,6 +1,6 @@
 # The link is the document
 
-openartifact embeds an entire markdown Document inside the URL itself — compressed with raw DEFLATE (`fflate`), base64url-encoded, and carried in the URL **fragment** (after `#`) behind a 1-character version tag. There is **no backend**: no account, no upload, no server-side storage or rendering. The Link *is* the datastore.
+HashDoc embeds an entire markdown Document inside the URL itself — compressed with raw DEFLATE (`fflate`), base64url-encoded, and carried in the URL **fragment** (after `#`) behind a 1-character version tag. There is **no backend**: no account, no upload, no server-side storage or rendering. The Link *is* the datastore.
 
 ## Why
 
