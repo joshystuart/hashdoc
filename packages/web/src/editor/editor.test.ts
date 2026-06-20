@@ -146,6 +146,17 @@ describe('Editor — author creates a Link', () => {
     expect(bar.textContent!.toLowerCase()).not.toContain('secure');
   });
 
+  it('shows the HashDoc logo at the far left of the bar', async () => {
+    mountEditor(root);
+    await flush();
+
+    const leading = root.querySelector('.editor__bar .app-header__leading')!;
+    const logo = leading.querySelector('.app-header__logo')!;
+    expect(logo).not.toBeNull();
+    expect(leading.firstElementChild).toBe(logo);
+    expect(logo.querySelector('img')?.getAttribute('src')).toContain('hashdoc-logo.svg');
+  });
+
   it('toolbar bold action wraps text in the source and updates the preview', async () => {
     mountEditor(root);
     await flush();

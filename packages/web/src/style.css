@@ -161,6 +161,29 @@ a {
   align-items: center;
 }
 
+.app-header__leading {
+  gap: 0.5rem;
+}
+
+.app-header__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-header__logo img {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: block;
+  border-radius: 8px;
+}
+
 .app-header__actions {
   gap: 0.5rem;
   margin-left: auto;
