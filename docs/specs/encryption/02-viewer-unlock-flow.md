@@ -1,5 +1,7 @@
 # Viewer unlock flow (web read path)
 
+> **Status:** ✅ Done — completed 2026-06-20
+
 ## Parent
 
 [Password-protected (encrypted) Links PRD](./PRD.md)
@@ -44,21 +46,21 @@ markdown into the Editor.
 
 ## Acceptance criteria
 
-- [ ] A protected Link routes `resolveView` to `kind: 'locked'` synchronously
+- [x] A protected Link routes `resolveView` to `kind: 'locked'` synchronously
       (not `error`, not `document`).
-- [ ] `mountViewer` renders a password prompt for a locked Link.
-- [ ] Submitting the correct password renders the Document (correct HTML, tab
+- [x] `mountViewer` renders a password prompt for a locked Link.
+- [x] Submitting the correct password renders the Document (correct HTML, tab
       title, chrome) and executes no scripts (XSS-safety holds on decrypted
       content).
-- [ ] A wrong password keeps the prompt and shows an "incorrect password"
+- [x] A wrong password keeps the prompt and shows an "incorrect password"
       message; the Document is not rendered; retry is possible.
-- [ ] A truncated/corrupt protected Link shows the existing corrupt-Link error
+- [x] A truncated/corrupt protected Link shows the existing corrupt-Link error
       view.
-- [ ] After unlock, "Copy Link" copies a still-protected Link (its Payload starts
+- [x] After unlock, "Copy Link" copies a still-protected Link (its Payload starts
       with `2`) that decrypts back to the same Document with the password.
-- [ ] After unlock, "Copy source" copies the decrypted markdown and "Edit" forks
+- [x] After unlock, "Copy source" copies the decrypted markdown and "Edit" forks
       the decrypted markdown into the Editor.
-- [ ] Unprotected (tag `1`) Links open exactly as before — no prompt, no
+- [x] Unprotected (tag `1`) Links open exactly as before — no prompt, no
       behavior change.
 
 ## Blocked by

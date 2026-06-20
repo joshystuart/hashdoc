@@ -2,7 +2,14 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { encode, decode, buildLink, payloadFromUrl } from '@hashdoc/core';
+import {
+  encode,
+  decode,
+  encodeProtected,
+  decodeProtected,
+  buildLink,
+  payloadFromUrl,
+} from '@hashdoc/core';
 import { resolveView, mountViewer } from './viewer.js';
 
 const ORIGIN = 'https://md.example/';
@@ -261,6 +268,163 @@ describe('Viewer reading niceties (issue-09)', () => {
     expect(root.querySelector('.viewer__copy-source')?.textContent).toBe('Copy source');
     expect(root.querySelector('.viewer__copy-link')?.textContent).toBe('Copy Link');
     expect(root.querySelector('.viewer__edit')?.textContent).toBe('Edit');
+  });
+});
+
+describe('Viewer unlock flow (protected Links)', () => {
+  let root: HTMLElement;
+  const PASSWORD = 'correct horse battery staple';
+
+  beforeEach(() => {
+    root = document.createElement('div');
+    document.title = '';
+  });
+
+  function mockClipboard(): string[] {
+    const writes: string[] = [];
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: (t: string) => {
+          writes.push(t);
+          return Promise.resolve();
+        },
+      },
+    });
+    return writes;
+  }
+
+  async function waitFor(predicate: () => boolean): Promise<void> {
+    for (let i = 0; i < 200 && !predicate(); i++) {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+    expect(predicate()).toBe(true);
+  }
+
+  function submitPassword(password: string): void {
+    const input = root.querySelector<HTMLInputElement>('.unlock__password')!;
+    input.value = password;
+    root.querySelector<HTMLFormElement>('.unlock__form')!.dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    );
+  }
+
+  it('routes a protected Link to a locked state synchronously', async () => {
+    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const state = resolveView(link);
+    expect(state.kind).toBe('locked');
+    if (state.kind === 'locked') {
+      expect(state.payload.startsWith('2')).toBe(true);
+    }
+  });
+
+  it('renders a password prompt for a locked Link', async () => {
+    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const state = mountViewer(root, link);
+
+    expect(state.kind).toBe('locked');
+    expect(root.querySelector('.unlock__password')).not.toBeNull();
+    expect(root.querySelector('.unlock__submit')).not.toBeNull();
+    expect((root.textContent ?? '').toLowerCase()).toContain('password-protected');
+    expect(root.querySelector('.document')).toBeNull();
+  });
+
+  it('renders the Document after the correct password, sanitizing scripts', async () => {
+    const md = '# Quarterly Report\n\n<script>globalThis.__pwnedUnlock = true</script>body';
+    const link = buildLink(await encodeProtected(md, PASSWORD), ORIGIN);
+    mountViewer(root, link);
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+
+    expect(root.querySelector('h1')?.textContent).toContain('Quarterly Report');
+    expect(document.title).toBe('Quarterly Report');
+    expect(root.querySelector('script')).toBeNull();
+    expect((globalThis as Record<string, unknown>).__pwnedUnlock).toBeUndefined();
+  });
+
+  it('keeps the prompt and shows an error on a wrong password, then unlocks on retry', async () => {
+    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+    mountViewer(root, link);
+
+    submitPassword('wrong password');
+    await waitFor(() => {
+      const message = root.querySelector<HTMLElement>('.unlock__error');
+      return message !== null && !message.hidden;
+    });
+
+    expect((root.querySelector('.unlock__error')?.textContent ?? '').toLowerCase()).toContain(
+      'incorrect password',
+    );
+    expect(root.querySelector('.unlock__password')).not.toBeNull();
+    expect(root.querySelector('.document')).toBeNull();
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+    expect(root.querySelector('h1')?.textContent).toContain('Secret');
+  });
+
+  it('shows the corrupt-Link error view for a truncated protected Link', async () => {
+    const full = buildLink(
+      await encodeProtected('# A protected document long enough '.repeat(20), PASSWORD),
+      ORIGIN,
+    );
+    const truncated = full.slice(0, Math.floor(full.length / 2));
+    const state = mountViewer(root, truncated);
+    expect(state.kind).toBe('locked');
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('section.error') !== null);
+
+    expect((root.textContent ?? '').toLowerCase()).toContain('cut off');
+    expect(root.querySelector('.document')).toBeNull();
+  });
+
+  it('Copy Link re-emits the original protected Link, not a re-encoded plaintext Link', async () => {
+    const writes = mockClipboard();
+    const md = '# Secret\n\nbody';
+    const link = buildLink(await encodeProtected(md, PASSWORD), location.origin + location.pathname);
+    mountViewer(root, link);
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+
+    root.querySelector<HTMLButtonElement>('.viewer__copy-link')!.click();
+    await waitFor(() => writes.length === 1);
+
+    const copied = writes[0]!;
+    const payload = payloadFromUrl(copied);
+    expect(payload).not.toBeNull();
+    expect(payload!.startsWith('2')).toBe(true);
+    expect(await decodeProtected(payload!, PASSWORD)).toBe(md);
+  });
+
+  it('Copy source copies the decrypted markdown after unlock', async () => {
+    const writes = mockClipboard();
+    const md = '# Secret\n\nraw **markdown** body';
+    mountViewer(root, buildLink(await encodeProtected(md, PASSWORD), ORIGIN));
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+
+    root.querySelector<HTMLButtonElement>('.viewer__copy-source')!.click();
+    await waitFor(() => writes.length === 1);
+    expect(writes).toEqual([md]);
+  });
+
+  it('Edit forks the decrypted markdown into the Editor after unlock', async () => {
+    const md = '# Secret\n\nedit me';
+    mountViewer(root, buildLink(await encodeProtected(md, PASSWORD), ORIGIN));
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+
+    root.querySelector<HTMLButtonElement>('.viewer__edit')!.click();
+    await waitFor(() => root.querySelector('.cm-content') !== null);
+
+    const { EditorView } = await import('@codemirror/view');
+    const view = EditorView.findFromDOM(root.querySelector('.cm-content') as HTMLElement);
+    expect(view).not.toBeNull();
+    expect(view!.state.doc.toString()).toBe(md);
   });
 });
 

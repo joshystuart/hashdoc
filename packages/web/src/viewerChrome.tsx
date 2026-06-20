@@ -7,6 +7,7 @@ import { copyText } from './render.js';
 interface ViewerChromeProps {
   markdown: string;
   onEdit: () => void;
+  protectedPayload?: string | undefined;
 }
 
 function useFlashingLabel(original: string): [string, (message: string) => void] {
@@ -23,7 +24,7 @@ function useFlashingLabel(original: string): [string, (message: string) => void]
   ];
 }
 
-export function ViewerChrome({ markdown, onEdit }: ViewerChromeProps) {
+export function ViewerChrome({ markdown, onEdit, protectedPayload }: ViewerChromeProps) {
   const [sourceLabel, flashSource] = useFlashingLabel('Copy source');
   const [linkLabel, flashLink] = useFlashingLabel('Copy Link');
 
@@ -46,7 +47,8 @@ export function ViewerChrome({ markdown, onEdit }: ViewerChromeProps) {
         class="viewer__action viewer__copy-link"
         title="Copy a link to this document"
         onClick={() => {
-          const link = buildLink(encode(markdown), location.origin + location.pathname);
+          const payload = protectedPayload ?? encode(markdown);
+          const link = buildLink(payload, location.origin + location.pathname);
           void copyText(link).then((ok) => {
             flashLink(ok ? 'Link copied' : 'Copy failed');
           });
