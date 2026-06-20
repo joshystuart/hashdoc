@@ -76,6 +76,9 @@ importers:
       katex:
         specifier: ^0.17.0
         version: 0.17.0
+      lucide-preact:
+        specifier: ^1.21.0
+        version: 1.21.0(preact@10.29.2)
       markdown-it:
         specifier: ^14.1.0
         version: 14.2.0
@@ -1654,6 +1657,11 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
+
+  lucide-preact@1.21.0:
+    resolution: {integrity: sha512-GUJs/vYSHNM5HU0UwNADfKvDbNDQ7i6vciniCvtpRVMsXy+FOcaRHgRhqVcY/CiORqA6oMC8xK5JJ7Wvb1r1Sw==}
+    peerDependencies:
+      preact: ^10.27.2
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
@@ -3723,6 +3731,10 @@ snapshots:
   loupe@3.2.1: {}
 
   lru-cache@10.4.3: {}
+
+  lucide-preact@1.21.0(preact@10.29.2):
+    dependencies:
+      preact: 10.29.2
 
   lz-string@1.5.0: {}
 

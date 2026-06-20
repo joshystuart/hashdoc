@@ -11,8 +11,10 @@
   --border-strong: rgba(0, 0, 0, 0.28);
   --code-bg: rgba(127, 127, 127, 0.12);
   --hover-bg: rgba(0, 0, 0, 0.06);
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --soft-bg: rgba(0, 0, 0, 0.05);
+  --soft-bg-hover: rgba(0, 0, 0, 0.1);
+  --accent: #6d5ef0;
+  --accent-hover: #5b4ce0;
   --accent-fg: #ffffff;
   --danger: #b91c1c;
   --warn: #92590b;
@@ -28,8 +30,10 @@
   --border-strong: rgba(255, 255, 255, 0.28);
   --code-bg: rgba(255, 255, 255, 0.08);
   --hover-bg: rgba(255, 255, 255, 0.1);
-  --accent: #2f81f7;
-  --accent-hover: #4493f8;
+  --soft-bg: rgba(255, 255, 255, 0.08);
+  --soft-bg-hover: rgba(255, 255, 255, 0.14);
+  --accent: #7c6cf5;
+  --accent-hover: #8d7ff7;
   --accent-fg: #ffffff;
   --danger: #ff7b72;
   --warn: #e3b341;
@@ -156,6 +160,7 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
   height: 2.25rem;
   padding: 0 0.85rem;
   box-sizing: border-box;
@@ -163,19 +168,34 @@ a {
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--soft-bg);
   color: inherit;
   cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.06s ease;
 }
 
 .app-button:hover {
-  background: var(--hover-bg);
+  background: var(--soft-bg-hover);
+}
+
+.app-button:active {
+  transform: translateY(1px);
+}
+
+.app-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.app-button svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-shrink: 0;
 }
 
 .app-button--primary {
-  border-color: transparent;
   background: var(--accent);
   color: var(--accent-fg);
 }
