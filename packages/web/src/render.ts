@@ -1,6 +1,24 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 
+const FORBID_TAGS = [
+  'script',
+  'style',
+  'iframe',
+  'frame',
+  'frameset',
+  'object',
+  'embed',
+  'base',
+  'form',
+  'link',
+  'meta',
+  'noscript',
+  'template',
+];
+
+const FORBID_ATTR = ['onerror', 'onload', 'onclick'];
+
 const md: MarkdownIt = new MarkdownIt({
   html: true,
   linkify: true,
@@ -198,8 +216,8 @@ export function render(markdown: string): string {
   const rawHtml = md.render(markdown);
   const safe = DOMPurify.sanitize(rawHtml, {
     ADD_ATTR: ['target', 'rel'],
-    FORBID_TAGS: ['script', 'style', 'iframe', 'frame', 'object', 'embed'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+    FORBID_TAGS,
+    FORBID_ATTR,
   });
   return postProcess(safe);
 }
@@ -352,8 +370,8 @@ async function enhanceMath(container: HTMLElement): Promise<void> {
       const rawHtml = renderMath(tex, displayMode);
       el.innerHTML = DOMPurify.sanitize(rawHtml, {
         USE_PROFILES: { html: true, mathMl: true },
-        FORBID_TAGS: ['script', 'style', 'iframe', 'frame', 'object', 'embed'],
-        FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+        FORBID_TAGS,
+        FORBID_ATTR,
       });
     } catch {
       el.textContent = tex;
@@ -379,8 +397,8 @@ async function enhanceHighlight(container: HTMLElement): Promise<void> {
     const language = languageOf(code);
     const tokenized = highlightCode(code.textContent ?? '', language);
     code.innerHTML = DOMPurify.sanitize(tokenized, {
-      FORBID_TAGS: ['script', 'style', 'iframe', 'frame', 'object', 'embed'],
-      FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+      FORBID_TAGS,
+      FORBID_ATTR,
     });
     code.classList.add('hljs');
     code.dataset.highlighted = 'yes';
@@ -411,8 +429,8 @@ async function enhanceMermaid(container: HTMLElement): Promise<void> {
       const rawSvg = await renderMermaid(id, source);
       const safeSvg = DOMPurify.sanitize(rawSvg, {
         USE_PROFILES: { svg: true, svgFilters: true },
-        FORBID_TAGS: ['script', 'style', 'foreignObject', 'iframe'],
-        FORBID_ATTR: ['onerror', 'onload', 'onclick'],
+        FORBID_TAGS: [...FORBID_TAGS, 'foreignObject'],
+        FORBID_ATTR,
       });
       const figure = container.ownerDocument.createElement('figure');
       figure.className = 'mermaid';

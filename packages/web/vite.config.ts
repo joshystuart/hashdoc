@@ -1,7 +1,43 @@
 import { defineConfig, type Plugin } from 'vite';
-import { buildCsp, inlineScriptBodies, inlineScriptHash } from './src/csp.js';
+import {
+  buildCsp,
+  inlineScriptBodies,
+  inlineScriptHash,
+  renderNetlifyHeaders,
+  securityHeaders,
+} from './src/csp.js';
 
 const CSP_PLACEHOLDER = '<!--HASHDOC_CSP-->';
+
+function securityHeadersPlugin(): Plugin {
+  const headers = securityHeaders();
+  return {
+    name: 'HashDoc-security-headers',
+    configureServer(server) {
+      server.middlewares.use((_req, res, next) => {
+        for (const [name, value] of Object.entries(headers)) {
+          res.setHeader(name, value);
+        }
+        next();
+      });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((_req, res, next) => {
+        for (const [name, value] of Object.entries(headers)) {
+          res.setHeader(name, value);
+        }
+        next();
+      });
+    },
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: '_headers',
+        source: renderNetlifyHeaders(headers),
+      });
+    },
+  };
+}
 
 function strictCspPlugin(): Plugin {
   return {
@@ -26,7 +62,7 @@ function strictCspPlugin(): Plugin {
 
 export default defineConfig({
   base: './',
-  plugins: [strictCspPlugin()],
+  plugins: [strictCspPlugin(), securityHeadersPlugin()],
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'preact',

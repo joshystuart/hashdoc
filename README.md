@@ -126,6 +126,27 @@ The build is fully static and origin-relative (`base: './'`), so
 `packages/web/dist` can be dropped onto any static host. Everything is bundled
 and self-hosted, including fonts, highlight.js, Mermaid, and KaTeX.
 
+### Security headers
+
+The page ships a strict Content-Security-Policy via a `<meta>` tag, but a few
+protections (notably `frame-ancestors` for clickjacking) only work as real HTTP
+response headers. The build emits a `dist/_headers` file that hosts like
+Cloudflare Pages and Netlify apply automatically. On other hosts (nginx, Caddy,
+Coolify static), configure these response headers yourself:
+
+```
+Content-Security-Policy: frame-ancestors 'none'
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: no-referrer
+Cross-Origin-Opener-Policy: same-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
+Strict-Transport-Security: max-age=63072000; includeSubDomains
+```
+
+`pnpm --filter @hashdoc/web preview` serves these headers locally so the
+production configuration can be verified.
+
 Build and run the local MCP server:
 
 ```bash
