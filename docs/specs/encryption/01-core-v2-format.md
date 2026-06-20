@@ -1,5 +1,7 @@
 # Core v2 encryption format (`@hashdoc/core`)
 
+> **Status:** ✅ Done — completed 2026-06-20
+
 ## Parent
 
 [Password-protected (encrypted) Links PRD](./PRD.md)
@@ -62,30 +64,30 @@ cost; password never in the Link; no backend / no third-party preserved).
 
 ## Acceptance criteria
 
-- [ ] `encodeProtected` / `decodeProtected` / `isProtected` and `VERSION_TAG_V2`
+- [x] `encodeProtected` / `decodeProtected` / `isProtected` and `VERSION_TAG_V2`
       are exported from `@hashdoc/core`; v1 `encode`/`decode` remain synchronous
       and unchanged (existing v1 golden tests still pass).
-- [ ] Round-trip holds across the v1 golden content variety (empty, ASCII,
+- [x] Round-trip holds across the v1 golden content variety (empty, ASCII,
       unicode/emoji, GFM table, fenced code, CRLF, long multi-construct):
       `decodeProtected(encodeProtected(md, pw), pw) === md`.
-- [ ] Encrypting the same input twice yields **different** Payloads (random
+- [x] Encrypting the same input twice yields **different** Payloads (random
       salt/IV) and both decrypt back to the original.
-- [ ] Wrong password throws `DecodeError` with reason `wrong-password`.
-- [ ] Tampering with any byte of the frame yields `wrong-password`, never a
+- [x] Wrong password throws `DecodeError` with reason `wrong-password`.
+- [x] Tampering with any byte of the frame yields `wrong-password`, never a
       silent wrong decryption.
-- [ ] A truncated/too-short frame yields `malformed-encrypted-frame` and is
+- [x] A truncated/too-short frame yields `malformed-encrypted-frame` and is
       classified as `corrupt`.
-- [ ] `isProtected` correctly distinguishes `1…` from `2…` Payloads.
-- [ ] Sync `decode` on a `2…` Payload throws a clear typed error;
+- [x] `isProtected` correctly distinguishes `1…` from `2…` Payloads.
+- [x] Sync `decode` on a `2…` Payload throws a clear typed error;
       `decodeProtected` on a `1…` Payload throws a clear typed error.
-- [ ] A pinned freeze fixture (hardcoded v2 Payload + known password) decrypts to
+- [x] A pinned freeze fixture (hardcoded v2 Payload + known password) decrypts to
       a known Document and is asserted to keep doing so forever (decode-direction
       permanence, mirroring `golden.test.ts`).
-- [ ] `classifyDecodeError` maps `wrong-password` to the new UI kind and leaves
+- [x] `classifyDecodeError` maps `wrong-password` to the new UI kind and leaves
       structural failures as `corrupt`.
-- [ ] `FORMAT.md` documents the frozen v2 format; a new ADR records the decision
+- [x] `FORMAT.md` documents the frozen v2 format; a new ADR records the decision
       and threat model.
-- [ ] The no-third-party bundle audit still passes (no new dependency, no network
+- [x] The no-third-party bundle audit still passes (no new dependency, no network
       request).
 
 ## Blocked by

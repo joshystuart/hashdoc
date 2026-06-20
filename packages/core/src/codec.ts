@@ -1,8 +1,9 @@
 import { deflateSync, inflateSync } from 'fflate';
 import { base64urlToBytes, bytesToBase64url } from './base64url.js';
 import { DecodeError } from './errors.js';
+import { VERSION_TAG_V1, VERSION_TAG_V2 } from './versions.js';
 
-export const VERSION_TAG_V1 = '1';
+export { VERSION_TAG_V1 };
 
 const MAX_COMPRESSED_BYTES = 512 * 1024;
 const MAX_DECOMPRESSED_BYTES = 8 * 1024 * 1024;
@@ -23,6 +24,13 @@ export function decode(payload: string): string {
 
   const tag = payload[0]!;
   const body = payload.slice(1);
+
+  if (tag === VERSION_TAG_V2) {
+    throw new DecodeError(
+      'password-required',
+      'This Link is password-protected. Use decodeProtected(payload, password) to open it.',
+    );
+  }
 
   if (tag !== VERSION_TAG_V1) {
     throw new DecodeError(

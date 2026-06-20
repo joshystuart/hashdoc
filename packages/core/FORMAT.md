@@ -31,11 +31,68 @@ markdown
   (the golden test asserts the round-trip too — this is the real permanence
   guarantee).
 
+## The v2 format — password-protected Links (FROZEN)
+
+Version 2 (tag `2`) is the **password-protected** Link format. It is additive: v1
+is untouched and remains the default for unprotected sharing. v2 reuses v1's
+compression and codec and inserts an encryption step (compress-then-encrypt, so
+the incompressible ciphertext does not bloat the Link).
+
+```
+markdown
+  -> UTF-8 bytes
+  -> raw DEFLATE            (fflate `deflateSync` — identical to v1)
+  -> AES-256-GCM encrypt    (key derived from the password)
+  -> binary frame
+  -> base64url              (no padding — existing codec)
+  -> prefix version tag `2`
+```
+
+`encodeProtected(markdown, password)` returns the `2…` Payload;
+`decodeProtected(payload, password)` reverses it. `isProtected(payload)` is a
+cheap synchronous `payload[0] === '2'` check. v2 is **async** because Web Crypto
+is Promise-based; v1 stays synchronous.
+
+### Binary frame layout
+
+All fields are non-secret and travel in the Payload. The password is **never**
+stored in the Link.
+
+```
+[ salt: 16 bytes ] [ iterations: uint32 big-endian ] [ iv: 12 bytes ] [ ciphertext + 16-byte GCM tag ]
+```
+
+The minimum valid frame is 48 bytes (32-byte header + 16-byte GCM tag for
+empty ciphertext). Anything shorter is a `malformed-encrypted-frame`.
+
+### Crypto parameters
+
+- **KDF:** PBKDF2-HMAC-SHA-256, **600,000 iterations**, 32-byte (256-bit) key.
+  The iteration count is stored in the frame so the cost is self-describing and
+  can be raised later without a third version tag.
+- **Cipher:** AES-256-GCM, random 12-byte IV per encryption, 16-byte auth tag.
+- **Randomness:** `crypto.getRandomValues` for the salt and IV.
+- All primitives are native Web Crypto (`crypto.subtle`) — **zero runtime
+  dependencies, no WASM**.
+
+A wrong password (or any tampering) fails the GCM tag check and surfaces as the
+`wrong-password` error reason — there is no separate stored password verifier.
+
+### What "frozen" means for v2
+
+Because encryption is **non-deterministic** (random salt and IV every time), the
+encode direction cannot be pinned the way v1's golden fixtures pin
+`encode(markdown)`. The permanence guarantee is therefore enforced on the
+**decode direction**: [`src/crypto.test.ts`](./src/crypto.test.ts) hardcodes a
+literal `2…` Payload plus its known password and asserts it always decrypts back
+to a known Document. A protected Link shared today must keep opening with its
+password forever.
+
 ## Evolving the format
 
 Any future change to compression or encoding must ship under a **NEW version
-tag** (e.g. `2`), routed through `decode`'s version dispatch. You must **never**
-mutate the v1 encoding or re-capture the golden literals to "make the test
+tag** (e.g. `3`), routed through `decode`'s version dispatch. You must **never**
+mutate the v1 or v2 encoding or re-capture the frozen literals to "make the test
 pass."
 
 The freeze is tied to fflate's DEFLATE output, which is deterministic for a
