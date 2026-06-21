@@ -13,16 +13,28 @@ const packagePaths = [
 
 const sh = (cmd) => execSync(cmd, { cwd: root, encoding: 'utf8' }).trim();
 
-const lastTag = (() => {
+const trySh = (cmd) => {
   try {
-    return sh('git describe --tags --abbrev=0 --match "v*"');
+    return execSync(cmd, {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
   } catch {
     return '';
   }
-})();
+};
 
-const baseVersion = lastTag ? lastTag.replace(/^v/, '') : '0.0.0';
-const range = lastTag ? `${lastTag}..HEAD` : 'HEAD';
+const baseVersion = JSON.parse(
+  readFileSync(join(root, 'packages/core/package.json'), 'utf8'),
+).version;
+
+const lastTag = trySh('git describe --tags --abbrev=0 --match "v*"');
+const lastReleaseCommit = trySh(
+  'git rev-list -1 --grep="chore(release):" HEAD',
+);
+const since = lastTag || lastReleaseCommit;
+const range = since ? `${since}..HEAD` : 'HEAD';
 const hashes = sh(`git log ${range} --no-merges --format=%H`)
   .split('\n')
   .filter(Boolean);
@@ -70,7 +82,7 @@ const setOutput = (key, value) => {
   }
 };
 
-console.log(`last tag: ${lastTag || '(none)'}`);
+console.log(`since: ${since || '(repo start)'}`);
 console.log(`bump: ${bumpName}`);
 console.log(`version: ${baseVersion} -> ${nextVersion}`);
 console.log(`publish: ${published}`);

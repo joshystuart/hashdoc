@@ -4,11 +4,21 @@ export const EXAMPLE_DOC = `# HashDoc
 nothing is stored on a server, and nothing is sent anywhere. Share the link and
 anyone who has it can read this, right in their browser.
 
-This page is itself an HashDoc document. To write your own, select all
+This page is itself a HashDoc document. To write your own, select all
 (Cmd/Ctrl+A) and replace it, then press **Copy Link**.
 
-HashDoc is open source on [GitHub](https://github.com/joshystuart/openartifact).
-If you find it useful, please star the project to help more people discover it.
+## How a link works
+
+\`\`\`
+https://hashdoc.ghost7.org/#1y0jNyclXKM8vykkBAA
+└────────────┬────────────┘└────────┬─────────┘
+          origin                   Payload
+\`\`\`
+
+- **origin** — the static site that renders the link. It serves only the app; it never receives the document.
+- **\`#\` fragment** — everything after \`#\` stays in the browser. Browsers do not send the fragment to the server in requests or \`Referer\` headers.
+- **version tag** — the first character of the Payload: \`1\` for a plain link, \`2\` for a secure link.
+- **Payload** — the whole document, compressed (and, for secure links, encrypted) and base64url-encoded.
 
 ## What it does
 

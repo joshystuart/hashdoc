@@ -5,8 +5,8 @@ HashDoc turns markdown into a single shareable Link.
 A Link looks like this:
 
 ```
-https://hashdoc.ghost7.org/#1eJxLSSxJVDA0AAAFAAH3
-└────────────┬────────────┘  └────────┬─────────┘
+https://hashdoc.ghost7.org/#1y0jNyclXKM8vykkBAA
+└────────────┬────────────┘└────────┬─────────┘
           origin                   Payload
 ```
 
