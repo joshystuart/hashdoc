@@ -482,6 +482,39 @@ describe('Viewer unlock flow (secure Links)', () => {
     expect(decode(payload)).toBe(md);
   });
 
+  it('secure copy/plain copy mode is sticky after unlock and toggles without re-prompting', async () => {
+    const writes = mockClipboard();
+    const md = '# Secret\n\nbody';
+    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
+    mountViewer(root, link);
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+
+    (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    (Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+      el.textContent?.includes('Copy Link'),
+    ) as HTMLButtonElement).click();
+    await waitFor(() => writes.length === 1);
+    expect(payloadFromUrl(writes[0]!)!.startsWith('1')).toBe(true);
+    expect(root.querySelector('.split-button--secure')).toBeNull();
+
+    (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    (Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+      el.textContent?.includes('Copy secure link'),
+    ) as HTMLButtonElement).click();
+    await waitFor(() => writes.length === 2);
+
+    expect(root.querySelector('.password-dialog')?.matches('[open]')).not.toBe(true);
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+    const payload = payloadFromUrl(writes[1]!)!;
+    expect(payload.startsWith('2')).toBe(true);
+    expect(await decodeSecure(payload, PASSWORD)).toBe(md);
+  });
+
   it('Copy source copies the decrypted markdown after unlock', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nraw **markdown** body';

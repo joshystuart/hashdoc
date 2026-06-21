@@ -326,6 +326,59 @@ describe('Editor — author creates a Link', () => {
     expect(decode(payload)).toBe(md);
   });
 
+  it('after creating a secure Link, the plain Copy Link menu item reverts the primary to plain', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Sticky\n\nbody\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    await copyViaSecureDialog(root, copied, 'pw-revert');
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+
+    openMenu(root);
+    await flush();
+    menuItem(root, 'Copy Link').click();
+    await flush();
+
+    expect(root.querySelector('.split-button--secure')).toBeNull();
+    const primary = root.querySelector('.split-button__primary')!;
+    expect(primary.classList.contains('app-button--secure')).toBe(false);
+
+    const link = await copyViaPrimary(root, copied);
+    const payload = payloadFromUrl(link)!;
+    expect(payload[0]).toBe('1');
+    expect(decode(payload)).toBe(md);
+  });
+
+  it('keeps the password after demoting to plain so secure can be re-chosen without a dialog', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Resecure\n\nbody\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    await copyViaSecureDialog(root, copied, 'remembered');
+
+    openMenu(root);
+    await flush();
+    menuItem(root, 'Copy Link').click();
+    await flush();
+    expect(root.querySelector('.split-button--secure')).toBeNull();
+
+    openMenu(root);
+    await flush();
+    menuItem(root, 'Copy secure link').click();
+    await flush();
+
+    expect(dialog(root).open).toBe(false);
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+    const link = await copyViaPrimary(root, copied);
+    const payload = payloadFromUrl(link)!;
+    expect(payload[0]).toBe('2');
+    expect(await decodeSecure(payload, 'remembered')).toBe(md);
+  });
+
   it('the dialog submit is disabled on an empty password', async () => {
     mountEditor(root);
     await flush();
@@ -343,6 +396,35 @@ describe('Editor — author creates a Link', () => {
     submitDialog(root);
     await flush();
     expect(copied).toHaveLength(0);
+  });
+
+  it('View on a secure Document shows the Viewer document directly, secure and unlocked', async () => {
+    mountEditor(root);
+    await flush();
+    const md = '# Sticky View\n\ncontents\n';
+    typeIntoSource(root, md);
+    await flush();
+
+    await copyViaSecureDialog(root, copied, 'sticky-pw');
+
+    root.querySelector<HTMLButtonElement>('.editor__view')!.click();
+    for (let i = 0; i < 200 && root.querySelector('.viewer .document') === null; i++) {
+      await tick();
+    }
+
+    expect(root.querySelector('.viewer .document')).not.toBeNull();
+    expect(root.querySelector('.unlock__password')).toBeNull();
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+
+    root.querySelector<HTMLButtonElement>('.viewer__edit')!.click();
+    for (let i = 0; i < 200 && root.querySelector('.cm-content') === null; i++) {
+      await tick();
+    }
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+    const link = await copyViaPrimary(root, copied);
+    const payload = payloadFromUrl(link)!;
+    expect(payload[0]).toBe('2');
+    expect(await decodeSecure(payload, 'sticky-pw')).toBe(md);
   });
 
   it('View opens the secure Link to the Viewer locked prompt', async () => {

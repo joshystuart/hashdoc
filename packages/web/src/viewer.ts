@@ -15,6 +15,7 @@ import {
   firstHeadingText,
 } from './render.js';
 import { ViewerChrome } from './viewerChrome.js';
+import type { SecureSession } from './secureSession.js';
 
 const DEFAULT_TITLE = 'HashDoc';
 
@@ -68,11 +69,18 @@ export function mountViewer(
   return state;
 }
 
+export function mountDocument(
+  root: HTMLElement,
+  { markdown, session }: { markdown: string; session?: SecureSession },
+): void {
+  renderDocument(root, markdown, render(markdown), session);
+}
+
 function renderDocument(
   root: HTMLElement,
   markdown: string,
   html: string,
-  securePayload?: string,
+  session?: SecureSession,
 ): void {
   root.textContent = '';
 
@@ -84,11 +92,15 @@ function renderDocument(
   preactRender(
     h(ViewerChrome, {
       markdown,
-      securePayload,
-      onEdit: () => {
+      session,
+      onEdit: (editSession: SecureSession) => {
         void import('./editor/mount.js').then(({ mountEditor }) => {
           root.textContent = '';
-          mountEditor(root, { initialMarkdown: markdown, forkedFromDocument: true });
+          mountEditor(root, {
+            initialMarkdown: markdown,
+            forkedFromDocument: true,
+            initialSession: editSession,
+          });
         });
       },
     }),
@@ -147,7 +159,11 @@ function mountUnlockPrompt(root: HTMLElement, payload: string): void {
     message.hidden = true;
     void decodeSecure(payload, input.value)
       .then((markdown) => {
-        renderDocument(root, markdown, render(markdown), payload);
+        renderDocument(root, markdown, render(markdown), {
+          mode: 'secure',
+          password: null,
+          payload,
+        });
       })
       .catch((e) => {
         const errorKind: DecodeErrorKind =

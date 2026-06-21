@@ -22,6 +22,7 @@ import { EXAMPLE_DOC } from './example.js';
 import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton, HEADER_ICON_SIZE } from '../chrome.js';
 import { SplitButton, type SplitButtonMenuItem } from '../SplitButton.js';
 import { PasswordDialog } from '../PasswordDialog.js';
+import type { SecureMode, SecureSession } from '../secureSession.js';
 
 const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
   bold: Bold,
@@ -36,17 +37,22 @@ type DialogMode = 'copy' | 'save';
 export interface EditorProps {
   initialMarkdown?: string;
   forkedFromDocument?: boolean;
+  initialSession?: SecureSession;
 }
 
-export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Element {
+export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): preact.JSX.Element {
   const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
+  const initialPassword = initialSession?.password ?? null;
   const rootRef = useRef<HTMLDivElement>(null);
   const sourceHost = useRef<HTMLDivElement>(null);
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [securePassword, setSecurePassword] = useState<string | null>(null);
+  const [securePassword, setSecurePassword] = useState<string | null>(initialPassword);
+  const [mode, setMode] = useState<SecureMode>(
+    initialPassword !== null && initialSession?.mode === 'secure' ? 'secure' : 'plain',
+  );
   const [secureLink, setSecureLink] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [dialogMode, setDialogMode] = useState<DialogMode>('copy');
@@ -88,7 +94,7 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     };
   }, [securePassword, markdown, base]);
 
-  const activeLink = securePassword === null ? plainLink : secureLink;
+  const activeLink = mode === 'secure' ? secureLink : plainLink;
 
   async function writeClipboard(value: string): Promise<void> {
     try {
@@ -100,6 +106,7 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   }
 
   function copyPlain(): void {
+    setMode('plain');
     void writeClipboard(plainLink);
   }
 
@@ -108,6 +115,17 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
       return;
     }
     void writeClipboard(secureLink);
+  }
+
+  function chooseSecure(): void {
+    if (securePassword === null) {
+      openCopyDialog();
+      return;
+    }
+    setMode('secure');
+    if (secureLink !== null) {
+      void writeClipboard(secureLink);
+    }
   }
 
   function openCopyDialog(): void {
@@ -122,12 +140,14 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
 
   function removePassword(): void {
     setSecurePassword(null);
+    setMode('plain');
     setCopyState('idle');
   }
 
   async function handleDialogSubmit(password: string): Promise<void> {
     if (dialogMode === 'copy') {
       setSecurePassword(password);
+      setMode('secure');
       try {
         const payload = await encodeSecure(markdown, password);
         const link = buildLink(payload, base);
@@ -154,13 +174,15 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     }
     history.pushState(null, '', activeLink);
     preactRender(null, root);
-    void import('../viewer.js').then(({ mountViewer }) => {
-      mountViewer(root, activeLink);
+    const session: SecureSession = { mode, password: securePassword };
+    void import('../viewer.js').then(({ mountDocument }) => {
+      mountDocument(root, { markdown, session });
     });
   }
 
   const copiedLabel = copyState === 'copied' ? 'Link copied' : null;
-  const secured = securePassword !== null;
+  const hasPassword = securePassword !== null;
+  const secured = mode === 'secure';
   const primary = secured
     ? { label: copiedLabel ?? 'Copy secure link', icon: Lock, onClick: copySecure }
     : { label: copiedLabel ?? 'Copy Link', icon: Link2, onClick: copyPlain };
@@ -170,7 +192,20 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         { label: 'Change password…', icon: KeyRound, onClick: openChangeDialog },
         { label: 'Remove password', icon: Unlock, onClick: removePassword, destructive: true },
       ]
-    : [{ label: 'Copy secure link', icon: Lock, onClick: openCopyDialog }];
+    : [
+        { label: 'Copy secure link', icon: Lock, onClick: chooseSecure },
+        ...(hasPassword
+          ? [
+              { label: 'Change password…', icon: KeyRound, onClick: openChangeDialog },
+              {
+                label: 'Remove password',
+                icon: Unlock,
+                onClick: removePassword,
+                destructive: true,
+              },
+            ]
+          : []),
+      ];
 
   const characters = (activeLink ?? plainLink).length;
   const sizeWarning = linkSizeWarning(characters);
