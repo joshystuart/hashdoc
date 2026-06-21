@@ -1,5 +1,7 @@
 # Viewer secure split button
 
+> **Status:** ✅ Done — completed 2026-06-21
+
 ## What to build
 
 Give the Viewer the same Split Button as the Editor, reusing the `SplitButton`
@@ -23,15 +25,15 @@ plaintext Link — the plain copy is always a deliberate menu choice.
 
 ## Acceptance criteria
 
-- [ ] The Viewer's single "Copy Link" is replaced by the shared `SplitButton`,
+- [x] The Viewer's single "Copy Link" is replaced by the shared `SplitButton`,
       seeded from the opened Document (presence of the original secure Payload).
-- [ ] Plain Document: primary copies the plain Link; the secure menu item opens the
+- [x] Plain Document: primary copies the plain Link; the secure menu item opens the
       dialog and produces a Secure Link decryptable to the same Document.
-- [ ] Secure Document: starts locked; the primary copies a still-secure (tag `2`)
+- [x] Secure Document: starts locked; the primary copies a still-secure (tag `2`)
       Link that decrypts back to the same Document with the password, without
       prompting for one; the menu offers a plain copy.
-- [ ] "Copy source", "Edit", and the unlock flow are unchanged.
-- [ ] Viewer tests cover the above at the existing Viewer seam; verified in a real
+- [x] "Copy source", "Edit", and the unlock flow are unchanged.
+- [x] Viewer tests cover the above at the existing Viewer seam; verified in a real
       browser via the Chrome DevTools MCP.
 
 ## Blocked by

@@ -14,6 +14,21 @@ import { resolveView, mountViewer } from './viewer.js';
 
 const ORIGIN = 'https://md.example/';
 
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function waitFor(predicate: () => boolean): Promise<void> {
+  for (let i = 0; i < 200 && !predicate(); i++) {
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+  expect(predicate()).toBe(true);
+}
+
+async function waitForDialogOpen(root: HTMLElement): Promise<void> {
+  await waitFor(() => (root.querySelector('.password-dialog') as HTMLDialogElement)?.open === true);
+}
+
 describe('resolveView — fragment routing', () => {
   it('shows the Editor when there is no fragment', () => {
     expect(resolveView(ORIGIN).kind).toBe('editor');
@@ -85,6 +100,10 @@ describe('mountViewer — DOM mounting', () => {
 
     const chrome = root.querySelector('.viewer__chrome')!;
     expect(chrome.textContent!.toLowerCase()).not.toContain('secure');
+
+    const primary = root.querySelector('.split-button__primary')!;
+    expect(primary.textContent!.toLowerCase()).not.toContain('secure');
+    expect(primary.textContent).toBe('Copy Link');
   });
 
   it('places the theme toggle last so it sits at the far right of the chrome', () => {
@@ -252,7 +271,7 @@ describe('Viewer reading niceties (issue-09)', () => {
     const md = '# Doc\n\nbody';
     mountViewer(root, buildLink(encode(md), 'https://md.example/'));
 
-    const button = root.querySelector<HTMLButtonElement>('.viewer__copy-link');
+    const button = root.querySelector<HTMLButtonElement>('.split-button__primary');
     expect(button).not.toBeNull();
     button!.click();
     await Promise.resolve();
@@ -278,8 +297,36 @@ describe('Viewer reading niceties (issue-09)', () => {
   it('renders Copy source and Copy Link actions in the chrome', () => {
     mountViewer(root, buildLink(encode('# x'), 'https://md.example/'));
     expect(root.querySelector('.viewer__copy-source')?.textContent).toBe('Copy source');
-    expect(root.querySelector('.viewer__copy-link')?.textContent).toBe('Copy Link');
+    expect(root.querySelector('.split-button__primary')?.textContent).toBe('Copy Link');
     expect(root.querySelector('.viewer__edit')?.textContent).toBe('Edit');
+  });
+
+  it('plain Link: the secure menu item opens the dialog and copies a decryptable secure Link', async () => {
+    const writes = mockClipboard();
+    const md = '# Doc\n\nbody to protect';
+    mountViewer(root, buildLink(encode(md), 'https://md.example/'));
+
+    (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
+    await flush();
+    const item = Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+      el.textContent?.includes('Copy secure link'),
+    ) as HTMLButtonElement;
+    expect(item).not.toBeNull();
+    item.click();
+    await waitForDialogOpen(root);
+
+    const input = root.querySelector('.password-dialog__input') as HTMLInputElement;
+    input.value = 'hunter2';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flush();
+    (root.querySelector('.password-dialog__form') as HTMLFormElement).dispatchEvent(
+      new Event('submit', { bubbles: true, cancelable: true }),
+    );
+    await waitFor(() => writes.length === 1);
+
+    const payload = payloadFromUrl(writes[0]!)!;
+    expect(payload.startsWith('2')).toBe(true);
+    expect(await decodeSecure(payload, 'hunter2')).toBe(md);
   });
 });
 
@@ -400,7 +447,9 @@ describe('Viewer unlock flow (secure Links)', () => {
     submitPassword(PASSWORD);
     await waitFor(() => root.querySelector('.document') !== null);
 
-    root.querySelector<HTMLButtonElement>('.viewer__copy-link')!.click();
+    expect(root.querySelector('.split-button--secure')).not.toBeNull();
+
+    root.querySelector<HTMLButtonElement>('.split-button__primary')!.click();
     await waitFor(() => writes.length === 1);
 
     const copied = writes[0]!;
@@ -408,6 +457,29 @@ describe('Viewer unlock flow (secure Links)', () => {
     expect(payload).not.toBeNull();
     expect(payload!.startsWith('2')).toBe(true);
     expect(await decodeSecure(payload!, PASSWORD)).toBe(md);
+  });
+
+  it('after unlock the menu offers a plain Copy Link that downgrades to a tag 1 Link', async () => {
+    const writes = mockClipboard();
+    const md = '# Secret\n\nbody';
+    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
+    mountViewer(root, link);
+
+    submitPassword(PASSWORD);
+    await waitFor(() => root.querySelector('.document') !== null);
+
+    (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const item = Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+      el.textContent?.includes('Copy Link'),
+    ) as HTMLButtonElement;
+    expect(item).not.toBeNull();
+    item.click();
+    await waitFor(() => writes.length === 1);
+
+    const payload = payloadFromUrl(writes[0]!)!;
+    expect(payload.startsWith('1')).toBe(true);
+    expect(decode(payload)).toBe(md);
   });
 
   it('Copy source copies the decrypted markdown after unlock', async () => {
