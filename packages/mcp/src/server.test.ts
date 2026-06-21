@@ -31,9 +31,9 @@ describe('resolveBaseUrl', () => {
   });
 
   it('honours HASHDOC_BASE_URL', () => {
-    expect(
-      resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.dev/' }),
-    ).toBe('https://hashdoc.dev/');
+    expect(resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.dev/' })).toBe(
+      'https://hashdoc.dev/',
+    );
   });
 });
 
