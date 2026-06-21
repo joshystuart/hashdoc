@@ -11,8 +11,8 @@ This page is itself a HashDoc document. To write your own, select all
 
 \`\`\`
 https://hashdoc.dev/#1y0jNyclXKM8vykkBAA
-└────────────┬────────────┘└────────┬─────────┘
-          origin                   Payload
+└────────┬─────────┘└────────┬─────────┘
+       origin             Payload
 \`\`\`
 
 - **origin** — the static site that renders the link. It serves only the app; it never receives the document.

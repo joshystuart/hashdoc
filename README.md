@@ -6,8 +6,8 @@ A Link looks like this:
 
 ```
 https://hashdoc.dev/#1y0jNyclXKM8vykkBAA
-└────────────┬────────────┘└────────┬─────────┘
-          origin                   Payload
+└────────┬─────────┘└────────┬─────────┘
+       origin             Payload
 ```
 
 - **origin** — the static site that renders the Link. It serves only the app; it
