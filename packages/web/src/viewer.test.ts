@@ -5,8 +5,8 @@ import { dirname, join } from 'node:path';
 import {
   encode,
   decode,
-  encodeProtected,
-  decodeProtected,
+  encodeSecure,
+  decodeSecure,
   buildLink,
   payloadFromUrl,
 } from '@hashdoc/core';
@@ -283,7 +283,7 @@ describe('Viewer reading niceties (issue-09)', () => {
   });
 });
 
-describe('Viewer unlock flow (protected Links)', () => {
+describe('Viewer unlock flow (secure Links)', () => {
   let root: HTMLElement;
   const PASSWORD = 'correct horse battery staple';
 
@@ -320,8 +320,8 @@ describe('Viewer unlock flow (protected Links)', () => {
     );
   }
 
-  it('routes a protected Link to a locked state synchronously', async () => {
-    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+  it('routes a secure Link to a locked state synchronously', async () => {
+    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
     const state = resolveView(link);
     expect(state.kind).toBe('locked');
     if (state.kind === 'locked') {
@@ -330,19 +330,19 @@ describe('Viewer unlock flow (protected Links)', () => {
   });
 
   it('renders a password prompt for a locked Link', async () => {
-    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
     const state = mountViewer(root, link);
 
     expect(state.kind).toBe('locked');
     expect(root.querySelector('.unlock__password')).not.toBeNull();
     expect(root.querySelector('.unlock__submit')).not.toBeNull();
-    expect((root.textContent ?? '').toLowerCase()).toContain('password-protected');
+    expect((root.textContent ?? '').toLowerCase()).toContain('secure');
     expect(root.querySelector('.document')).toBeNull();
   });
 
   it('renders the Document after the correct password, sanitizing scripts', async () => {
     const md = '# Quarterly Report\n\n<script>globalThis.__pwnedUnlock = true</script>body';
-    const link = buildLink(await encodeProtected(md, PASSWORD), ORIGIN);
+    const link = buildLink(await encodeSecure(md, PASSWORD), ORIGIN);
     mountViewer(root, link);
 
     submitPassword(PASSWORD);
@@ -355,7 +355,7 @@ describe('Viewer unlock flow (protected Links)', () => {
   });
 
   it('keeps the prompt and shows an error on a wrong password, then unlocks on retry', async () => {
-    const link = buildLink(await encodeProtected('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
     mountViewer(root, link);
 
     submitPassword('wrong password');
@@ -375,9 +375,9 @@ describe('Viewer unlock flow (protected Links)', () => {
     expect(root.querySelector('h1')?.textContent).toContain('Secret');
   });
 
-  it('shows the corrupt-Link error view for a truncated protected Link', async () => {
+  it('shows the corrupt-Link error view for a truncated secure Link', async () => {
     const full = buildLink(
-      await encodeProtected('# A protected document long enough '.repeat(20), PASSWORD),
+      await encodeSecure('# A secure document long enough '.repeat(20), PASSWORD),
       ORIGIN,
     );
     const truncated = full.slice(0, Math.floor(full.length / 2));
@@ -391,10 +391,10 @@ describe('Viewer unlock flow (protected Links)', () => {
     expect(root.querySelector('.document')).toBeNull();
   });
 
-  it('Copy Link re-emits the original protected Link, not a re-encoded plaintext Link', async () => {
+  it('Copy Link re-emits the original secure Link, not a re-encoded plaintext Link', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nbody';
-    const link = buildLink(await encodeProtected(md, PASSWORD), location.origin + location.pathname);
+    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
     mountViewer(root, link);
 
     submitPassword(PASSWORD);
@@ -407,13 +407,13 @@ describe('Viewer unlock flow (protected Links)', () => {
     const payload = payloadFromUrl(copied);
     expect(payload).not.toBeNull();
     expect(payload!.startsWith('2')).toBe(true);
-    expect(await decodeProtected(payload!, PASSWORD)).toBe(md);
+    expect(await decodeSecure(payload!, PASSWORD)).toBe(md);
   });
 
   it('Copy source copies the decrypted markdown after unlock', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nraw **markdown** body';
-    mountViewer(root, buildLink(await encodeProtected(md, PASSWORD), ORIGIN));
+    mountViewer(root, buildLink(await encodeSecure(md, PASSWORD), ORIGIN));
 
     submitPassword(PASSWORD);
     await waitFor(() => root.querySelector('.document') !== null);
@@ -425,7 +425,7 @@ describe('Viewer unlock flow (protected Links)', () => {
 
   it('Edit forks the decrypted markdown into the Editor after unlock', async () => {
     const md = '# Secret\n\nedit me';
-    mountViewer(root, buildLink(await encodeProtected(md, PASSWORD), ORIGIN));
+    mountViewer(root, buildLink(await encodeSecure(md, PASSWORD), ORIGIN));
 
     submitPassword(PASSWORD);
     await waitFor(() => root.querySelector('.document') !== null);

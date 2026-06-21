@@ -63,9 +63,9 @@ describe('MCP server', () => {
     expect(read.markdown).toBe(markdown);
   });
 
-  it('create then read round-trips a protected Link with the password', async () => {
+  it('create then read round-trips a secure Link with the password', async () => {
     const client = await connectedClient('https://hashdoc.ghost7.org/');
-    const markdown = '# Protected\n\nsecret body';
+    const markdown = '# Secret\n\nsecret body';
     const password = 'shared-secret';
 
     const created = parseJsonResult<{ url: string; characters: number }>(
@@ -85,7 +85,7 @@ describe('MCP server', () => {
     expect(read.markdown).toBe(markdown);
   });
 
-  it('returns a password-required error for a protected Link read with no password', async () => {
+  it('returns a password-required error for a secure Link read with no password', async () => {
     const client = await connectedClient('https://hashdoc.ghost7.org/');
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({
@@ -103,7 +103,7 @@ describe('MCP server', () => {
     expect(result.content[0]!.text).toContain('password-required');
   });
 
-  it('returns a wrong-password error for a protected Link read with the wrong password', async () => {
+  it('returns a wrong-password error for a secure Link read with the wrong password', async () => {
     const client = await connectedClient('https://hashdoc.ghost7.org/');
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({

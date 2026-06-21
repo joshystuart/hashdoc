@@ -31,10 +31,10 @@ markdown
   (the golden test asserts the round-trip too — this is the real permanence
   guarantee).
 
-## The v2 format — password-protected Links (FROZEN)
+## The v2 format — secure Links (FROZEN)
 
-Version 2 (tag `2`) is the **password-protected** Link format. It is additive: v1
-is untouched and remains the default for unprotected sharing. v2 reuses v1's
+Version 2 (tag `2`) is the **secure** Link format. It is additive: v1
+is untouched and remains the default for plain sharing. v2 reuses v1's
 compression and codec and inserts an encryption step (compress-then-encrypt, so
 the incompressible ciphertext does not bloat the Link).
 
@@ -48,8 +48,8 @@ markdown
   -> prefix version tag `2`
 ```
 
-`encodeProtected(markdown, password)` returns the `2…` Payload;
-`decodeProtected(payload, password)` reverses it. `isProtected(payload)` is a
+`encodeSecure(markdown, password)` returns the `2…` Payload;
+`decodeSecure(payload, password)` reverses it. `isSecure(payload)` is a
 cheap synchronous `payload[0] === '2'` check. v2 is **async** because Web Crypto
 is Promise-based; v1 stays synchronous.
 
@@ -85,7 +85,7 @@ encode direction cannot be pinned the way v1's golden fixtures pin
 `encode(markdown)`. The permanence guarantee is therefore enforced on the
 **decode direction**: [`src/crypto.test.ts`](./src/crypto.test.ts) hardcodes a
 literal `2…` Payload plus its known password and asserts it always decrypts back
-to a known Document. A protected Link shared today must keep opening with its
+to a known Document. A secure Link shared today must keep opening with its
 password forever.
 
 ## Evolving the format

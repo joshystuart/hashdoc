@@ -68,7 +68,7 @@ export function createServer(baseUrl: string = resolveBaseUrl()): McpServer {
           .string()
           .optional()
           .describe(
-            'Optional password for protected Links. The password is never embedded in the Link and must be conveyed out-of-band.',
+            'Optional password for secure Links. The password is never embedded in the Link and must be conveyed out-of-band.',
           ),
       },
     },

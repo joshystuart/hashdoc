@@ -2,7 +2,7 @@ import { render as preactRender } from 'preact';
 import type { ComponentType } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
-import { encode, encodeProtected, buildLink, linkSizeWarning } from '@hashdoc/core';
+import { encode, encodeSecure, buildLink, linkSizeWarning } from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
@@ -31,10 +31,10 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [protect, setProtect] = useState<boolean>(false);
+  const [secure, setSecure] = useState<boolean>(false);
   const [password, setPassword] = useState<string>('');
   const [confirm, setConfirm] = useState<string>('');
-  const [protectedLink, setProtectedLink] = useState<string | null>(null);
+  const [secureLink, setSecureLink] = useState<string | null>(null);
 
   useLayoutEffect(() => {
     const host = sourceHost.current;
@@ -54,31 +54,31 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   }, []);
 
   const base = location.origin + location.pathname;
-  const unprotectedLink = buildLink(encode(markdown), base);
-  const passwordReady = protect && password.length > 0 && password === confirm;
+  const plainLink = buildLink(encode(markdown), base);
+  const secureReady = secure && password.length > 0 && password === confirm;
 
   useEffect(() => {
-    if (!passwordReady) {
-      setProtectedLink(null);
+    if (!secureReady) {
+      setSecureLink(null);
       return;
     }
     let ignore = false;
-    void encodeProtected(markdown, password).then((payload) => {
+    void encodeSecure(markdown, password).then((payload) => {
       if (!ignore) {
-        setProtectedLink(buildLink(payload, base));
+        setSecureLink(buildLink(payload, base));
       }
     });
     return () => {
       ignore = true;
     };
-  }, [passwordReady, markdown, password, base]);
+  }, [secureReady, markdown, password, base]);
 
-  const link = protect ? protectedLink : unprotectedLink;
+  const link = secure ? secureLink : plainLink;
 
-  const protectMessage = !protect
+  const secureMessage = !secure
     ? null
     : password.length === 0
-      ? 'Enter a password to protect this Document.'
+      ? 'Enter a password to secure this Document.'
       : password !== confirm
         ? 'Passwords do not match.'
         : null;
@@ -110,7 +110,7 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     });
   }
 
-  const characters = (link ?? unprotectedLink).length;
+  const characters = (link ?? plainLink).length;
   const sizeWarning = linkSizeWarning(characters);
   const images = classifyImages(markdown);
   const previewHtml = render(markdown);
@@ -164,21 +164,21 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         </div>
       </AppHeader>
       <div class="editor__status">
-        <div class="editor__protect">
-          <label class="editor__protect-toggle">
+        <div class="editor__secure">
+          <label class="editor__secure-toggle">
             <input
               type="checkbox"
-              class="editor__protect-checkbox"
-              checked={protect}
+              class="editor__secure-checkbox"
+              checked={secure}
               onChange={(event) => {
-                setProtect((event.target as HTMLInputElement).checked);
+                setSecure((event.target as HTMLInputElement).checked);
                 setCopyState('idle');
               }}
             />
-            Protect with password
+            Secure with password
           </label>
-          {protect ? (
-            <div class="editor__protect-fields">
+          {secure ? (
+            <div class="editor__secure-fields">
               <input
                 type="password"
                 class="editor__password"
@@ -203,13 +203,13 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
                   setCopyState('idle');
                 }}
               />
-              <p class="editor__protect-note">
+              <p class="editor__secure-note">
                 Share this password separately from the Link — never send both in the same message.
                 If the password is lost, the Document is unrecoverable.
               </p>
-              {protectMessage ? (
-                <p class="editor__protect-error editor__warning" role="alert">
-                  {protectMessage}
+              {secureMessage ? (
+                <p class="editor__secure-error editor__warning" role="alert">
+                  {secureMessage}
                 </p>
               ) : null}
             </div>

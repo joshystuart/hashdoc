@@ -1,5 +1,7 @@
 # Rename "protected" → "secure" (prefactor)
 
+> **Status:** ✅ Done — completed 2026-06-21
+
 ## What to build
 
 A language-only rename so the whole password-encryption feature area uses the
@@ -26,14 +28,14 @@ fixtures are unchanged.
 
 ## Acceptance criteria
 
-- [ ] Core, web, and MCP source use "secure" consistently for the v2 scheme; no
+- [x] Core, web, and MCP source use "secure" consistently for the v2 scheme; no
       "protected" identifiers remain for it.
-- [ ] `FORMAT.md`, ADR 0003, and `docs/specs/encryption/` prose use "secure".
-- [ ] The `2` version tag, binary frame, and crypto parameters are unchanged.
-- [ ] All existing tests pass under the renamed identifiers, including the
+- [x] `FORMAT.md`, ADR 0003, and `docs/specs/encryption/` prose use "secure".
+- [x] The `2` version tag, binary frame, and crypto parameters are unchanged.
+- [x] All existing tests pass under the renamed identifiers, including the
       decode-direction permanence/golden fixtures.
-- [ ] The no-third-party bundle audit still passes (no new dependency or request).
-- [ ] App behavior is observably identical to before the rename.
+- [x] The no-third-party bundle audit still passes (no new dependency or request).
+- [x] App behavior is observably identical to before the rename.
 
 ## Blocked by
 

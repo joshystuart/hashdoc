@@ -1,9 +1,9 @@
 import {
   encode,
   decode,
-  encodeProtected,
-  decodeProtected,
-  isProtected,
+  encodeSecure,
+  decodeSecure,
+  isSecure,
   buildLink,
   payloadFromUrl,
   linkSizeWarning,
@@ -26,7 +26,7 @@ export async function createMarkdownLink(
 ): Promise<CreateMarkdownLinkResult> {
   const payload =
     args.password && args.password.length > 0
-      ? await encodeProtected(args.markdown, args.password)
+      ? await encodeSecure(args.markdown, args.password)
       : encode(args.markdown);
   const url = buildLink(payload, baseUrl);
   const characters = url.length;
@@ -39,14 +39,14 @@ export async function readMarkdownLink(args: {
   password?: string | undefined;
 }): Promise<ReadMarkdownLinkResult> {
   const payload = payloadFromUrl(args.url) ?? args.url;
-  if (isProtected(payload)) {
+  if (isSecure(payload)) {
     if (!args.password || args.password.length === 0) {
       throw new DecodeError(
         'password-required',
-        'This Link is password-protected. A password is required to open it.',
+        'This Link is secure. A password is required to open it.',
       );
     }
-    return { markdown: await decodeProtected(payload, args.password) };
+    return { markdown: await decodeSecure(payload, args.password) };
   }
   return { markdown: decode(payload) };
 }

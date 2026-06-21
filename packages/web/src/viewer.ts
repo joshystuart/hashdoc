@@ -1,7 +1,7 @@
 import {
   decode,
-  decodeProtected,
-  isProtected,
+  decodeSecure,
+  isSecure,
   payloadFromUrl,
   DecodeError,
   classifyDecodeError,
@@ -29,7 +29,7 @@ export function resolveView(url: string): ViewerState {
   if (payload === null) {
     return { kind: 'editor' };
   }
-  if (isProtected(payload)) {
+  if (isSecure(payload)) {
     return { kind: 'locked', payload };
   }
   try {
@@ -72,7 +72,7 @@ function renderDocument(
   root: HTMLElement,
   markdown: string,
   html: string,
-  protectedPayload?: string,
+  securePayload?: string,
 ): void {
   root.textContent = '';
 
@@ -84,7 +84,7 @@ function renderDocument(
   preactRender(
     h(ViewerChrome, {
       markdown,
-      protectedPayload,
+      securePayload,
       onEdit: () => {
         void import('./editor/mount.js').then(({ mountEditor }) => {
           root.textContent = '';
@@ -118,7 +118,7 @@ function mountUnlockPrompt(root: HTMLElement, payload: string): void {
   section.className = 'unlock';
 
   const heading = document.createElement('h1');
-  heading.textContent = 'This Document is password-protected';
+  heading.textContent = 'This Document is secure';
 
   const intro = document.createElement('p');
   intro.textContent = 'Enter the password to open it.';
@@ -145,7 +145,7 @@ function mountUnlockPrompt(root: HTMLElement, payload: string): void {
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     message.hidden = true;
-    void decodeProtected(payload, input.value)
+    void decodeSecure(payload, input.value)
       .then((markdown) => {
         renderDocument(root, markdown, render(markdown), payload);
       })

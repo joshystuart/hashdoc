@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { decode } from './codec.js';
-import { decodeProtected, encodeProtected, isProtected, VERSION_TAG_V2 } from './crypto.js';
+import { decodeSecure, encodeSecure, isSecure, VERSION_TAG_V2 } from './crypto.js';
 import { classifyDecodeError, DecodeError } from './errors.js';
 import { base64urlToBytes, bytesToBase64url } from './base64url.js';
 
@@ -36,12 +36,12 @@ async function reasonOf(promise: Promise<unknown>): Promise<string> {
   throw new Error('expected promise to reject');
 }
 
-describe('v2 protected round-trip across the content variety', () => {
+describe('v2 secure round-trip across the content variety', () => {
   for (const { name, markdown } of CONTENT_VARIETY) {
     it(`round-trips: ${name}`, async () => {
-      const payload = await encodeProtected(markdown, PASSWORD);
+      const payload = await encodeSecure(markdown, PASSWORD);
       expect(payload.startsWith(VERSION_TAG_V2)).toBe(true);
-      expect(await decodeProtected(payload, PASSWORD)).toBe(markdown);
+      expect(await decodeSecure(payload, PASSWORD)).toBe(markdown);
     });
   }
 });
@@ -49,37 +49,37 @@ describe('v2 protected round-trip across the content variety', () => {
 describe('v2 encryption is non-deterministic', () => {
   it('encrypting the same input twice yields different Payloads that both decrypt', async () => {
     const markdown = '# Same input, different ciphertext';
-    const a = await encodeProtected(markdown, PASSWORD);
-    const b = await encodeProtected(markdown, PASSWORD);
+    const a = await encodeSecure(markdown, PASSWORD);
+    const b = await encodeSecure(markdown, PASSWORD);
     expect(a).not.toBe(b);
-    expect(await decodeProtected(a, PASSWORD)).toBe(markdown);
-    expect(await decodeProtected(b, PASSWORD)).toBe(markdown);
+    expect(await decodeSecure(a, PASSWORD)).toBe(markdown);
+    expect(await decodeSecure(b, PASSWORD)).toBe(markdown);
   });
 });
 
 describe('v2 authentication and integrity', () => {
   it('wrong password rejects with reason wrong-password', async () => {
-    const payload = await encodeProtected('secret content', PASSWORD);
-    expect(await reasonOf(decodeProtected(payload, 'not the password'))).toBe('wrong-password');
+    const payload = await encodeSecure('secret content', PASSWORD);
+    expect(await reasonOf(decodeSecure(payload, 'not the password'))).toBe('wrong-password');
   });
 
   it('tampering with a frame byte rejects with wrong-password (never a silent wrong decrypt)', async () => {
-    const payload = await encodeProtected('secret content', PASSWORD);
+    const payload = await encodeSecure('secret content', PASSWORD);
     const frame = base64urlToBytes(payload.slice(1));
     const last = frame.length - 1;
     frame[last] = frame[last]! ^ 0xff;
     const tampered = VERSION_TAG_V2 + bytesToBase64url(frame);
-    expect(await reasonOf(decodeProtected(tampered, PASSWORD))).toBe('wrong-password');
+    expect(await reasonOf(decodeSecure(tampered, PASSWORD))).toBe('wrong-password');
   });
 
   it('truncated/too-short frame rejects with malformed-encrypted-frame and classifies as corrupt', async () => {
-    const payload = await encodeProtected('secret content', PASSWORD);
+    const payload = await encodeSecure('secret content', PASSWORD);
     const frame = base64urlToBytes(payload.slice(1)).subarray(0, 10);
     const truncated = VERSION_TAG_V2 + bytesToBase64url(frame);
 
     let caught: DecodeError | undefined;
     try {
-      await decodeProtected(truncated, PASSWORD);
+      await decodeSecure(truncated, PASSWORD);
     } catch (error) {
       caught = error as DecodeError;
     }
@@ -88,35 +88,35 @@ describe('v2 authentication and integrity', () => {
   });
 });
 
-describe('isProtected distinguishes schemes', () => {
+describe('isSecure distinguishes schemes', () => {
   it('returns true for a 2… Payload and false for a 1… Payload', async () => {
-    const protectedPayload = await encodeProtected('# Locked', PASSWORD);
-    expect(isProtected(protectedPayload)).toBe(true);
-    expect(isProtected('1U1bwSM3JyQcA')).toBe(false);
-    expect(isProtected('')).toBe(false);
+    const securePayload = await encodeSecure('# Locked', PASSWORD);
+    expect(isSecure(securePayload)).toBe(true);
+    expect(isSecure('1U1bwSM3JyQcA')).toBe(false);
+    expect(isSecure('')).toBe(false);
   });
 });
 
 describe('cross-scheme guards', () => {
-  it('sync decode on a 2… Payload throws password-required directing to decodeProtected', async () => {
-    const payload = await encodeProtected('# Locked', PASSWORD);
+  it('sync decode on a 2… Payload throws password-required directing to decodeSecure', async () => {
+    const payload = await encodeSecure('# Locked', PASSWORD);
     try {
       decode(payload);
       throw new Error('expected decode to throw');
     } catch (error) {
       expect(error).toBeInstanceOf(DecodeError);
       expect((error as DecodeError).reason).toBe('password-required');
-      expect((error as DecodeError).message).toMatch(/decodeProtected/);
+      expect((error as DecodeError).message).toMatch(/decodeSecure/);
     }
   });
 
-  it('decodeProtected on a 1… Payload throws a clear typed error', async () => {
-    expect(await reasonOf(decodeProtected('1U1bwSM3JyQcA', PASSWORD))).toBe('unsupported-version');
+  it('decodeSecure on a 1… Payload throws a clear typed error', async () => {
+    expect(await reasonOf(decodeSecure('1U1bwSM3JyQcA', PASSWORD))).toBe('unsupported-version');
   });
 
-  it('decodeProtected on a 2… Payload with an empty password throws password-required', async () => {
-    const payload = await encodeProtected('# Locked', PASSWORD);
-    expect(await reasonOf(decodeProtected(payload, ''))).toBe('password-required');
+  it('decodeSecure on a 2… Payload with an empty password throws password-required', async () => {
+    const payload = await encodeSecure('# Locked', PASSWORD);
+    expect(await reasonOf(decodeSecure(payload, ''))).toBe('password-required');
   });
 });
 
@@ -142,10 +142,10 @@ describe('v2 permanence freeze — a pinned Payload must decrypt forever (decode
   });
 
   it('frozen Payload decrypts to the known Document with the known password', async () => {
-    expect(await decodeProtected(FROZEN_PAYLOAD, FROZEN_PASSWORD)).toBe(FROZEN_DOC);
+    expect(await decodeSecure(FROZEN_PAYLOAD, FROZEN_PASSWORD)).toBe(FROZEN_DOC);
   });
 
   it('frozen Payload rejects the wrong password', async () => {
-    expect(await reasonOf(decodeProtected(FROZEN_PAYLOAD, 'wrong'))).toBe('wrong-password');
+    expect(await reasonOf(decodeSecure(FROZEN_PAYLOAD, 'wrong'))).toBe('wrong-password');
   });
 });

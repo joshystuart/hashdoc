@@ -365,13 +365,13 @@ a {
   border-radius: 6px;
 }
 
-.editor__protect {
+.editor__secure {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.editor__protect-toggle {
+.editor__secure-toggle {
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -379,7 +379,7 @@ a {
   color: var(--fg);
 }
 
-.editor__protect-fields {
+.editor__secure-fields {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -396,7 +396,7 @@ a {
   border-radius: 6px;
 }
 
-.editor__protect-note {
+.editor__secure-note {
   flex-basis: 100%;
   margin: 0;
   font-size: 0.8rem;

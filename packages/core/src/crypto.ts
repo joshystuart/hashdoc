@@ -21,7 +21,7 @@ const MAX_DECOMPRESSED_BYTES = 8 * 1024 * 1024;
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
 
-export function isProtected(payload: string): boolean {
+export function isSecure(payload: string): boolean {
   return payload[0] === VERSION_TAG_V2;
 }
 
@@ -42,7 +42,7 @@ async function deriveKey(password: string, salt: Uint8Array, iterations: number)
   );
 }
 
-export async function encodeProtected(markdown: string, password: string): Promise<string> {
+export async function encodeSecure(markdown: string, password: string): Promise<string> {
   const compressed = deflateSync(utf8Encoder.encode(markdown));
 
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
@@ -60,7 +60,7 @@ export async function encodeProtected(markdown: string, password: string): Promi
   return VERSION_TAG_V2 + bytesToBase64url(frame);
 }
 
-export async function decodeProtected(payload: string, password: string): Promise<string> {
+export async function decodeSecure(payload: string, password: string): Promise<string> {
   if (payload.length === 0) {
     throw new DecodeError('empty-payload', 'Payload is empty.');
   }
@@ -70,7 +70,7 @@ export async function decodeProtected(payload: string, password: string): Promis
   if (tag === VERSION_TAG_V1) {
     throw new DecodeError(
       'unsupported-version',
-      'This is an unprotected v1 Link. Use decode(payload) to open it.',
+      'This is a plain v1 Link. Use decode(payload) to open it.',
     );
   }
 
@@ -84,7 +84,7 @@ export async function decodeProtected(payload: string, password: string): Promis
   if (password.length === 0) {
     throw new DecodeError(
       'password-required',
-      'This Link is password-protected. A password is required to open it.',
+      'This Link is secure. A password is required to open it.',
     );
   }
 
@@ -122,7 +122,7 @@ export async function decodeProtected(payload: string, password: string): Promis
   } catch (cause) {
     throw new DecodeError(
       'wrong-password',
-      'Incorrect password, or this protected Link has been tampered with.',
+      'Incorrect password, or this secure Link has been tampered with.',
       { cause },
     );
   }

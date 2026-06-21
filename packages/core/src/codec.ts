@@ -28,7 +28,7 @@ export function decode(payload: string): string {
   if (tag === VERSION_TAG_V2) {
     throw new DecodeError(
       'password-required',
-      'This Link is password-protected. Use decodeProtected(payload, password) to open it.',
+      'This Link is secure. Use decodeSecure(payload, password) to open it.',
     );
   }
 

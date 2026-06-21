@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { decode, decodeProtected, payloadFromUrl } from '@hashdoc/core';
+import { decode, decodeSecure, payloadFromUrl } from '@hashdoc/core';
 import { mountEditor } from './mount.js';
 import { mountViewer } from '../viewer.js';
 import { render as renderMarkdown } from '../render.js';
@@ -28,9 +28,9 @@ function setInput(el: HTMLInputElement, value: string): void {
   el.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-function toggleProtect(root: HTMLElement): void {
-  const toggle = root.querySelector('.editor__protect-checkbox') as HTMLInputElement;
-  expect(toggle, 'protect toggle should exist').not.toBeNull();
+function toggleSecure(root: HTMLElement): void {
+  const toggle = root.querySelector('.editor__secure-checkbox') as HTMLInputElement;
+  expect(toggle, 'secure toggle should exist').not.toBeNull();
   toggle.checked = true;
   toggle.dispatchEvent(new Event('change', { bubbles: true }));
 }
@@ -171,33 +171,33 @@ describe('Editor — author creates a Link', () => {
     expect(bar.textContent!.toLowerCase()).not.toContain('secure');
   });
 
-  it('Protect toggle reveals password + confirm inputs and the threat-model copy', async () => {
+  it('Secure toggle reveals password + confirm inputs and the threat-model copy', async () => {
     mountEditor(root);
     await flush();
 
     expect(root.querySelector('.editor__password')).toBeNull();
     expect(root.querySelector('.editor__confirm')).toBeNull();
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
 
     expect(root.querySelector('.editor__password')).not.toBeNull();
     expect(root.querySelector('.editor__confirm')).not.toBeNull();
 
-    const note = root.querySelector('.editor__protect-note')!;
+    const note = root.querySelector('.editor__secure-note')!;
     const text = note.textContent!.toLowerCase();
     expect(text).toContain('separately');
     expect(text).toContain('unrecoverable');
   });
 
-  it('Protection ON: Copy Link produces a 2… Link that decodeProtected reverses', async () => {
+  it('Secure ON: Copy Link produces a 2… Link that decodeSecure reverses', async () => {
     mountEditor(root);
     await flush();
-    const md = '# Secret\n\nThis is *protected*.\n';
+    const md = '# Secret\n\nThis is *secure*.\n';
     typeIntoSource(root, md);
     await flush();
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
     setInput(root.querySelector('.editor__password') as HTMLInputElement, 'hunter2');
     setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'hunter2');
@@ -207,17 +207,17 @@ describe('Editor — author creates a Link', () => {
     const payload = payloadFromUrl(link);
     expect(payload).not.toBeNull();
     expect(payload![0]).toBe('2');
-    expect(await decodeProtected(payload!, 'hunter2')).toBe(md);
+    expect(await decodeSecure(payload!, 'hunter2')).toBe(md);
   });
 
-  it('Protection ON: View opens the protected Link to the Viewer locked prompt', async () => {
+  it('Secure ON: View opens the secure Link to the Viewer locked prompt', async () => {
     mountEditor(root);
     await flush();
     const md = '# Locked\n\ncontents\n';
     typeIntoSource(root, md);
     await flush();
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
     setInput(root.querySelector('.editor__password') as HTMLInputElement, 'correct horse');
     setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'correct horse');
@@ -231,14 +231,14 @@ describe('Editor — author creates a Link', () => {
     expect(viewerRoot.querySelector('.unlock__password')).not.toBeNull();
   });
 
-  it('size indicator reflects the protected Link length when protection is on', async () => {
+  it('size indicator reflects the secure Link length when secure is on', async () => {
     mountEditor(root);
     await flush();
     const md = '# Size\n\nsome body text here\n';
     typeIntoSource(root, md);
     await flush();
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
     setInput(root.querySelector('.editor__password') as HTMLInputElement, 'pw-123');
     setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'pw-123');
@@ -249,19 +249,19 @@ describe('Editor — author creates a Link', () => {
     expect(size.textContent).toContain(link.length.toLocaleString());
   });
 
-  it('does not copy a protected Link while password and confirm mismatch', async () => {
+  it('does not copy a secure Link while password and confirm mismatch', async () => {
     mountEditor(root);
     await flush();
     typeIntoSource(root, '# Mismatch\n');
     await flush();
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
     setInput(root.querySelector('.editor__password') as HTMLInputElement, 'one');
     setInput(root.querySelector('.editor__confirm') as HTMLInputElement, 'two');
     await flush();
 
-    expect(root.querySelector('.editor__protect-error')).not.toBeNull();
+    expect(root.querySelector('.editor__secure-error')).not.toBeNull();
 
     (root.querySelector('.editor__copy') as HTMLButtonElement).click();
     await flush();
@@ -278,7 +278,7 @@ describe('Editor — author creates a Link', () => {
     const preview = root.querySelector('.editor__preview')!;
     expect(preview.innerHTML).toBe(renderMarkdown(md));
 
-    toggleProtect(root);
+    toggleSecure(root);
     await flush();
     expect(preview.innerHTML).toBe(renderMarkdown(md));
   });

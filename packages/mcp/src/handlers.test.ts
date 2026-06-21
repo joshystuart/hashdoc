@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decode, payloadFromUrl, isProtected } from '@hashdoc/core';
+import { decode, payloadFromUrl, isSecure } from '@hashdoc/core';
 import { createMarkdownLink, readMarkdownLink, DecodeError } from './handlers.js';
 
 const BASE = 'https://hashdoc.ghost7.org/';
@@ -44,18 +44,18 @@ describe('createMarkdownLink', () => {
     expect(result.warning).toBeTypeOf('string');
   });
 
-  it('produces an unprotected tag 1 Link when no password is given', async () => {
+  it('produces an plain tag 1 Link when no password is given', async () => {
     const { url } = await createMarkdownLink({ markdown: 'plain' }, BASE);
     const payload = payloadFromUrl(url) as string;
     expect(payload[0]).toBe('1');
-    expect(isProtected(payload)).toBe(false);
+    expect(isSecure(payload)).toBe(false);
   });
 
-  it('produces a protected tag 2 Link when a password is given', async () => {
+  it('produces a secure tag 2 Link when a password is given', async () => {
     const { url } = await createMarkdownLink({ markdown: 'secret', password: 'hunter2' }, BASE);
     const payload = payloadFromUrl(url) as string;
     expect(payload[0]).toBe('2');
-    expect(isProtected(payload)).toBe(true);
+    expect(isSecure(payload)).toBe(true);
   });
 });
 
@@ -80,14 +80,14 @@ describe('readMarkdownLink', () => {
     await expect(readMarkdownLink({ url: 'total garbage' })).rejects.toThrow(DecodeError);
   });
 
-  it('round-trips a protected Link with the same password', async () => {
+  it('round-trips a secure Link with the same password', async () => {
     const markdown = '# Top secret\n\nclassified body';
     const password = 'correct horse battery staple';
     const { url } = await createMarkdownLink({ markdown, password }, BASE);
     expect((await readMarkdownLink({ url, password })).markdown).toBe(markdown);
   });
 
-  it('throws password-required for a protected Link with no password', async () => {
+  it('throws password-required for a secure Link with no password', async () => {
     const { url } = await createMarkdownLink({ markdown: 'guarded', password: 'pw' }, BASE);
     await expect(readMarkdownLink({ url })).rejects.toMatchObject({
       reason: 'password-required',
@@ -95,7 +95,7 @@ describe('readMarkdownLink', () => {
     await expect(readMarkdownLink({ url })).rejects.toThrow(DecodeError);
   });
 
-  it('throws wrong-password for a protected Link with the wrong password', async () => {
+  it('throws wrong-password for a secure Link with the wrong password', async () => {
     const { url } = await createMarkdownLink({ markdown: 'guarded', password: 'right' }, BASE);
     await expect(readMarkdownLink({ url, password: 'nope' })).rejects.toMatchObject({
       reason: 'wrong-password',
