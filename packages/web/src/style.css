@@ -123,6 +123,28 @@ a {
   opacity: 0.85;
 }
 
+.unlock {
+  max-width: 24rem;
+  margin: 4rem auto 0;
+}
+
+.unlock__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin: 1.25rem 0 0;
+}
+
+.unlock__submit {
+  width: 100%;
+}
+
+.unlock__error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
 .error__actions {
   margin-top: 1.5rem;
   display: flex;

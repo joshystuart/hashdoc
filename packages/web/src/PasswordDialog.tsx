@@ -1,7 +1,6 @@
 import type { JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Eye, EyeOff } from 'lucide-preact';
-import { HEADER_ICON_SIZE } from './chrome.js';
+import { PasswordField } from './PasswordField.js';
 
 export interface PasswordDialogProps {
   open: boolean;
@@ -53,7 +52,6 @@ export function PasswordDialog({
 }: PasswordDialogProps): JSX.Element {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [value, setValue] = useState(initialPassword);
-  const [reveal, setReveal] = useState(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -62,7 +60,6 @@ export function PasswordDialog({
     }
     if (open) {
       setValue(initialPassword);
-      setReveal(false);
       openDialog(dialog);
     } else {
       closeDialog(dialog);
@@ -90,26 +87,12 @@ export function PasswordDialog({
       }}
     >
       <form class="password-dialog__form" onSubmit={handleSubmit}>
-        <div class="password-dialog__field">
-          <input
-            class="password-dialog__input"
-            type={reveal ? 'text' : 'password'}
-            aria-label="Password"
-            placeholder="Password"
-            autocomplete="new-password"
-            value={value}
-            onInput={(event) => setValue((event.target as HTMLInputElement).value)}
-          />
-          <button
-            type="button"
-            class="password-dialog__reveal"
-            aria-label={reveal ? 'Hide password' : 'Show password'}
-            aria-pressed={reveal}
-            onClick={() => setReveal((current) => !current)}
-          >
-            {reveal ? <EyeOff size={HEADER_ICON_SIZE} /> : <Eye size={HEADER_ICON_SIZE} />}
-          </button>
-        </div>
+        <PasswordField
+          key={open ? 'open' : 'closed'}
+          value={value}
+          onInput={setValue}
+          autocomplete="new-password"
+        />
         <p class="password-dialog__note">
           Share this password separately from the Link — never send both in the same message. If the
           password is lost, the Document is unrecoverable.

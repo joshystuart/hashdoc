@@ -15,6 +15,7 @@ import {
   firstHeadingText,
 } from './render.js';
 import { ViewerChrome } from './viewerChrome.js';
+import { UnlockPrompt, type UnlockOutcome } from './UnlockPrompt.js';
 import type { SecureSession } from './secureSession.js';
 
 const DEFAULT_TITLE = 'HashDoc';
@@ -126,63 +127,34 @@ function renderDocument(
 function mountUnlockPrompt(root: HTMLElement, payload: string): void {
   root.textContent = '';
 
-  const section = document.createElement('section');
-  section.className = 'unlock';
+  const host = document.createElement('div');
+  host.className = 'unlock-host';
+  root.append(host);
 
-  const heading = document.createElement('h1');
-  heading.textContent = 'This Document is secure';
-
-  const intro = document.createElement('p');
-  intro.textContent = 'Enter the password to open it.';
-
-  const form = document.createElement('form');
-  form.className = 'unlock__form';
-
-  const input = document.createElement('input');
-  input.type = 'password';
-  input.className = 'unlock__password';
-  input.required = true;
-  input.autocomplete = 'current-password';
-  input.setAttribute('aria-label', 'Password');
-
-  const submit = document.createElement('button');
-  submit.type = 'submit';
-  submit.className = 'unlock__submit';
-  submit.textContent = 'Unlock';
-
-  const message = document.createElement('p');
-  message.className = 'unlock__error';
-  message.hidden = true;
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    message.hidden = true;
-    void decodeSecure(payload, input.value)
-      .then((markdown) => {
-        renderDocument(root, markdown, render(markdown), {
-          mode: 'secure',
-          password: null,
-          payload,
-        });
-      })
-      .catch((e) => {
-        const errorKind: DecodeErrorKind =
-          e instanceof DecodeError ? classifyDecodeError(e) : 'corrupt';
-        if (errorKind === 'wrong-password') {
-          message.textContent = 'Incorrect password. Please try again.';
-          message.hidden = false;
-          input.value = '';
-          input.focus();
-          return;
-        }
-        root.textContent = '';
-        mountError(root, errorKind);
+  async function attempt(password: string): Promise<UnlockOutcome> {
+    try {
+      const markdown = await decodeSecure(payload, password);
+      preactRender(null, host);
+      renderDocument(root, markdown, render(markdown), {
+        mode: 'secure',
+        password: null,
+        payload,
       });
-  });
+      return 'handled';
+    } catch (e) {
+      const errorKind: DecodeErrorKind =
+        e instanceof DecodeError ? classifyDecodeError(e) : 'corrupt';
+      if (errorKind === 'wrong-password') {
+        return 'wrong-password';
+      }
+      preactRender(null, host);
+      root.textContent = '';
+      mountError(root, errorKind);
+      return 'handled';
+    }
+  }
 
-  form.append(input, submit, message);
-  section.append(heading, intro, form);
-  root.append(section);
+  preactRender(h(UnlockPrompt, { onSubmit: attempt }), host);
 }
 
 function mountError(root: HTMLElement, errorKind: DecodeErrorKind): void {
