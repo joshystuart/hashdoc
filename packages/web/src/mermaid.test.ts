@@ -23,7 +23,9 @@ describe('render — mermaid fence shape', () => {
   });
 
   it('hasMermaidBlocks detects mermaid fences and ignores plain code', () => {
-    expect(hasMermaidBlocks(mount('```mermaid\ngraph TD; A-->B;\n```\n'))).toBe(true);
+    expect(hasMermaidBlocks(mount('```mermaid\ngraph TD; A-->B;\n```\n'))).toBe(
+      true,
+    );
     expect(hasMermaidBlocks(mount('```js\nconst x = 1;\n```\n'))).toBe(false);
     expect(hasMermaidBlocks(mount('# just prose\n'))).toBe(false);
   });
@@ -32,7 +34,9 @@ describe('render — mermaid fence shape', () => {
 describe('enhance — mermaid rendering wiring (mocked island)', () => {
   it('replaces a mermaid block with the rendered SVG', async () => {
     vi.doMock('./mermaid.js', () => ({
-      renderMermaid: vi.fn(async (id: string) => `<svg id="${id}"><g><text>A</text></g></svg>`),
+      renderMermaid: vi.fn(
+        async (id: string) => `<svg id="${id}"><g><text>A</text></g></svg>`,
+      ),
     }));
 
     const { render: r, enhance: e } = await import('./render.js');
@@ -74,7 +78,6 @@ describe('enhance — mermaid rendering wiring (mocked island)', () => {
 
     await e(el);
 
-
     expect(el.querySelector('svg')).toBeNull();
     expect(el.querySelector('pre > code.language-mermaid')).not.toBeNull();
     expect(el.textContent).toContain('not a real diagram');
@@ -85,7 +88,8 @@ describe('enhance — mermaid output sanitization (no DOMPurify bypass)', () => 
   it('strips <script> smuggled in the renderer SVG output', async () => {
     vi.doMock('./mermaid.js', () => ({
       renderMermaid: vi.fn(
-        async () => '<svg><script>window.__pwned = 1<\/script><g><text>ok</text></g></svg>',
+        async () =>
+          '<svg><script>window.__pwned = 1<\/script><g><text>ok</text></g></svg>',
       ),
     }));
     const { render: r, enhance: e } = await import('./render.js');
@@ -103,7 +107,8 @@ describe('enhance — mermaid output sanitization (no DOMPurify bypass)', () => 
   it('strips on* event handlers from the renderer SVG output', async () => {
     vi.doMock('./mermaid.js', () => ({
       renderMermaid: vi.fn(
-        async () => '<svg><image href="x" onerror="window.__pwned=1"/><rect onclick="alert(1)"/></svg>',
+        async () =>
+          '<svg><image href="x" onerror="window.__pwned=1"/><rect onclick="alert(1)"/></svg>',
       ),
     }));
     const { render: r, enhance: e } = await import('./render.js');
@@ -145,10 +150,11 @@ describe('enhance — mermaid does not collide with highlight.js', () => {
     }));
     const { render: r, enhance: e } = await import('./render.js');
     const el = document.createElement('div');
-    el.innerHTML = r('```mermaid\ngraph TD; A-->B;\n```\n\n```js\nconst x = 1;\n```\n');
+    el.innerHTML = r(
+      '```mermaid\ngraph TD; A-->B;\n```\n\n```js\nconst x = 1;\n```\n',
+    );
 
     await e(el);
-
 
     expect(el.querySelector('figure.mermaid svg')).not.toBeNull();
 

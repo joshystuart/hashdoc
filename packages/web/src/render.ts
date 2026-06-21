@@ -31,7 +31,11 @@ md.core.ruler.after('inline', 'HASHDOC_task_lists', (state) => {
   const tokens = state.tokens;
   for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i]!;
-    if (token.type !== 'inline' || !token.children || token.children.length === 0) {
+    if (
+      token.type !== 'inline' ||
+      !token.children ||
+      token.children.length === 0
+    ) {
       continue;
     }
     const isListItemParagraph =
@@ -98,7 +102,12 @@ function installHeadingAnchors(instance: MarkdownIt): void {
       const anchorText = new state.Token('html_inline', '', 0);
       anchorText.content = '#';
       const anchorClose = new state.Token('link_close', 'a', -1);
-      inline.children = [anchorOpen, anchorText, anchorClose, ...(inline.children ?? [])];
+      inline.children = [
+        anchorOpen,
+        anchorText,
+        anchorClose,
+        ...(inline.children ?? []),
+      ];
     }
     return true;
   });
@@ -107,48 +116,52 @@ function installHeadingAnchors(instance: MarkdownIt): void {
 installMathRules(md);
 
 function installMathRules(instance: MarkdownIt): void {
-  instance.inline.ruler.after('escape', 'HASHDOC_math_inline', (state, silent) => {
-    const start = state.pos;
-    if (state.src.charCodeAt(start) !== 0x24) {
-      return false;
-    }
-    if (state.src.charCodeAt(start + 1) === 0x24) {
-      return false;
-    }
-    const afterOpen = state.src.charCodeAt(start + 1);
-    if (Number.isNaN(afterOpen) || afterOpen === 0x20 || afterOpen === 0x0a) {
-      return false;
-    }
-    let pos = start + 1;
-    const max = state.posMax;
-    let found = -1;
-    while (pos < max) {
-      const code = state.src.charCodeAt(pos);
-      if (code === 0x5c) {
-        pos += 2;
-        continue;
+  instance.inline.ruler.after(
+    'escape',
+    'HASHDOC_math_inline',
+    (state, silent) => {
+      const start = state.pos;
+      if (state.src.charCodeAt(start) !== 0x24) {
+        return false;
       }
-      if (code === 0x24) {
-        found = pos;
-        break;
+      if (state.src.charCodeAt(start + 1) === 0x24) {
+        return false;
       }
-      pos += 1;
-    }
-    if (found < 0) {
-      return false;
-    }
-    const beforeClose = state.src.charCodeAt(found - 1);
-    if (found === start + 1 || beforeClose === 0x20 || beforeClose === 0x0a) {
-      return false;
-    }
-    const tex = state.src.slice(start + 1, found);
-    if (!silent) {
-      const token = state.push('html_inline', '', 0);
-      token.content = `<span class="math-inline" data-tex="${escapeAttr(tex)}"></span>`;
-    }
-    state.pos = found + 1;
-    return true;
-  });
+      const afterOpen = state.src.charCodeAt(start + 1);
+      if (Number.isNaN(afterOpen) || afterOpen === 0x20 || afterOpen === 0x0a) {
+        return false;
+      }
+      let pos = start + 1;
+      const max = state.posMax;
+      let found = -1;
+      while (pos < max) {
+        const code = state.src.charCodeAt(pos);
+        if (code === 0x5c) {
+          pos += 2;
+          continue;
+        }
+        if (code === 0x24) {
+          found = pos;
+          break;
+        }
+        pos += 1;
+      }
+      if (found < 0) {
+        return false;
+      }
+      const beforeClose = state.src.charCodeAt(found - 1);
+      if (found === start + 1 || beforeClose === 0x20 || beforeClose === 0x0a) {
+        return false;
+      }
+      const tex = state.src.slice(start + 1, found);
+      if (!silent) {
+        const token = state.push('html_inline', '', 0);
+        token.content = `<span class="math-inline" data-tex="${escapeAttr(tex)}"></span>`;
+      }
+      state.pos = found + 1;
+      return true;
+    },
+  );
 
   instance.block.ruler.before(
     'fence',
@@ -159,7 +172,10 @@ function installMathRules(instance: MarkdownIt): void {
       if (startPos + 2 > maxPos) {
         return false;
       }
-      if (state.src.charCodeAt(startPos) !== 0x24 || state.src.charCodeAt(startPos + 1) !== 0x24) {
+      if (
+        state.src.charCodeAt(startPos) !== 0x24 ||
+        state.src.charCodeAt(startPos + 1) !== 0x24
+      ) {
         return false;
       }
       if (silent) {
@@ -236,7 +252,9 @@ function postProcess(html: string): string {
   for (const heading of Array.from(
     doc.querySelectorAll('h1, h2, h3, h4, h5, h6'),
   )) {
-    const anchor = heading.querySelector(':scope > a.heading-anchor[href^="#"]');
+    const anchor = heading.querySelector(
+      ':scope > a.heading-anchor[href^="#"]',
+    );
     const href = anchor?.getAttribute('href') ?? '';
     const slug = href.slice(1);
     if (slug !== '') {
@@ -249,7 +267,8 @@ function postProcess(html: string): string {
 
 const CODE_BLOCK_SELECTOR = 'pre > code[class*="language-"]';
 const MERMAID_BLOCK_SELECTOR = 'pre > code.language-mermaid';
-const MATH_PLACEHOLDER_SELECTOR = '.math-inline[data-tex], .math-block[data-tex]';
+const MATH_PLACEHOLDER_SELECTOR =
+  '.math-inline[data-tex], .math-block[data-tex]';
 
 export function hasCodeBlocks(container: HTMLElement): boolean {
   return container.querySelector(CODE_BLOCK_SELECTOR) !== null;
@@ -276,7 +295,9 @@ export async function enhance(container: HTMLElement): Promise<void> {
 
 export function enhanceCopyCode(container: HTMLElement): void {
   const doc = container.ownerDocument;
-  for (const pre of Array.from(container.querySelectorAll<HTMLElement>('pre'))) {
+  for (const pre of Array.from(
+    container.querySelectorAll<HTMLElement>('pre'),
+  )) {
     const code = pre.querySelector('code');
     if (!code || pre.parentElement?.classList.contains('code-block')) {
       continue;

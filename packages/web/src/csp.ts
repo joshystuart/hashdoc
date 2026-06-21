@@ -19,7 +19,9 @@ export function inlineScriptBodies(html: string): string[] {
 }
 
 export function inlineScriptHash(scriptBody: string): string {
-  const digest = createHash('sha256').update(scriptBody, 'utf8').digest('base64');
+  const digest = createHash('sha256')
+    .update(scriptBody, 'utf8')
+    .digest('base64');
   return `'sha256-${digest}'`;
 }
 
@@ -46,12 +48,15 @@ export function securityHeaders(): Record<string, string> {
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
     'Cross-Origin-Opener-Policy': 'same-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), browsing-topics=()',
+    'Permissions-Policy':
+      'camera=(), microphone=(), geolocation=(), browsing-topics=()',
     'Strict-Transport-Security': 'max-age=63072000',
   };
 }
 
 export function renderNetlifyHeaders(headers: Record<string, string>): string {
-  const lines = Object.entries(headers).map(([name, value]) => `  ${name}: ${value}`);
+  const lines = Object.entries(headers).map(
+    ([name, value]) => `  ${name}: ${value}`,
+  );
   return `/*\n${lines.join('\n')}\n`;
 }

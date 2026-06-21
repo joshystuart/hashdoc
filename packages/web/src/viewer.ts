@@ -1,5 +1,7 @@
 import {
   decode,
+  decodeSecure,
+  isSecure,
   payloadFromUrl,
   DecodeError,
   classifyDecodeError,
@@ -13,18 +15,24 @@ import {
   firstHeadingText,
 } from './render.js';
 import { ViewerChrome } from './viewerChrome.js';
+import { UnlockPrompt, type UnlockOutcome } from './UnlockPrompt.js';
+import type { SecureSession } from './secureSession.js';
 
 const DEFAULT_TITLE = 'HashDoc';
 
 export type ViewerState =
   | { kind: 'document'; html: string; markdown: string }
   | { kind: 'editor' }
+  | { kind: 'locked'; payload: string }
   | { kind: 'error'; errorKind: DecodeErrorKind };
 
 export function resolveView(url: string): ViewerState {
   const payload = payloadFromUrl(url);
   if (payload === null) {
     return { kind: 'editor' };
+  }
+  if (isSecure(payload)) {
+    return { kind: 'locked', payload };
   }
   try {
     const markdown = decode(payload);
@@ -42,49 +50,17 @@ export function mountViewer(
 ): ViewerState {
   const state = resolveView(url);
   switch (state.kind) {
-    case 'document': {
-      root.textContent = '';
-      const markdown = state.markdown;
-
-      const viewer = document.createElement('div');
-      viewer.className = 'viewer';
-
-      const chrome = document.createElement('div');
-      chrome.className = 'viewer__chrome-host';
-      preactRender(
-        h(ViewerChrome, {
-          markdown,
-          onEdit: () => {
-            void import('./editor/mount.js').then(({ mountEditor }) => {
-              root.textContent = '';
-              mountEditor(root, { initialMarkdown: markdown, forkedFromDocument: true });
-            });
-          },
-        }),
-        chrome,
-      );
-
-      const article = document.createElement('article');
-      article.className = 'document';
-      article.innerHTML = state.html;
-
-      const content = document.createElement('div');
-      content.className = 'viewer__content';
-      content.append(article);
-
-      viewer.append(chrome, content);
-      root.append(viewer);
-
-      interceptInPageAnchors(article);
-      document.title = firstHeadingText(markdown) ?? DEFAULT_TITLE;
-      void enhance(article);
+    case 'document':
+      renderDocument(root, state.markdown, state.html);
       break;
-    }
     case 'editor':
       root.textContent = '';
       void import('./editor/mount.js').then(({ mountEditor }) => {
         mountEditor(root);
       });
+      break;
+    case 'locked':
+      mountUnlockPrompt(root, state.payload);
       break;
     case 'error':
       root.textContent = '';
@@ -92,6 +68,93 @@ export function mountViewer(
       break;
   }
   return state;
+}
+
+export function mountDocument(
+  root: HTMLElement,
+  { markdown, session }: { markdown: string; session?: SecureSession },
+): void {
+  renderDocument(root, markdown, render(markdown), session);
+}
+
+function renderDocument(
+  root: HTMLElement,
+  markdown: string,
+  html: string,
+  session?: SecureSession,
+): void {
+  root.textContent = '';
+
+  const viewer = document.createElement('div');
+  viewer.className = 'viewer';
+
+  const chrome = document.createElement('div');
+  chrome.className = 'viewer__chrome-host';
+  preactRender(
+    h(ViewerChrome, {
+      markdown,
+      session,
+      onEdit: (editSession: SecureSession) => {
+        void import('./editor/mount.js').then(({ mountEditor }) => {
+          root.textContent = '';
+          mountEditor(root, {
+            initialMarkdown: markdown,
+            forkedFromDocument: true,
+            initialSession: editSession,
+          });
+        });
+      },
+    }),
+    chrome,
+  );
+
+  const article = document.createElement('article');
+  article.className = 'document';
+  article.innerHTML = html;
+
+  const content = document.createElement('div');
+  content.className = 'viewer__content';
+  content.append(article);
+
+  viewer.append(chrome, content);
+  root.append(viewer);
+
+  interceptInPageAnchors(article);
+  document.title = firstHeadingText(markdown) ?? DEFAULT_TITLE;
+  void enhance(article);
+}
+
+function mountUnlockPrompt(root: HTMLElement, payload: string): void {
+  root.textContent = '';
+
+  const host = document.createElement('div');
+  host.className = 'unlock-host';
+  root.append(host);
+
+  async function attempt(password: string): Promise<UnlockOutcome> {
+    try {
+      const markdown = await decodeSecure(payload, password);
+      preactRender(null, host);
+      renderDocument(root, markdown, render(markdown), {
+        mode: 'secure',
+        password: null,
+        payload,
+      });
+      return 'handled';
+    } catch (e) {
+      const errorKind: DecodeErrorKind =
+        e instanceof DecodeError ? classifyDecodeError(e) : 'corrupt';
+      if (errorKind === 'wrong-password') {
+        return 'wrong-password';
+      }
+      preactRender(null, host);
+      root.textContent = '';
+      mountError(root, errorKind);
+      return 'handled';
+    }
+  }
+
+  preactRender(h(UnlockPrompt, { onSubmit: attempt }), host);
 }
 
 function mountError(root: HTMLElement, errorKind: DecodeErrorKind): void {

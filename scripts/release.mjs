@@ -6,7 +6,10 @@ import { dirname, join } from 'node:path';
 const dryRun = process.argv.includes('--dry-run');
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const releasablePaths = ['packages/core/', 'packages/mcp/'];
-const packagePaths = ['packages/core/package.json', 'packages/mcp/package.json'];
+const packagePaths = [
+  'packages/core/package.json',
+  'packages/mcp/package.json',
+];
 
 const sh = (cmd) => execSync(cmd, { cwd: root, encoding: 'utf8' }).trim();
 
@@ -40,7 +43,9 @@ for (const hash of hashes) {
   const files = sh(`git show --name-only --format= ${hash}`)
     .split('\n')
     .filter(Boolean);
-  const touched = files.some((file) => releasablePaths.some((p) => file.startsWith(p)));
+  const touched = files.some((file) =>
+    releasablePaths.some((p) => file.startsWith(p)),
+  );
   if (!touched) continue;
   const subject = sh(`git show -s --format=%s ${hash}`);
   const body = sh(`git show -s --format=%b ${hash}`);

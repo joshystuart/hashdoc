@@ -23,7 +23,10 @@ function ensureInitialised(): void {
   initialisedTheme = theme;
 }
 
-export async function renderMermaid(id: string, source: string): Promise<string> {
+export async function renderMermaid(
+  id: string,
+  source: string,
+): Promise<string> {
   ensureInitialised();
   const { svg } = await mermaid.render(id, source);
   return svg;

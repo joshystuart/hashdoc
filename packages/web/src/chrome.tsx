@@ -19,7 +19,11 @@ interface HeaderButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> 
   variant?: HeaderButtonVariant;
 }
 
-export function AppHeader({ children, leading, class: className = '' }: AppHeaderProps): JSX.Element {
+export function AppHeader({
+  children,
+  leading,
+  class: className = '',
+}: AppHeaderProps): JSX.Element {
   return (
     <header class={['app-header', className].filter(Boolean).join(' ')}>
       <div class="app-header__leading">
@@ -45,7 +49,10 @@ export function HeaderToolbar({
   ...props
 }: JSX.HTMLAttributes<HTMLDivElement>): JSX.Element {
   return (
-    <div class={['app-header__toolbar', className].filter(Boolean).join(' ')} {...props}>
+    <div
+      class={['app-header__toolbar', className].filter(Boolean).join(' ')}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -62,7 +69,9 @@ export function HeaderButton({
     <button
       {...props}
       type={type}
-      class={['app-button', `app-button--${variant}`, className].filter(Boolean).join(' ')}
+      class={['app-button', `app-button--${variant}`, className]
+        .filter(Boolean)
+        .join(' ')}
     >
       {children}
     </button>
@@ -71,7 +80,8 @@ export function HeaderButton({
 
 export function ThemeToggleButton(): JSX.Element {
   const [theme, setTheme] = useState<Theme>(() => currentTheme());
-  const label = theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
+  const label =
+    theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme';
 
   return (
     <HeaderButton
@@ -81,7 +91,11 @@ export function ThemeToggleButton(): JSX.Element {
       title={label}
       onClick={() => setTheme(toggleTheme())}
     >
-      {theme === 'light' ? <Moon size={HEADER_ICON_SIZE} /> : <Sun size={HEADER_ICON_SIZE} />}
+      {theme === 'light' ? (
+        <Moon size={HEADER_ICON_SIZE} />
+      ) : (
+        <Sun size={HEADER_ICON_SIZE} />
+      )}
     </HeaderButton>
   );
 }

@@ -4,12 +4,19 @@ export type DecodeErrorReason =
   | 'malformed-base64'
   | 'corrupt-deflate'
   | 'too-large'
-  | 'invalid-utf8';
+  | 'invalid-utf8'
+  | 'wrong-password'
+  | 'password-required'
+  | 'malformed-encrypted-frame';
 
 export class DecodeError extends Error {
   readonly reason: DecodeErrorReason;
 
-  constructor(reason: DecodeErrorReason, message: string, options?: { cause?: unknown }) {
+  constructor(
+    reason: DecodeErrorReason,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
     super(message, options);
     this.name = 'DecodeError';
     this.reason = reason;
@@ -17,8 +24,14 @@ export class DecodeError extends Error {
   }
 }
 
-export type DecodeErrorKind = 'unknown-version' | 'corrupt';
+export type DecodeErrorKind = 'unknown-version' | 'corrupt' | 'wrong-password';
 
 export function classifyDecodeError(error: DecodeError): DecodeErrorKind {
-  return error.reason === 'unsupported-version' ? 'unknown-version' : 'corrupt';
+  if (error.reason === 'unsupported-version') {
+    return 'unknown-version';
+  }
+  if (error.reason === 'wrong-password') {
+    return 'wrong-password';
+  }
+  return 'corrupt';
 }

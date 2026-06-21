@@ -16,6 +16,22 @@ If you find it useful, please star the project to help more people discover it.
 - Encodes the whole document into the link — client-side, no account, no upload.
 - Bearer-access: anyone with the link can read it. Treat the link like the contents.
 
+## Secure links
+
+A plain link is bearer-access: anyone who has it can read the document. When that
+is not enough, use **Copy secure link** instead of **Copy Link**.
+
+- You set a password, and the document is encrypted in your browser with
+  AES-256-GCM before it ever touches the link.
+- The password is **never** stored in the link. Share it separately — never in the
+  same message as the link.
+- Opening a secure link shows a password prompt; the document only appears once the
+  correct password is entered.
+- If the password is lost, the document is unrecoverable. There is no reset.
+
+Secure links work exactly like plain links otherwise: nothing is uploaded, and the
+encrypted document still lives entirely inside the URL.
+
 ## A quick demo
 
 A fenced code block (syntax highlighted in the preview):

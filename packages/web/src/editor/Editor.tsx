@@ -1,14 +1,39 @@
 import { render as preactRender } from 'preact';
 import type { ComponentType } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
-import { encode, buildLink, linkSizeWarning } from '@hashdoc/core';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import {
+  Bold,
+  Code,
+  Eye,
+  Heading,
+  Italic,
+  KeyRound,
+  Link2,
+  Lock,
+  Unlock,
+  type LucideProps,
+} from 'lucide-preact';
+import {
+  encode,
+  encodeSecure,
+  buildLink,
+  linkSizeWarning,
+} from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
 import { EXAMPLE_DOC } from './example.js';
-import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton, HEADER_ICON_SIZE } from '../chrome.js';
+import {
+  AppHeader,
+  HeaderButton,
+  HeaderToolbar,
+  ThemeToggleButton,
+  HEADER_ICON_SIZE,
+} from '../chrome.js';
+import { SplitButton, type SplitButtonMenuItem } from '../SplitButton.js';
+import { PasswordDialog } from '../PasswordDialog.js';
+import type { SecureMode, SecureSession } from '../secureSession.js';
 
 const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
   bold: Bold,
@@ -18,19 +43,39 @@ const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
   code: Code,
 };
 
+type DialogMode = 'copy' | 'save';
+
 export interface EditorProps {
   initialMarkdown?: string;
   forkedFromDocument?: boolean;
+  initialSession?: SecureSession;
 }
 
-export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Element {
+export function Editor({
+  initialMarkdown,
+  initialSession,
+}: EditorProps = {}): preact.JSX.Element {
   const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
+  const initialPassword = initialSession?.password ?? null;
   const rootRef = useRef<HTMLDivElement>(null);
   const sourceHost = useRef<HTMLDivElement>(null);
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>(
+    'idle',
+  );
+  const [securePassword, setSecurePassword] = useState<string | null>(
+    initialPassword,
+  );
+  const [mode, setMode] = useState<SecureMode>(
+    initialPassword !== null && initialSession?.mode === 'secure'
+      ? 'secure'
+      : 'plain',
+  );
+  const [secureLink, setSecureLink] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [dialogMode, setDialogMode] = useState<DialogMode>('copy');
 
   useLayoutEffect(() => {
     const host = sourceHost.current;
@@ -49,30 +94,157 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const link = buildLink(encode(markdown), location.origin + location.pathname);
+  const base = location.origin + location.pathname;
+  const plainLink = buildLink(encode(markdown), base);
 
-  async function copyLink(): Promise<void> {
+  useEffect(() => {
+    if (securePassword === null) {
+      setSecureLink(null);
+      return;
+    }
+    let ignore = false;
+    setSecureLink(null);
+    void encodeSecure(markdown, securePassword).then((payload) => {
+      if (!ignore) {
+        setSecureLink(buildLink(payload, base));
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [securePassword, markdown, base]);
+
+  const activeLink = mode === 'secure' ? secureLink : plainLink;
+
+  async function writeClipboard(value: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(value);
       setCopyState('copied');
     } catch {
       setCopyState('failed');
     }
   }
 
+  function copyPlain(): void {
+    setMode('plain');
+    void writeClipboard(plainLink);
+  }
+
+  function copySecure(): void {
+    if (secureLink === null) {
+      return;
+    }
+    void writeClipboard(secureLink);
+  }
+
+  function chooseSecure(): void {
+    if (securePassword === null) {
+      openCopyDialog();
+      return;
+    }
+    setMode('secure');
+    if (secureLink !== null) {
+      void writeClipboard(secureLink);
+    }
+  }
+
+  function openCopyDialog(): void {
+    setDialogMode('copy');
+    setDialogOpen(true);
+  }
+
+  function openChangeDialog(): void {
+    setDialogMode('save');
+    setDialogOpen(true);
+  }
+
+  function removePassword(): void {
+    setSecurePassword(null);
+    setMode('plain');
+    setCopyState('idle');
+  }
+
+  async function handleDialogSubmit(password: string): Promise<void> {
+    if (dialogMode === 'copy') {
+      setSecurePassword(password);
+      setMode('secure');
+      try {
+        const payload = await encodeSecure(markdown, password);
+        const link = buildLink(payload, base);
+        await navigator.clipboard.writeText(link);
+        setSecureLink(link);
+        setCopyState('copied');
+      } catch {
+        setCopyState('failed');
+      }
+    } else {
+      setSecureLink(null);
+      setSecurePassword(password);
+    }
+    setDialogOpen(false);
+  }
+
   function openView(): void {
+    if (activeLink === null) {
+      return;
+    }
     const root = rootRef.current?.parentElement;
     if (!root) {
       return;
     }
-    history.pushState(null, '', link);
+    history.pushState(null, '', activeLink);
     preactRender(null, root);
-    void import('../viewer.js').then(({ mountViewer }) => {
-      mountViewer(root, link);
+    const session: SecureSession = { mode, password: securePassword };
+    void import('../viewer.js').then(({ mountDocument }) => {
+      mountDocument(root, { markdown, session });
     });
   }
 
-  const characters = link.length;
+  const copiedLabel = copyState === 'copied' ? 'Link copied' : null;
+  const hasPassword = securePassword !== null;
+  const secured = mode === 'secure';
+  const primary = secured
+    ? {
+        label: copiedLabel ?? 'Copy secure link',
+        icon: Lock,
+        onClick: copySecure,
+      }
+    : { label: copiedLabel ?? 'Copy Link', icon: Link2, onClick: copyPlain };
+  const menuItems: SplitButtonMenuItem[] = secured
+    ? [
+        { label: 'Copy Link', icon: Link2, onClick: copyPlain },
+        {
+          label: 'Change password…',
+          icon: KeyRound,
+          onClick: openChangeDialog,
+        },
+        {
+          label: 'Remove password',
+          icon: Unlock,
+          onClick: removePassword,
+          destructive: true,
+        },
+      ]
+    : [
+        { label: 'Copy secure link', icon: Lock, onClick: chooseSecure },
+        ...(hasPassword
+          ? [
+              {
+                label: 'Change password…',
+                icon: KeyRound,
+                onClick: openChangeDialog,
+              },
+              {
+                label: 'Remove password',
+                icon: Unlock,
+                onClick: removePassword,
+                destructive: true,
+              },
+            ]
+          : []),
+      ];
+
+  const characters = (activeLink ?? plainLink).length;
   const sizeWarning = linkSizeWarning(characters);
   const images = classifyImages(markdown);
   const previewHtml = render(markdown);
@@ -89,7 +261,11 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
       <AppHeader
         class="editor__bar"
         leading={
-          <HeaderToolbar class="editor__toolbar" role="toolbar" aria-label="Formatting">
+          <HeaderToolbar
+            class="editor__toolbar"
+            role="toolbar"
+            aria-label="Formatting"
+          >
             {TOOLBAR_ACTIONS.map((action) => {
               const Icon = TOOLBAR_ICONS[action.id];
               return (
@@ -114,10 +290,12 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         }
       >
         <div class="editor__actions">
-          <HeaderButton variant="primary" class="editor__copy" onClick={() => void copyLink()}>
-            <Link2 size={HEADER_ICON_SIZE} />
-            {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
-          </HeaderButton>
+          <SplitButton
+            class="editor__copy"
+            primary={primary}
+            items={menuItems}
+            locked={secured}
+          />
           <HeaderButton class="editor__view" onClick={openView}>
             <Eye size={HEADER_ICON_SIZE} />
             View
@@ -126,7 +304,9 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         </div>
       </AppHeader>
       <div class="editor__status">
-        <span class="editor__size">{characters.toLocaleString()} characters</span>
+        <span class="editor__size">
+          {characters.toLocaleString()} characters
+        </span>
         {copyState === 'failed' ? (
           <span class="editor__copy-status" role="alert">
             Copy failed — your browser blocked clipboard access.
@@ -139,7 +319,8 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         ) : null}
         {images.any ? (
           <p class="editor__image-warning editor__warning" role="status">
-            This Document embeds {images.data && !images.remote ? 'an image' : 'images'}.{' '}
+            This Document embeds{' '}
+            {images.data && !images.remote ? 'an image' : 'images'}.{' '}
             {images.data
               ? 'Inline (data-URI) images are stored inside the Link, so they inflate its size quickly. '
               : 'Images add to the size of the Link. '}
@@ -150,7 +331,11 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         ) : null}
       </div>
       <div class="editor__panes">
-        <div class="editor__source" ref={sourceHost} aria-label="Markdown source" />
+        <div
+          class="editor__source"
+          ref={sourceHost}
+          aria-label="Markdown source"
+        />
         <article
           class="editor__preview document"
           aria-label="Preview"
@@ -158,6 +343,13 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </div>
+      <PasswordDialog
+        open={dialogOpen}
+        initialPassword={dialogMode === 'save' ? (securePassword ?? '') : ''}
+        submitLabel={dialogMode === 'save' ? 'Save' : 'Copy secure link'}
+        onSubmit={(password) => void handleDialogSubmit(password)}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   );
 }

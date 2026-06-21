@@ -1,0 +1,40 @@
+# MCP secure create/read
+
+> **Status:** ✅ Done — completed 2026-06-20
+
+## Parent
+
+[Secure (encrypted) Links PRD](./PRD.md)
+
+## What to build
+
+Programmatic create/read of secure (tag `2`) Links over the MCP, reusing the
+existing `createMarkdownLink` / `readMarkdownLink` handlers and tool schemas.
+
+- `create_markdown_link`: add an optional `password` input. When present, produce
+  a `2…` Link via `encodeSecure`; otherwise behavior is unchanged. The result
+  shape (`url`, `characters`, optional `warning`) is preserved.
+- `read_markdown_link`: add an optional `password` input. When the Payload is
+  secure, decrypt with the supplied password; if none is supplied, return the
+  typed `password-required` error result; if wrong, return `wrong-password`.
+  Plain Links are unchanged.
+
+Handlers become async; tool registrations already support async handlers. Tool
+descriptions should briefly note that the password is never embedded in the Link
+and must be conveyed out-of-band.
+
+## Acceptance criteria
+
+- [x] `create_markdown_link` with a `password` returns a secure Link that
+      `read_markdown_link` + the same password reverses to the original markdown.
+- [x] `create_markdown_link` without a `password` is unchanged (tag `1`), with the
+      same result shape and size warning behavior.
+- [x] `read_markdown_link` on a secure Link with no password returns a typed
+      `password-required` error result.
+- [x] `read_markdown_link` on a secure Link with a wrong password returns a
+      typed `wrong-password` error result.
+- [x] `read_markdown_link` on an plain Link is unchanged.
+
+## Blocked by
+
+- 01 — Core v2 encryption format
