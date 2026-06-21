@@ -2,6 +2,23 @@
 
 HashDoc turns markdown into a single shareable Link.
 
+A Link looks like this:
+
+```
+https://hashdoc.ghost7.org/#1eJxLSSxJVDA0AAAFAAH3
+└────────────┬────────────┘  └────────┬─────────┘
+          origin                   Payload
+```
+
+- **origin** — the static site that renders the Link. It serves only the app; it
+  never receives the Document.
+- **`#` fragment** — everything after `#` stays in the browser. Browsers do not
+  send the fragment to the origin server in requests or `Referer` headers.
+- **version tag** — the first character of the Payload: `1` for a plain Link,
+  `2` for a [secure Link](#secure-links).
+- **Payload** — the whole Document, compressed (and, for secure Links, encrypted)
+  and base64url-encoded.
+
 Paste markdown into the Editor, copy the Link, and send it to someone. Opening
 that Link reconstructs and renders the Document entirely in the browser. The
 Document is compressed into the URL fragment, so no server receives or stores
@@ -39,6 +56,40 @@ To create a Link:
 To read a Link, open it in a browser. To edit what you received, use the Editor
 to create a new Link. Editing never mutates the Link you opened.
 
+## Secure Links
+
+A plain Link is bearer-access: anyone who has it can read the Document. When that
+is not enough, HashDoc can produce a **secure Link** that is encrypted with a
+password.
+
+In the Editor, open the **Copy Link** menu and choose **Copy secure link**. You
+set a password, and the Document is encrypted in your browser before it is placed
+in the Link. Opening a secure Link prompts the reader for the password and only
+renders the Document once the correct password is entered.
+
+To create a secure Link:
+
+1. Write your markdown in the Editor.
+2. Open the **Copy Link** split-button menu and choose **Copy secure link**.
+3. Enter a password and copy the resulting `…/#2…` Link.
+4. Share the Link and the password through **separate** channels.
+
+Key properties:
+
+- **Client-side encryption.** Encryption happens entirely in the browser using
+  the native Web Crypto API — no server, no upload, no extra dependencies.
+- **AES-256-GCM** with a key derived from the password via **PBKDF2-HMAC-SHA-256
+  (600,000 iterations)**. A random salt and IV are generated per Link.
+- **The password is never stored in the Link.** Only the non-secret salt, IV, and
+  iteration count travel inside the Payload. Share the password separately — never
+  in the same message as the Link.
+- **No recovery.** If the password is lost, the Document is unrecoverable. A wrong
+  password fails the integrity check and surfaces as an incorrect-password error.
+
+Secure Links use the `2` version tag and otherwise behave like plain Links: the
+encrypted Document still lives entirely in the URL fragment. The format is frozen
+and documented in [FORMAT.md](packages/core/FORMAT.md).
+
 ## Using The MCP Server
 
 The published MCP package lets agents create and read HashDoc Links without
@@ -65,12 +116,10 @@ it defaults to `https://hashdoc.ghost7.org/`.
 
 The server speaks stdio, makes zero network calls, and exposes two tools:
 
-
 | Tool                   | Input                               | Result                          |
 | ---------------------- | ----------------------------------- | ------------------------------- |
 | `create_markdown_link` | `{ markdown }`                      | `{ url, characters, warning? }` |
 | `read_markdown_link`   | `{ url }` full Link or bare Payload | `{ markdown }`                  |
-
 
 There is no update tool. Editing is another create operation that produces a
 new Link.
@@ -79,13 +128,11 @@ new Link.
 
 This is a pnpm and TypeScript monorepo with three packages:
 
-
 | Package                          | What it is                                                                                                                                                                   |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `[packages/core](packages/core)` | The Link format: `encode`/`decode`, version-tag handling, and link/size helpers. Shared by `web` and `mcp`. The v1 format is frozen in [FORMAT.md](packages/core/FORMAT.md). |
 | `[packages/web](packages/web)`   | The Viewer, Editor, and shared render module built with Vite, Preact, and CodeMirror.                                                                                        |
 | `[packages/mcp](packages/mcp)`   | The MCP server exposing HashDoc tools over stdio.                                                                                                                            |
-
 
 Prerequisites:
 
@@ -194,4 +241,3 @@ pnpm build
 pnpm test
 pnpm typecheck
 ```
-
