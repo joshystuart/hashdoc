@@ -1,5 +1,7 @@
 # Editor secure split button
 
+> **Status:** ✅ Done — completed 2026-06-21
+
 ## What to build
 
 Replace the Editor's inline "Protect with password" checkbox with a shared
@@ -37,23 +39,23 @@ security language; the plain copy stays honestly unprotected.
 
 ## Acceptance criteria
 
-- [ ] `SplitButton` and `PasswordDialog` exist as the shared chrome primitives and
+- [x] `SplitButton` and `PasswordDialog` exist as the shared chrome primitives and
       the Editor's inline protect section is gone.
-- [ ] With no password, the primary copies a plain (tag `1`) Link unchanged.
-- [ ] Choosing the secure menu item opens the dialog; submitting a non-empty
+- [x] With no password, the primary copies a plain (tag `1`) Link unchanged.
+- [x] Choosing the secure menu item opens the dialog; submitting a non-empty
       password copies a Secure (tag `2`) Link that decodes back to the typed
       Document with that password, sets the lock, and closes the dialog.
-- [ ] With a password set, the primary copies the Secure Link without reopening
+- [x] With a password set, the primary copies the Secure Link without reopening
       the dialog.
-- [ ] "Change password…" yields a Secure Link decryptable with the new password
+- [x] "Change password…" yields a Secure Link decryptable with the new password
       but not the old; "Remove password" reverts to the plain primary and plain
       Link.
-- [ ] Submit is disabled on an empty password; live preview works regardless of
+- [x] Submit is disabled on an empty password; live preview works regardless of
       protection; size indicator reflects the active Link.
-- [ ] Dialog and menu are keyboard- and screen-reader-operable (focus trap,
+- [x] Dialog and menu are keyboard- and screen-reader-operable (focus trap,
       Escape, click-outside, focus restoration).
-- [ ] The "never says secure" guardrail still holds for the plain path.
-- [ ] Editor tests cover the above at the existing Editor seam; verified in a real
+- [x] The "never says secure" guardrail still holds for the plain path.
+- [x] Editor tests cover the above at the existing Editor seam; verified in a real
       browser via the Chrome DevTools MCP (light and dark themes).
 
 ## Blocked by

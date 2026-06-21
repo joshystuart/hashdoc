@@ -1,7 +1,18 @@
 import { render as preactRender } from 'preact';
 import type { ComponentType } from 'preact';
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
-import { Bold, Code, Eye, Heading, Italic, Link2, type LucideProps } from 'lucide-preact';
+import {
+  Bold,
+  Code,
+  Eye,
+  Heading,
+  Italic,
+  KeyRound,
+  Link2,
+  Lock,
+  Unlock,
+  type LucideProps,
+} from 'lucide-preact';
 import { encode, encodeSecure, buildLink, linkSizeWarning } from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
@@ -9,6 +20,8 @@ import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
 import { EXAMPLE_DOC } from './example.js';
 import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton, HEADER_ICON_SIZE } from '../chrome.js';
+import { SplitButton, type SplitButtonMenuItem } from '../SplitButton.js';
+import { PasswordDialog } from '../PasswordDialog.js';
 
 const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
   bold: Bold,
@@ -17,6 +30,8 @@ const TOOLBAR_ICONS: Record<string, ComponentType<LucideProps>> = {
   link: Link2,
   code: Code,
 };
+
+type DialogMode = 'copy' | 'save';
 
 export interface EditorProps {
   initialMarkdown?: string;
@@ -31,10 +46,10 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [secure, setSecure] = useState<boolean>(false);
-  const [password, setPassword] = useState<string>('');
-  const [confirm, setConfirm] = useState<string>('');
+  const [securePassword, setSecurePassword] = useState<string | null>(null);
   const [secureLink, setSecureLink] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [dialogMode, setDialogMode] = useState<DialogMode>('copy');
 
   useLayoutEffect(() => {
     const host = sourceHost.current;
@@ -55,15 +70,15 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
 
   const base = location.origin + location.pathname;
   const plainLink = buildLink(encode(markdown), base);
-  const secureReady = secure && password.length > 0 && password === confirm;
 
   useEffect(() => {
-    if (!secureReady) {
+    if (securePassword === null) {
       setSecureLink(null);
       return;
     }
     let ignore = false;
-    void encodeSecure(markdown, password).then((payload) => {
+    setSecureLink(null);
+    void encodeSecure(markdown, securePassword).then((payload) => {
       if (!ignore) {
         setSecureLink(buildLink(payload, base));
       }
@@ -71,46 +86,93 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
     return () => {
       ignore = true;
     };
-  }, [secureReady, markdown, password, base]);
+  }, [securePassword, markdown, base]);
 
-  const link = secure ? secureLink : plainLink;
+  const activeLink = securePassword === null ? plainLink : secureLink;
 
-  const secureMessage = !secure
-    ? null
-    : password.length === 0
-      ? 'Enter a password to secure this Document.'
-      : password !== confirm
-        ? 'Passwords do not match.'
-        : null;
-
-  async function copyLink(): Promise<void> {
-    if (link === null) {
-      return;
-    }
+  async function writeClipboard(value: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(value);
       setCopyState('copied');
     } catch {
       setCopyState('failed');
     }
   }
 
+  function copyPlain(): void {
+    void writeClipboard(plainLink);
+  }
+
+  function copySecure(): void {
+    if (secureLink === null) {
+      return;
+    }
+    void writeClipboard(secureLink);
+  }
+
+  function openCopyDialog(): void {
+    setDialogMode('copy');
+    setDialogOpen(true);
+  }
+
+  function openChangeDialog(): void {
+    setDialogMode('save');
+    setDialogOpen(true);
+  }
+
+  function removePassword(): void {
+    setSecurePassword(null);
+    setCopyState('idle');
+  }
+
+  async function handleDialogSubmit(password: string): Promise<void> {
+    if (dialogMode === 'copy') {
+      setSecurePassword(password);
+      try {
+        const payload = await encodeSecure(markdown, password);
+        const link = buildLink(payload, base);
+        await navigator.clipboard.writeText(link);
+        setSecureLink(link);
+        setCopyState('copied');
+      } catch {
+        setCopyState('failed');
+      }
+    } else {
+      setSecureLink(null);
+      setSecurePassword(password);
+    }
+    setDialogOpen(false);
+  }
+
   function openView(): void {
-    if (link === null) {
+    if (activeLink === null) {
       return;
     }
     const root = rootRef.current?.parentElement;
     if (!root) {
       return;
     }
-    history.pushState(null, '', link);
+    history.pushState(null, '', activeLink);
     preactRender(null, root);
     void import('../viewer.js').then(({ mountViewer }) => {
-      mountViewer(root, link);
+      mountViewer(root, activeLink);
     });
   }
 
-  const characters = (link ?? plainLink).length;
+  const copiedLabel = copyState === 'copied' ? 'Link copied' : null;
+  const secured = securePassword !== null;
+  const primary = secured
+    ? { label: copiedLabel ?? 'Copy secure link', icon: Lock, onClick: copySecure }
+    : { label: copiedLabel ?? 'Copy Link', icon: Link2, onClick: copyPlain };
+  const menuItems: SplitButtonMenuItem[] = secured
+    ? [
+        { label: 'Copy Link', icon: Link2, onClick: copyPlain },
+        { label: 'Change password…', icon: KeyRound, onClick: openChangeDialog },
+        { label: 'Remove password', icon: Unlock, onClick: removePassword, destructive: true },
+      ]
+    : [{ label: 'Copy secure link', icon: Lock, onClick: openCopyDialog }];
+
+  const characters = (activeLink ?? plainLink).length;
   const sizeWarning = linkSizeWarning(characters);
   const images = classifyImages(markdown);
   const previewHtml = render(markdown);
@@ -152,10 +214,7 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         }
       >
         <div class="editor__actions">
-          <HeaderButton variant="primary" class="editor__copy" onClick={() => void copyLink()}>
-            <Link2 size={HEADER_ICON_SIZE} />
-            {copyState === 'copied' ? 'Link copied' : 'Copy Link'}
-          </HeaderButton>
+          <SplitButton class="editor__copy" primary={primary} items={menuItems} locked={secured} />
           <HeaderButton class="editor__view" onClick={openView}>
             <Eye size={HEADER_ICON_SIZE} />
             View
@@ -164,57 +223,6 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
         </div>
       </AppHeader>
       <div class="editor__status">
-        <div class="editor__secure">
-          <label class="editor__secure-toggle">
-            <input
-              type="checkbox"
-              class="editor__secure-checkbox"
-              checked={secure}
-              onChange={(event) => {
-                setSecure((event.target as HTMLInputElement).checked);
-                setCopyState('idle');
-              }}
-            />
-            Secure with password
-          </label>
-          {secure ? (
-            <div class="editor__secure-fields">
-              <input
-                type="password"
-                class="editor__password"
-                aria-label="Password"
-                placeholder="Password"
-                autocomplete="new-password"
-                value={password}
-                onInput={(event) => {
-                  setPassword((event.target as HTMLInputElement).value);
-                  setCopyState('idle');
-                }}
-              />
-              <input
-                type="password"
-                class="editor__confirm"
-                aria-label="Confirm password"
-                placeholder="Confirm password"
-                autocomplete="new-password"
-                value={confirm}
-                onInput={(event) => {
-                  setConfirm((event.target as HTMLInputElement).value);
-                  setCopyState('idle');
-                }}
-              />
-              <p class="editor__secure-note">
-                Share this password separately from the Link — never send both in the same message.
-                If the password is lost, the Document is unrecoverable.
-              </p>
-              {secureMessage ? (
-                <p class="editor__secure-error editor__warning" role="alert">
-                  {secureMessage}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
         <span class="editor__size">{characters.toLocaleString()} characters</span>
         {copyState === 'failed' ? (
           <span class="editor__copy-status" role="alert">
@@ -247,6 +255,13 @@ export function Editor({ initialMarkdown }: EditorProps = {}): preact.JSX.Elemen
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       </div>
+      <PasswordDialog
+        open={dialogOpen}
+        initialPassword={dialogMode === 'save' ? securePassword ?? '' : ''}
+        submitLabel={dialogMode === 'save' ? 'Save' : 'Copy secure link'}
+        onSubmit={(password) => void handleDialogSubmit(password)}
+        onClose={() => setDialogOpen(false)}
+      />
     </div>
   );
 }

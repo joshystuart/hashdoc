@@ -77,7 +77,7 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: editedMd } });
     await flush();
 
-    (root.querySelector('.editor__copy') as HTMLButtonElement).click();
+    (root.querySelector('.split-button__primary') as HTMLButtonElement).click();
     await flush();
 
     expect(copied).toHaveLength(1);
@@ -95,7 +95,7 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-    const copyButton = root.querySelector('.editor__copy') as HTMLButtonElement;
+    const copyButton = root.querySelector('.split-button__primary') as HTMLButtonElement;
     copyButton.click();
     await flush();
 

@@ -163,7 +163,7 @@ describe('Editor — advisory warnings (issue-11)', () => {
     expect(root.querySelector('.editor__size-warning')).not.toBeNull();
     expect(root.querySelector('.editor__image-warning')).not.toBeNull();
 
-    (root.querySelector('.editor__copy') as HTMLButtonElement).click();
+    (root.querySelector('.split-button__primary') as HTMLButtonElement).click();
     await flush();
 
     expect(copied).toHaveLength(1);
