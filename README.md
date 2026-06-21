@@ -5,7 +5,7 @@ HashDoc turns markdown into a single shareable Link.
 A Link looks like this:
 
 ```
-https://hashdoc.ghost7.org/#1y0jNyclXKM8vykkBAA
+https://hashdoc.dev/#1y0jNyclXKM8vykkBAA
 └────────────┬────────────┘└────────┬─────────┘
           origin                   Payload
 ```
@@ -44,7 +44,7 @@ anyone with the Link can read the Document.
 
 ## Getting Started Online
 
-Open [hashdoc.ghost7.org](https://hashdoc.ghost7.org/).
+Open [hashdoc.dev](https://hashdoc.dev/).
 
 To create a Link:
 
@@ -104,7 +104,7 @@ Example MCP client configuration:
       "command": "npx",
       "args": ["-y", "@hashdoc/mcp"],
       "env": {
-        "HASHDOC_BASE_URL": "https://hashdoc.ghost7.org/"
+        "HASHDOC_BASE_URL": "https://hashdoc.dev/"
       }
     }
   }
@@ -112,7 +112,7 @@ Example MCP client configuration:
 ```
 
 `HASHDOC_BASE_URL` controls the origin used for generated Links. If unset,
-it defaults to `https://hashdoc.ghost7.org/`.
+it defaults to `https://hashdoc.dev/`.
 
 The server speaks stdio, makes zero network calls, and exposes two tools:
 
@@ -214,7 +214,7 @@ Or point an MCP client at the local build:
       "command": "node",
       "args": ["/absolute/path/to/HashDoc/packages/mcp/dist/bin.js"],
       "env": {
-        "HASHDOC_BASE_URL": "https://hashdoc.ghost7.org/"
+        "HASHDOC_BASE_URL": "https://hashdoc.dev/"
       }
     }
   }

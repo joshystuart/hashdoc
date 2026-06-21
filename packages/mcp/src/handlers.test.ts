@@ -6,7 +6,7 @@ import {
   DecodeError,
 } from './handlers.js';
 
-const BASE = 'https://hashdoc.ghost7.org/';
+const BASE = 'https://hashdoc.dev/';
 
 describe('createMarkdownLink', () => {
   it('produces a url whose fragment decodes back to the input markdown', async () => {
@@ -82,7 +82,7 @@ describe('readMarkdownLink', () => {
   it('throws a typed DecodeError on corrupt / garbage input', async () => {
     await expect(
       readMarkdownLink({
-        url: 'https://hashdoc.ghost7.org/#not-a-real-payload!!!',
+        url: 'https://hashdoc.dev/#not-a-real-payload!!!',
       }),
     ).rejects.toThrow(DecodeError);
     await expect(readMarkdownLink({ url: 'total garbage' })).rejects.toThrow(

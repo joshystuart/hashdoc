@@ -31,9 +31,9 @@ describe('resolveBaseUrl', () => {
   });
 
   it('honours HASHDOC_BASE_URL', () => {
-    expect(
-      resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.ghost7.org/' }),
-    ).toBe('https://hashdoc.ghost7.org/');
+    expect(resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.dev/' })).toBe(
+      'https://hashdoc.dev/',
+    );
   });
 });
 
@@ -46,7 +46,7 @@ describe('MCP server', () => {
   });
 
   it('create then read round-trips the markdown through the tools', async () => {
-    const client = await connectedClient('https://hashdoc.ghost7.org/');
+    const client = await connectedClient('https://hashdoc.dev/');
     const markdown = '# Via tools\n\nround trip body';
 
     const created = parseJsonResult<{ url: string; characters: number }>(
@@ -55,7 +55,7 @@ describe('MCP server', () => {
         arguments: { markdown },
       })) as TextResult,
     );
-    expect(created.url.startsWith('https://hashdoc.ghost7.org/#')).toBe(true);
+    expect(created.url.startsWith('https://hashdoc.dev/#')).toBe(true);
     expect(created.characters).toBe(created.url.length);
 
     const read = parseJsonResult<{ markdown: string }>(
@@ -68,7 +68,7 @@ describe('MCP server', () => {
   });
 
   it('create then read round-trips a secure Link with the password', async () => {
-    const client = await connectedClient('https://hashdoc.ghost7.org/');
+    const client = await connectedClient('https://hashdoc.dev/');
     const markdown = '# Secret\n\nsecret body';
     const password = 'shared-secret';
 
@@ -78,7 +78,7 @@ describe('MCP server', () => {
         arguments: { markdown, password },
       })) as TextResult,
     );
-    expect(created.url.startsWith('https://hashdoc.ghost7.org/#2')).toBe(true);
+    expect(created.url.startsWith('https://hashdoc.dev/#2')).toBe(true);
 
     const read = parseJsonResult<{ markdown: string }>(
       (await client.callTool({
@@ -90,7 +90,7 @@ describe('MCP server', () => {
   });
 
   it('returns a password-required error for a secure Link read with no password', async () => {
-    const client = await connectedClient('https://hashdoc.ghost7.org/');
+    const client = await connectedClient('https://hashdoc.dev/');
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({
         name: 'create_markdown_link',
@@ -108,7 +108,7 @@ describe('MCP server', () => {
   });
 
   it('returns a wrong-password error for a secure Link read with the wrong password', async () => {
-    const client = await connectedClient('https://hashdoc.ghost7.org/');
+    const client = await connectedClient('https://hashdoc.dev/');
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({
         name: 'create_markdown_link',
@@ -129,7 +129,7 @@ describe('MCP server', () => {
     const client = await connectedClient();
     const result = (await client.callTool({
       name: 'read_markdown_link',
-      arguments: { url: 'https://hashdoc.ghost7.org/#totally-bogus!!!' },
+      arguments: { url: 'https://hashdoc.dev/#totally-bogus!!!' },
     })) as TextResult;
 
     expect(result.isError).toBe(true);
