@@ -10,7 +10,7 @@ This page is itself a HashDoc document. To write your own, select all
 ## How a link works
 
 \`\`\`
-https://hashdoc.ghost7.org/#1y0jNyclXKM8vykkBAA
+https://hashdoc.dev/#1y0jNyclXKM8vykkBAA
 └────────────┬────────────┘└────────┬─────────┘
           origin                   Payload
 \`\`\`

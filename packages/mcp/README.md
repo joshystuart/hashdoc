@@ -13,14 +13,14 @@ HashDoc Links store markdown in the URL fragment after `#`. The MCP server runs 
       "command": "npx",
       "args": ["-y", "@hashdoc/mcp"],
       "env": {
-        "HASHDOC_BASE_URL": "https://hashdoc.ghost7.org/"
+        "HASHDOC_BASE_URL": "https://hashdoc.dev/"
       }
     }
   }
 }
 ```
 
-`HASHDOC_BASE_URL` controls the origin used when the server creates Links. If it is unset, the server uses `https://hashdoc.ghost7.org/`.
+`HASHDOC_BASE_URL` controls the origin used when the server creates Links. If it is unset, the server uses `https://hashdoc.dev/`.
 
 ## Tools
 
@@ -49,7 +49,7 @@ Result:
 
 ```json
 {
-  "url": "https://hashdoc.ghost7.org/#1...",
+  "url": "https://hashdoc.dev/#1...",
   "characters": 123
 }
 ```
@@ -64,7 +64,7 @@ Input:
 
 ```json
 {
-  "url": "https://hashdoc.ghost7.org/#1..."
+  "url": "https://hashdoc.dev/#1..."
 }
 ```
 
@@ -72,7 +72,7 @@ Secure Links require the same password used when the Link was created:
 
 ```json
 {
-  "url": "https://hashdoc.ghost7.org/#2...",
+  "url": "https://hashdoc.dev/#2...",
   "password": "correct horse battery staple"
 }
 ```
@@ -94,7 +94,7 @@ npm install @hashdoc/mcp
 The package exposes a `hashdoc-mcp` binary:
 
 ```bash
-HASHDOC_BASE_URL="https://hashdoc.ghost7.org/" npx -y @hashdoc/mcp
+HASHDOC_BASE_URL="https://hashdoc.dev/" npx -y @hashdoc/mcp
 ```
 
 It also exports helpers for embedding or testing the server:
@@ -113,6 +113,6 @@ import {
 
 - `createServer(baseUrl)` creates the MCP server.
 - `resolveBaseUrl(env)` resolves `HASHDOC_BASE_URL` with the production default.
-- `DEFAULT_BASE_URL` is `https://hashdoc.ghost7.org/`.
+- `DEFAULT_BASE_URL` is `https://hashdoc.dev/`.
 - `createMarkdownLink(args, baseUrl)` creates a Link without starting MCP transport.
 - `readMarkdownLink(args)` reads a Link without starting MCP transport.

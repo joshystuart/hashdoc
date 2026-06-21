@@ -16,7 +16,7 @@ npm install @hashdoc/core
 import { buildLink, decode, encode, payloadFromUrl } from '@hashdoc/core';
 
 const payload = encode('# Hello HashDoc');
-const url = buildLink(payload, 'https://hashdoc.ghost7.org/');
+const url = buildLink(payload, 'https://hashdoc.dev/');
 
 const decodedPayload = payloadFromUrl(url);
 if (decodedPayload === null) {
@@ -42,7 +42,7 @@ const payload = await encodeSecure(
   '# Private note',
   'correct horse battery staple',
 );
-const url = buildLink(payload, 'https://hashdoc.ghost7.org/');
+const url = buildLink(payload, 'https://hashdoc.dev/');
 const decodedPayload = payloadFromUrl(url);
 
 if (decodedPayload === null) {

@@ -7,7 +7,7 @@ import {
   DecodeError,
 } from './handlers.js';
 
-export const DEFAULT_BASE_URL = 'https://hashdoc.ghost7.org/';
+export const DEFAULT_BASE_URL = 'https://hashdoc.dev/';
 
 export function resolveBaseUrl(env: NodeJS.ProcessEnv = process.env): string {
   const value = env.HASHDOC_BASE_URL?.trim();
