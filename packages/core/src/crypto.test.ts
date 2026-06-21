@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { decode } from './codec.js';
-import { decodeSecure, encodeSecure, isSecure, VERSION_TAG_V2 } from './crypto.js';
+import {
+  decodeSecure,
+  encodeSecure,
+  isSecure,
+  VERSION_TAG_V2,
+} from './crypto.js';
 import { classifyDecodeError, DecodeError } from './errors.js';
 import { base64urlToBytes, bytesToBase64url } from './base64url.js';
 
@@ -60,7 +65,9 @@ describe('v2 encryption is non-deterministic', () => {
 describe('v2 authentication and integrity', () => {
   it('wrong password rejects with reason wrong-password', async () => {
     const payload = await encodeSecure('secret content', PASSWORD);
-    expect(await reasonOf(decodeSecure(payload, 'not the password'))).toBe('wrong-password');
+    expect(await reasonOf(decodeSecure(payload, 'not the password'))).toBe(
+      'wrong-password',
+    );
   });
 
   it('tampering with a frame byte rejects with wrong-password (never a silent wrong decrypt)', async () => {
@@ -69,7 +76,9 @@ describe('v2 authentication and integrity', () => {
     const last = frame.length - 1;
     frame[last] = frame[last]! ^ 0xff;
     const tampered = VERSION_TAG_V2 + bytesToBase64url(frame);
-    expect(await reasonOf(decodeSecure(tampered, PASSWORD))).toBe('wrong-password');
+    expect(await reasonOf(decodeSecure(tampered, PASSWORD))).toBe(
+      'wrong-password',
+    );
   });
 
   it('truncated/too-short frame rejects with malformed-encrypted-frame and classifies as corrupt', async () => {
@@ -111,7 +120,9 @@ describe('cross-scheme guards', () => {
   });
 
   it('decodeSecure on a 1… Payload throws a clear typed error', async () => {
-    expect(await reasonOf(decodeSecure('1U1bwSM3JyQcA', PASSWORD))).toBe('unsupported-version');
+    expect(await reasonOf(decodeSecure('1U1bwSM3JyQcA', PASSWORD))).toBe(
+      'unsupported-version',
+    );
   });
 
   it('decodeSecure on a 2… Payload with an empty password throws password-required', async () => {
@@ -127,7 +138,9 @@ describe('classifyDecodeError maps the new wrong-password kind', () => {
   });
 
   it('still classifies structural failures as corrupt', () => {
-    expect(classifyDecodeError(new DecodeError('malformed-encrypted-frame', 'x'))).toBe('corrupt');
+    expect(
+      classifyDecodeError(new DecodeError('malformed-encrypted-frame', 'x')),
+    ).toBe('corrupt');
   });
 });
 
@@ -142,10 +155,14 @@ describe('v2 permanence freeze — a pinned Payload must decrypt forever (decode
   });
 
   it('frozen Payload decrypts to the known Document with the known password', async () => {
-    expect(await decodeSecure(FROZEN_PAYLOAD, FROZEN_PASSWORD)).toBe(FROZEN_DOC);
+    expect(await decodeSecure(FROZEN_PAYLOAD, FROZEN_PASSWORD)).toBe(
+      FROZEN_DOC,
+    );
   });
 
   it('frozen Payload rejects the wrong password', async () => {
-    expect(await reasonOf(decodeSecure(FROZEN_PAYLOAD, 'wrong'))).toBe('wrong-password');
+    expect(await reasonOf(decodeSecure(FROZEN_PAYLOAD, 'wrong'))).toBe(
+      'wrong-password',
+    );
   });
 });

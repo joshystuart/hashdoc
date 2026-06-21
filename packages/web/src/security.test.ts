@@ -62,12 +62,16 @@ describe('render() — URL scheme vectors', () => {
     const html = render('<a href="java\tscript:alert(1)">x</a>');
     const hrefs = html.match(/href=["']([^"']*)["']/gi) ?? [];
     for (const href of hrefs) {
-      expect(href.replace(/\s/g, '').toLowerCase()).not.toContain('javascript:');
+      expect(href.replace(/\s/g, '').toLowerCase()).not.toContain(
+        'javascript:',
+      );
     }
   });
 
   it('neutralizes data: URI scripting in an anchor href', () => {
-    const html = render('<a href="data:text/html,<script>alert(1)</script>">x</a>');
+    const html = render(
+      '<a href="data:text/html,<script>alert(1)</script>">x</a>',
+    );
     expect(html).not.toMatch(/<script/i);
     const hrefs = html.match(/href=["']([^"']*)["']/gi) ?? [];
     for (const href of hrefs) {
@@ -89,12 +93,16 @@ describe('render() — SVG-based vectors', () => {
   });
 
   it('strips <svg><a xlink:href="javascript:…">', () => {
-    const html = render('<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>');
+    const html = render(
+      '<svg><a xlink:href="javascript:alert(1)"><text>x</text></a></svg>',
+    );
     expect(html).not.toMatch(/javascript:/i);
   });
 
   it('strips <foreignObject> HTML smuggling inside svg', () => {
-    const html = render('<svg><foreignObject><img src=x onerror=alert(1)></foreignObject></svg>');
+    const html = render(
+      '<svg><foreignObject><img src=x onerror=alert(1)></foreignObject></svg>',
+    );
     expect(html).not.toMatch(/onerror/i);
   });
 });
@@ -106,7 +114,9 @@ describe('render() — frame & object injection', () => {
   });
 
   it('strips <frame>/<frameset>', () => {
-    const html = render('<frameset><frame src="https://evil.example"></frameset>');
+    const html = render(
+      '<frameset><frame src="https://evil.example"></frameset>',
+    );
     expect(html).not.toMatch(/<frame/i);
   });
 
@@ -122,7 +132,9 @@ describe('render() — frame & object injection', () => {
   });
 
   it('strips <form> (phishing / credential-capture vector)', () => {
-    const html = render('<form action="https://evil.example"><input name="pw"></form>');
+    const html = render(
+      '<form action="https://evil.example"><input name="pw"></form>',
+    );
     expect(html).not.toMatch(/<form/i);
   });
 });
@@ -151,16 +163,21 @@ describe('render() — malicious code-block content stays inert', () => {
     const html = render('```"><img src=x onerror=alert(1)>\ncode\n```');
     expect(html).not.toMatch(/onerror/i);
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    expect(doc.querySelector('img'), 'no live <img> may be injected').toBeNull();
+    expect(
+      doc.querySelector('img'),
+      'no live <img> may be injected',
+    ).toBeNull();
   });
 });
 
 describe('enhance islands — sanitize their own (possibly hostile) output', () => {
   it('highlight island: hostile highlighter output is sanitized before insertion', async () => {
     vi.doMock('./highlight.js', () => ({
-      highlightCode: () => '<span onclick="alert(1)">x</span><script>alert(2)</script>',
+      highlightCode: () =>
+        '<span onclick="alert(1)">x</span><script>alert(2)</script>',
     }));
-    const { enhance: enhanceMocked, render: renderMocked } = await import('./render.js');
+    const { enhance: enhanceMocked, render: renderMocked } =
+      await import('./render.js');
     const el = document.createElement('div');
     el.innerHTML = renderMocked('```js\nconst x = 1;\n```');
     document.body.append(el);
@@ -174,7 +191,8 @@ describe('enhance islands — sanitize their own (possibly hostile) output', () 
       renderMermaid: async () =>
         '<svg onload="window.__pwned=1"><script>alert(1)</script><rect/></svg>',
     }));
-    const { enhance: enhanceMocked, render: renderMocked } = await import('./render.js');
+    const { enhance: enhanceMocked, render: renderMocked } =
+      await import('./render.js');
     const el = document.createElement('div');
     el.innerHTML = renderMocked('```mermaid\ngraph TD; A-->B;\n```');
     document.body.append(el);
@@ -189,7 +207,8 @@ describe('enhance islands — sanitize their own (possibly hostile) output', () 
       renderMath: () =>
         '<span class="katex" onmouseover="alert(1)"><script>alert(2)</script>x</span>',
     }));
-    const { enhance: enhanceMocked, render: renderMocked } = await import('./render.js');
+    const { enhance: enhanceMocked, render: renderMocked } =
+      await import('./render.js');
     const el = document.createElement('div');
     el.innerHTML = renderMocked('inline $x^2$ math');
     document.body.append(el);
@@ -201,7 +220,9 @@ describe('enhance islands — sanitize their own (possibly hostile) output', () 
 
 describe('enhance — does not introduce handlers for benign content', () => {
   it('leaves a clean document free of script/handler markup after enhance', async () => {
-    const el = mount('# Title\n\nSome **safe** text and a [link](https://example.com).');
+    const el = mount(
+      '# Title\n\nSome **safe** text and a [link](https://example.com).',
+    );
     await enhance(el);
     expect(el.innerHTML).not.toMatch(/<script/i);
     expect(el.innerHTML).not.toMatch(/\son\w+=/i);

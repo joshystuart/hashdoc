@@ -11,8 +11,18 @@ const built = existsSync(indexHtml);
 
 const FAVICON_LINKS = [
   { rel: 'icon', href: '/favicon.ico' },
-  { rel: 'icon', href: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
-  { rel: 'icon', href: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+  {
+    rel: 'icon',
+    href: '/favicon-32x32.png',
+    type: 'image/png',
+    sizes: '32x32',
+  },
+  {
+    rel: 'icon',
+    href: '/favicon-16x16.png',
+    type: 'image/png',
+    sizes: '16x16',
+  },
   { rel: 'apple-touch-icon', href: '/apple-touch-icon.png', sizes: '180x180' },
   { rel: 'manifest', href: '/site.webmanifest' },
 ];
@@ -36,9 +46,14 @@ function pngSignature(file: string): number[] {
 describe('favicon assets (public/)', () => {
   it('keeps the raster source in public/', () => {
     const source = join(publicDir, 'favicon-source.png');
-    expect(existsSync(source), 'public/favicon-source.png must be committed').toBe(true);
+    expect(
+      existsSync(source),
+      'public/favicon-source.png must be committed',
+    ).toBe(true);
     expect(statSync(source).size).toBeGreaterThan(100);
-    expect(pngSignature(source)).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    expect(pngSignature(source)).toEqual([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ]);
   });
 
   it('generates every favicon size from the source', () => {
@@ -50,7 +65,9 @@ describe('favicon assets (public/)', () => {
   });
 
   it('site.webmanifest references self-hosted PNG icons', () => {
-    const manifest = JSON.parse(readFileSync(join(publicDir, 'site.webmanifest'), 'utf8')) as {
+    const manifest = JSON.parse(
+      readFileSync(join(publicDir, 'site.webmanifest'), 'utf8'),
+    ) as {
       icons: { src: string; sizes: string; type: string }[];
       theme_color: string;
     };
@@ -65,29 +82,43 @@ describe('favicon assets (public/)', () => {
 });
 
 describe('favicon (built output)', () => {
-  it.runIf(built)('built index.html links every favicon asset from the app origin', () => {
-    const html = readFileSync(indexHtml, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
-    for (const link of FAVICON_LINKS) {
-      const rel = link.rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const href = link.href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const re = new RegExp(
-        `<link[^>]+rel=["']${rel}["'][^>]+href=["']${href}["']|<link[^>]+href=["']${href}["'][^>]+rel=["']${rel}["']`,
-        'i',
+  it.runIf(built)(
+    'built index.html links every favicon asset from the app origin',
+    () => {
+      const html = readFileSync(indexHtml, 'utf8').replace(
+        /<!--[\s\S]*?-->/g,
+        '',
       );
-      expect(html, `missing <link rel="${link.rel}" href="${link.href}">`).toMatch(re);
-      expect(html).not.toMatch(new RegExp(`href=["']https?:\\/\\/${href.slice(1)}`, 'i'));
-    }
-    expect(html).toMatch(/<meta[^>]+name=["']theme-color["']/i);
-    expect(html).toMatch(/<meta[^>]+name=["']msapplication-config["']/i);
+      for (const link of FAVICON_LINKS) {
+        const rel = link.rel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const href = link.href.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(
+          `<link[^>]+rel=["']${rel}["'][^>]+href=["']${href}["']|<link[^>]+href=["']${href}["'][^>]+rel=["']${rel}["']`,
+          'i',
+        );
+        expect(
+          html,
+          `missing <link rel="${link.rel}" href="${link.href}">`,
+        ).toMatch(re);
+        expect(html).not.toMatch(
+          new RegExp(`href=["']https?:\\/\\/${href.slice(1)}`, 'i'),
+        );
+      }
+      expect(html).toMatch(/<meta[^>]+name=["']theme-color["']/i);
+      expect(html).toMatch(/<meta[^>]+name=["']msapplication-config["']/i);
 
-    const manifest = JSON.parse(readFileSync(join(distDir, 'site.webmanifest'), 'utf8')) as {
-      theme_color: string;
-    };
-    const themeMeta = /<meta[^>]+name=["']theme-color["'][^>]+content=["']([^"']+)["']/i.exec(
-      html,
-    );
-    expect(themeMeta?.[1]).toBe(manifest.theme_color);
-  });
+      const manifest = JSON.parse(
+        readFileSync(join(distDir, 'site.webmanifest'), 'utf8'),
+      ) as {
+        theme_color: string;
+      };
+      const themeMeta =
+        /<meta[^>]+name=["']theme-color["'][^>]+content=["']([^"']+)["']/i.exec(
+          html,
+        );
+      expect(themeMeta?.[1]).toBe(manifest.theme_color);
+    },
+  );
 
   it.runIf(built)('copies every favicon asset into dist/', () => {
     for (const name of DIST_ASSETS) {
@@ -97,17 +128,24 @@ describe('favicon (built output)', () => {
     }
   });
 
-  it.runIf(built)('favicon PNGs are valid and ICO contains expected sizes', () => {
-    for (const name of ['favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png']) {
-      expect(pngSignature(join(distDir, name))).toEqual([
-        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-      ]);
-    }
-    const ico = readFileSync(join(distDir, 'favicon.ico'));
-    expect(ico.length).toBeGreaterThan(100);
-    expect(ico[0]).toBe(0);
-    expect(ico[1]).toBe(0);
-  });
+  it.runIf(built)(
+    'favicon PNGs are valid and ICO contains expected sizes',
+    () => {
+      for (const name of [
+        'favicon-16x16.png',
+        'favicon-32x32.png',
+        'apple-touch-icon.png',
+      ]) {
+        expect(pngSignature(join(distDir, name))).toEqual([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+      }
+      const ico = readFileSync(join(distDir, 'favicon.ico'));
+      expect(ico.length).toBeGreaterThan(100);
+      expect(ico[0]).toBe(0);
+      expect(ico[1]).toBe(0);
+    },
+  );
 
   if (!built) {
     it('SKIPPED: dist not present — run `pnpm build` to enable the favicon audit', () => {

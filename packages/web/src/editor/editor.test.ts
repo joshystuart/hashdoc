@@ -16,7 +16,10 @@ function tick(): Promise<void> {
 
 function getView(root: HTMLElement): EditorView {
   const content = root.querySelector('.cm-content');
-  expect(content, 'CodeMirror content element should be mounted').not.toBeNull();
+  expect(
+    content,
+    'CodeMirror content element should be mounted',
+  ).not.toBeNull();
   const view = EditorView.findFromDOM(content as HTMLElement);
   expect(view, 'a live CodeMirror view should be attached').not.toBeNull();
   return view!;
@@ -24,7 +27,9 @@ function getView(root: HTMLElement): EditorView {
 
 function typeIntoSource(root: HTMLElement, text: string): void {
   const view = getView(root);
-  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: text },
+  });
 }
 
 function setInput(el: HTMLInputElement, value: string): void {
@@ -39,8 +44,8 @@ function openMenu(root: HTMLElement): void {
 }
 
 function menuItem(root: HTMLElement, text: string): HTMLButtonElement {
-  const item = Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
-    el.textContent?.includes(text),
+  const item = Array.from(root.querySelectorAll('.split-button__item')).find(
+    (el) => el.textContent?.includes(text),
   ) as HTMLButtonElement | undefined;
   expect(item, `menu item "${text}" should exist`).not.toBeNull();
   return item!;
@@ -72,7 +77,10 @@ async function waitForDialogClosed(root: HTMLElement): Promise<void> {
 
 async function fillDialog(root: HTMLElement, password: string): Promise<void> {
   await waitForDialogOpen(root);
-  setInput(root.querySelector('.password-dialog__input') as HTMLInputElement, password);
+  setInput(
+    root.querySelector('.password-dialog__input') as HTMLInputElement,
+    password,
+  );
   await flush();
 }
 
@@ -81,8 +89,13 @@ function submitDialog(root: HTMLElement): void {
   form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 }
 
-async function copyViaPrimary(root: HTMLElement, copied: string[]): Promise<string> {
-  const button = root.querySelector('.split-button__primary') as HTMLButtonElement;
+async function copyViaPrimary(
+  root: HTMLElement,
+  copied: string[],
+): Promise<string> {
+  const button = root.querySelector(
+    '.split-button__primary',
+  ) as HTMLButtonElement;
   const before = copied.length;
   for (let i = 0; i < 1500; i++) {
     button.click();
@@ -94,7 +107,11 @@ async function copyViaPrimary(root: HTMLElement, copied: string[]): Promise<stri
   throw new Error('primary copy never produced a Link');
 }
 
-async function copyViaSecureDialog(root: HTMLElement, copied: string[], password: string): Promise<string> {
+async function copyViaSecureDialog(
+  root: HTMLElement,
+  copied: string[],
+  password: string,
+): Promise<string> {
   openMenu(root);
   await flush();
   menuItem(root, 'Copy secure link').click();
@@ -202,7 +219,10 @@ describe('Editor — author creates a Link', () => {
   });
 
   it('does NOT seed the example when forking (initialMarkdown provided) (issue-12)', async () => {
-    mountEditor(root, { initialMarkdown: '# Forked\n\nmine\n', forkedFromDocument: true });
+    mountEditor(root, {
+      initialMarkdown: '# Forked\n\nmine\n',
+      forkedFromDocument: true,
+    });
     await flush();
 
     const view = getView(root);
@@ -390,7 +410,9 @@ describe('Editor — author creates a Link', () => {
     menuItem(root, 'Copy secure link').click();
     await waitForDialogOpen(root);
 
-    const submit = root.querySelector('.password-dialog__submit') as HTMLButtonElement;
+    const submit = root.querySelector(
+      '.password-dialog__submit',
+    ) as HTMLButtonElement;
     expect(submit.disabled).toBe(true);
 
     submitDialog(root);
@@ -408,7 +430,11 @@ describe('Editor — author creates a Link', () => {
     await copyViaSecureDialog(root, copied, 'sticky-pw');
 
     root.querySelector<HTMLButtonElement>('.editor__view')!.click();
-    for (let i = 0; i < 200 && root.querySelector('.viewer .document') === null; i++) {
+    for (
+      let i = 0;
+      i < 200 && root.querySelector('.viewer .document') === null;
+      i++
+    ) {
       await tick();
     }
 
@@ -417,7 +443,11 @@ describe('Editor — author creates a Link', () => {
     expect(root.querySelector('.split-button--secure')).not.toBeNull();
 
     root.querySelector<HTMLButtonElement>('.viewer__edit')!.click();
-    for (let i = 0; i < 200 && root.querySelector('.cm-content') === null; i++) {
+    for (
+      let i = 0;
+      i < 200 && root.querySelector('.cm-content') === null;
+      i++
+    ) {
       await tick();
     }
     expect(root.querySelector('.split-button--secure')).not.toBeNull();
@@ -484,7 +514,9 @@ describe('Editor — author creates a Link', () => {
     const logo = leading.querySelector('.app-header__logo')!;
     expect(logo).not.toBeNull();
     expect(leading.firstElementChild).toBe(logo);
-    expect(logo.querySelector('img')?.getAttribute('src')).toContain('hashdoc-logo.svg');
+    expect(logo.querySelector('img')?.getAttribute('src')).toContain(
+      'hashdoc-logo.svg',
+    );
   });
 
   it('toolbar bold action wraps text in the source and updates the preview', async () => {

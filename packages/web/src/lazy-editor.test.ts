@@ -33,11 +33,11 @@ describe('lazy-loaded Editor chunk (built output)', () => {
   });
 
   it.runIf(built)('puts CodeMirror in a separate async chunk', () => {
-    const withCodeMirror = jsFiles(assetsDir).filter((f) => CODEMIRROR_MARKER.test(f.text));
+    const withCodeMirror = jsFiles(assetsDir).filter((f) =>
+      CODEMIRROR_MARKER.test(f.text),
+    );
     expect(withCodeMirror.length).toBeGreaterThan(0);
   });
-
-
 
   it.runIf(built)('keeps highlight.js out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
@@ -54,9 +54,6 @@ describe('lazy-loaded Editor chunk (built output)', () => {
     expect(withHljs.length).toBeGreaterThan(0);
   });
 
-
-
-
   it.runIf(built)('keeps Mermaid out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
     const entryMatch = indexHtml.match(/<script[^>]+src=["']([^"']+\.js)["']/i);
@@ -68,11 +65,11 @@ describe('lazy-loaded Editor chunk (built output)', () => {
   });
 
   it.runIf(built)('puts Mermaid in a separate async chunk', () => {
-    const withMermaid = jsFiles(assetsDir).filter((f) => MERMAID_MARKER.test(f.text));
+    const withMermaid = jsFiles(assetsDir).filter((f) =>
+      MERMAID_MARKER.test(f.text),
+    );
     expect(withMermaid.length).toBeGreaterThan(0);
   });
-
-
 
   it.runIf(built)('keeps KaTeX out of the entry chunk', () => {
     const indexHtml = readFileSync(join(distDir, 'index.html'), 'utf8');
@@ -85,7 +82,9 @@ describe('lazy-loaded Editor chunk (built output)', () => {
   });
 
   it.runIf(built)('puts KaTeX in a separate async chunk', () => {
-    const withKatex = jsFiles(assetsDir).filter((f) => KATEX_MARKER.test(f.text));
+    const withKatex = jsFiles(assetsDir).filter((f) =>
+      KATEX_MARKER.test(f.text),
+    );
     expect(withKatex.length).toBeGreaterThan(0);
   });
 

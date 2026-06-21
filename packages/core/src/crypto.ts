@@ -25,7 +25,11 @@ export function isSecure(payload: string): boolean {
   return payload[0] === VERSION_TAG_V2;
 }
 
-async function deriveKey(password: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
+async function deriveKey(
+  password: string,
+  salt: Uint8Array,
+  iterations: number,
+): Promise<CryptoKey> {
   const baseKey = await crypto.subtle.importKey(
     'raw',
     new Uint8Array(utf8Encoder.encode(password)),
@@ -42,14 +46,19 @@ async function deriveKey(password: string, salt: Uint8Array, iterations: number)
   );
 }
 
-export async function encodeSecure(markdown: string, password: string): Promise<string> {
+export async function encodeSecure(
+  markdown: string,
+  password: string,
+): Promise<string> {
   const compressed = deflateSync(utf8Encoder.encode(markdown));
 
   const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
   const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
   const key = await deriveKey(password, salt, PBKDF2_ITERATIONS);
 
-  const ciphertext = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, compressed));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, compressed),
+  );
 
   const frame = new Uint8Array(HEADER_BYTES + ciphertext.length);
   frame.set(salt, 0);
@@ -60,7 +69,10 @@ export async function encodeSecure(markdown: string, password: string): Promise<
   return VERSION_TAG_V2 + bytesToBase64url(frame);
 }
 
-export async function decodeSecure(payload: string, password: string): Promise<string> {
+export async function decodeSecure(
+  payload: string,
+  password: string,
+): Promise<string> {
   if (payload.length === 0) {
     throw new DecodeError('empty-payload', 'Payload is empty.');
   }
@@ -92,7 +104,11 @@ export async function decodeSecure(payload: string, password: string): Promise<s
   try {
     frame = base64urlToBytes(payload.slice(1));
   } catch (cause) {
-    throw new DecodeError('malformed-base64', 'Payload is not valid base64url.', { cause });
+    throw new DecodeError(
+      'malformed-base64',
+      'Payload is not valid base64url.',
+      { cause },
+    );
   }
 
   if (frame.length < MIN_FRAME_BYTES) {
@@ -103,7 +119,10 @@ export async function decodeSecure(payload: string, password: string): Promise<s
   }
 
   if (frame.length > MAX_COMPRESSED_BYTES) {
-    throw new DecodeError('too-large', 'Payload is too large to decode safely.');
+    throw new DecodeError(
+      'too-large',
+      'Payload is too large to decode safely.',
+    );
   }
 
   const view = new DataView(frame.buffer, frame.byteOffset, frame.byteLength);
@@ -117,7 +136,11 @@ export async function decodeSecure(payload: string, password: string): Promise<s
   let compressed: Uint8Array;
   try {
     compressed = new Uint8Array(
-      await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv) }, key, new Uint8Array(ciphertext)),
+      await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: new Uint8Array(iv) },
+        key,
+        new Uint8Array(ciphertext),
+      ),
     );
   } catch (cause) {
     throw new DecodeError(
@@ -129,18 +152,31 @@ export async function decodeSecure(payload: string, password: string): Promise<s
 
   let bytes: Uint8Array;
   try {
-    bytes = inflateSync(compressed, { out: new Uint8Array(MAX_DECOMPRESSED_BYTES + 1) });
+    bytes = inflateSync(compressed, {
+      out: new Uint8Array(MAX_DECOMPRESSED_BYTES + 1),
+    });
   } catch (cause) {
-    throw new DecodeError('corrupt-deflate', 'Payload data is corrupt or truncated.', { cause });
+    throw new DecodeError(
+      'corrupt-deflate',
+      'Payload data is corrupt or truncated.',
+      { cause },
+    );
   }
 
   if (bytes.length > MAX_DECOMPRESSED_BYTES) {
-    throw new DecodeError('too-large', 'Decoded Document exceeds the maximum supported size.');
+    throw new DecodeError(
+      'too-large',
+      'Decoded Document exceeds the maximum supported size.',
+    );
   }
 
   try {
     return utf8Decoder.decode(bytes);
   } catch (cause) {
-    throw new DecodeError('invalid-utf8', 'Decoded Document is not valid UTF-8.', { cause });
+    throw new DecodeError(
+      'invalid-utf8',
+      'Decoded Document is not valid UTF-8.',
+      { cause },
+    );
   }
 }

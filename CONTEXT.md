@@ -21,7 +21,7 @@ The read view of the web app: decodes a Link and renders its Document. Read-firs
 _Avoid_: reader, site, page
 
 **Editor**:
-The create/edit mode of the web app: a markdown source editor with live preview. Saving produces a *new* Link (a snapshot) — it never mutates the Link you opened.
+The create/edit mode of the web app: a markdown source editor with live preview. Saving produces a _new_ Link (a snapshot) — it never mutates the Link you opened.
 _Avoid_: composer, workspace
 
 **Secure Link**:

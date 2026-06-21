@@ -3,15 +3,21 @@ import { buildLink, payloadFromUrl } from './link.js';
 
 describe('buildLink', () => {
   it('appends the payload as a fragment', () => {
-    expect(buildLink('1abc', 'https://md.example/')).toBe('https://md.example/#1abc');
+    expect(buildLink('1abc', 'https://md.example/')).toBe(
+      'https://md.example/#1abc',
+    );
   });
 
   it('discards an existing fragment', () => {
-    expect(buildLink('1new', 'https://md.example/#1old')).toBe('https://md.example/#1new');
+    expect(buildLink('1new', 'https://md.example/#1old')).toBe(
+      'https://md.example/#1new',
+    );
   });
 
   it('discards an existing query string', () => {
-    expect(buildLink('1abc', 'https://md.example/path?ref=x')).toBe('https://md.example/path#1abc');
+    expect(buildLink('1abc', 'https://md.example/path?ref=x')).toBe(
+      'https://md.example/path#1abc',
+    );
   });
 
   it('works origin-relative (no host)', () => {

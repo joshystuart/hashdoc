@@ -78,11 +78,6 @@ describe('enhance — KaTeX rendering (real library, jsdom)', () => {
 
 describe('enhance — KaTeX output sanitization (no DOMPurify bypass)', () => {
   it('does not let `\\href` produce a live javascript: link or script', async () => {
-
-
-
-
-
     const el = document.createElement('div');
     el.innerHTML = render('$\\href{javascript:alert(1)}{x}$\n');
     await enhance(el);
@@ -93,8 +88,6 @@ describe('enhance — KaTeX output sanitization (no DOMPurify bypass)', () => {
   });
 
   it('cannot smuggle raw HTML through the TeX source', async () => {
-
-
     const el = document.createElement('div');
     el.innerHTML = render('$\\text{<img src=x onerror=alert(1)>}$\n');
     await enhance(el);

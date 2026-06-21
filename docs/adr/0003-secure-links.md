@@ -8,10 +8,10 @@ Every v1 Link is bearer access: anyone who holds the Link can read the Document.
 
 ## Considered options
 
-- **Where the secret lives.** The password is **never** placed in the Link. The Link carries everything needed to *attempt* decryption (random salt and IV) but not the secret, so a leaked Link exposes nothing without the separately-shared password.
+- **Where the secret lives.** The password is **never** placed in the Link. The Link carries everything needed to _attempt_ decryption (random salt and IV) but not the secret, so a leaked Link exposes nothing without the separately-shared password.
 - **Compress-then-encrypt vs encrypt-then-compress.** Chose compress-then-encrypt. Ciphertext is incompressible, so encrypting first would bloat Links; compressing first keeps secure Links close to v1 size plus a fixed ~44-byte (pre-base64) header.
 - **KDF + cipher.** Chose PBKDF2-HMAC-SHA-256 (600k iterations) + AES-256-GCM, all via native Web Crypto. Rejected Argon2id and other non-native KDFs: they require bundled WASM, which conflicts with ADR 0002 (no third-party code) and the FORMAT.md permanence promise (no library-version drift that could break old Links). A stronger KDF would be a future, separate version tag. The iteration count is stored in the frame so it can be raised later without a new tag.
-- **Authentication.** AES-GCM is authenticated, so a wrong password (or any tampering) fails the tag check. This *is* the "incorrect password" signal — no separate stored password verifier, and no risk of a silent wrong decryption.
+- **Authentication.** AES-GCM is authenticated, so a wrong password (or any tampering) fails the tag check. This _is_ the "incorrect password" signal — no separate stored password verifier, and no risk of a silent wrong decryption.
 
 ## Threat model
 

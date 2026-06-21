@@ -24,7 +24,11 @@ export function PasswordField({
     <div class="password-dialog__field">
       <input
         ref={inputRef ?? null}
-        class={inputClass ? `password-dialog__input ${inputClass}` : 'password-dialog__input'}
+        class={
+          inputClass
+            ? `password-dialog__input ${inputClass}`
+            : 'password-dialog__input'
+        }
         type={reveal ? 'text' : 'password'}
         aria-label="Password"
         placeholder="Password"
@@ -39,7 +43,11 @@ export function PasswordField({
         aria-pressed={reveal}
         onClick={() => setReveal((current) => !current)}
       >
-        {reveal ? <EyeOff size={HEADER_ICON_SIZE} /> : <Eye size={HEADER_ICON_SIZE} />}
+        {reveal ? (
+          <EyeOff size={HEADER_ICON_SIZE} />
+        ) : (
+          <Eye size={HEADER_ICON_SIZE} />
+        )}
       </button>
     </div>
   );

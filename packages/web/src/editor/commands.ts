@@ -1,6 +1,11 @@
 import type { EditorView } from '@codemirror/view';
 
-function wrapSelection(view: EditorView, before: string, after: string, placeholder: string): void {
+function wrapSelection(
+  view: EditorView,
+  before: string,
+  after: string,
+  placeholder: string,
+): void {
   const { state } = view;
   const range = state.selection.main;
   const selected = state.sliceDoc(range.from, range.to);

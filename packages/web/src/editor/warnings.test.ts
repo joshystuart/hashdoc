@@ -1,7 +1,13 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { render as preactRender } from 'preact';
 import { EditorView } from '@codemirror/view';
-import { encode, buildLink, payloadFromUrl, decode, linkSizeWarning } from '@hashdoc/core';
+import {
+  encode,
+  buildLink,
+  payloadFromUrl,
+  decode,
+  linkSizeWarning,
+} from '@hashdoc/core';
 import { mountEditor } from './mount.js';
 import { hasImages, classifyImages } from './images.js';
 
@@ -24,7 +30,10 @@ function bigMarkdown(): string {
 
 function getView(root: HTMLElement): EditorView {
   const content = root.querySelector('.cm-content');
-  expect(content, 'CodeMirror content element should be mounted').not.toBeNull();
+  expect(
+    content,
+    'CodeMirror content element should be mounted',
+  ).not.toBeNull();
   const view = EditorView.findFromDOM(content as HTMLElement);
   expect(view, 'a live CodeMirror view should be attached').not.toBeNull();
   return view!;
@@ -32,21 +41,41 @@ function getView(root: HTMLElement): EditorView {
 
 function typeIntoSource(root: HTMLElement, text: string): void {
   const view = getView(root);
-  view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text } });
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: text },
+  });
 }
 
 describe('image detection helpers', () => {
   it('hasImages detects a markdown image and ignores plain text/links', () => {
-    expect(hasImages('# Title\n\nNo images here, just a [link](https://x).')).toBe(false);
+    expect(
+      hasImages('# Title\n\nNo images here, just a [link](https://x).'),
+    ).toBe(false);
     expect(hasImages('![alt](https://x/y.png)')).toBe(true);
     expect(hasImages('text ![](data:image/png;base64,AAAA) more')).toBe(true);
   });
 
   it('classifyImages distinguishes remote from data-URI images', () => {
-    expect(classifyImages('plain')).toEqual({ any: false, remote: false, data: false });
-    expect(classifyImages('![a](https://h/i.png)')).toEqual({ any: true, remote: true, data: false });
-    expect(classifyImages('![a](data:image/png;base64,AA)')).toEqual({ any: true, remote: false, data: true });
-    expect(classifyImages('![a](https://h/i.png) and ![b](data:image/png;base64,AA)')).toEqual({
+    expect(classifyImages('plain')).toEqual({
+      any: false,
+      remote: false,
+      data: false,
+    });
+    expect(classifyImages('![a](https://h/i.png)')).toEqual({
+      any: true,
+      remote: true,
+      data: false,
+    });
+    expect(classifyImages('![a](data:image/png;base64,AA)')).toEqual({
+      any: true,
+      remote: false,
+      data: true,
+    });
+    expect(
+      classifyImages(
+        '![a](https://h/i.png) and ![b](data:image/png;base64,AA)',
+      ),
+    ).toEqual({
       any: true,
       remote: true,
       data: true,
@@ -114,7 +143,9 @@ describe('Editor — advisory warnings (issue-11)', () => {
 
     const chars = linkFor(md).length;
     const expected = linkSizeWarning(chars);
-    expect(expected, 'fixture should be past the threshold').toBeTypeOf('string');
+    expect(expected, 'fixture should be past the threshold').toBeTypeOf(
+      'string',
+    );
 
     const warning = root.querySelector('.editor__size-warning');
     expect(warning).not.toBeNull();

@@ -37,39 +37,66 @@ describe('zero third-party requests (built output)', () => {
     expect(assets.length).toBeGreaterThan(0);
     for (const file of assets) {
       const text = readFileSync(file, 'utf8');
-      expect(text).not.toMatch(/https?:\/\/(?:fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com|cdnjs\.cloudflare)/i);
+      expect(text).not.toMatch(
+        /https?:\/\/(?:fonts\.googleapis|fonts\.gstatic|cdn\.jsdelivr|unpkg\.com|cdnjs\.cloudflare)/i,
+      );
     }
   });
 
-  it.runIf(built)('no bundled asset references an external http(s) origin', () => {
-    const loaders: { label: string; re: RegExp }[] = [
-      { label: 'tag src=', re: /\bsrc\s*=\s*["']https?:\/\/[^"']+["']/gi },
-      { label: 'tag href=', re: /\bhref\s*=\s*["']https?:\/\/[^"']+["']/gi },
-      { label: 'css url()', re: /url\(\s*["']?https?:\/\/[^)"']+["']?\s*\)/gi },
-      { label: 'es import', re: /\bimport\s*\(?\s*["']https?:\/\/[^"']+["']/gi },
-      { label: 'fetch()', re: /\bfetch\s*\(\s*["']https?:\/\/[^"']+["']/gi },
-      { label: 'new Worker()', re: /new\s+Worker\s*\(\s*["']https?:\/\/[^"']+["']/gi },
-      { label: 'importScripts()', re: /importScripts\s*\(\s*["']https?:\/\/[^"']+["']/gi },
-      { label: "new URL('http…')", re: /new\s+URL\s*\(\s*["']https?:\/\/[^"']+["']/gi },
-    ];
-    const files = walk(distDir).filter((f) => /\.(js|css|html)$/.test(f));
-    expect(files.length).toBeGreaterThan(0);
-    const offenders: string[] = [];
-    for (const file of files) {
-      const text = readFileSync(file, 'utf8');
-      for (const { label, re } of loaders) {
-        const hits = text.match(re);
-        if (hits) {
-          offenders.push(`${file}: ${label} -> ${hits.join(', ')}`);
+  it.runIf(built)(
+    'no bundled asset references an external http(s) origin',
+    () => {
+      const loaders: { label: string; re: RegExp }[] = [
+        { label: 'tag src=', re: /\bsrc\s*=\s*["']https?:\/\/[^"']+["']/gi },
+        { label: 'tag href=', re: /\bhref\s*=\s*["']https?:\/\/[^"']+["']/gi },
+        {
+          label: 'css url()',
+          re: /url\(\s*["']?https?:\/\/[^)"']+["']?\s*\)/gi,
+        },
+        {
+          label: 'es import',
+          re: /\bimport\s*\(?\s*["']https?:\/\/[^"']+["']/gi,
+        },
+        { label: 'fetch()', re: /\bfetch\s*\(\s*["']https?:\/\/[^"']+["']/gi },
+        {
+          label: 'new Worker()',
+          re: /new\s+Worker\s*\(\s*["']https?:\/\/[^"']+["']/gi,
+        },
+        {
+          label: 'importScripts()',
+          re: /importScripts\s*\(\s*["']https?:\/\/[^"']+["']/gi,
+        },
+        {
+          label: "new URL('http…')",
+          re: /new\s+URL\s*\(\s*["']https?:\/\/[^"']+["']/gi,
+        },
+      ];
+      const files = walk(distDir).filter((f) => /\.(js|css|html)$/.test(f));
+      expect(files.length).toBeGreaterThan(0);
+      const offenders: string[] = [];
+      for (const file of files) {
+        const text = readFileSync(file, 'utf8');
+        for (const { label, re } of loaders) {
+          const hits = text.match(re);
+          if (hits) {
+            offenders.push(`${file}: ${label} -> ${hits.join(', ')}`);
+          }
         }
       }
-    }
-    expect(offenders, `external network loaders found:\n${offenders.join('\n')}`).toEqual([]);
-  });
+      expect(
+        offenders,
+        `external network loaders found:\n${offenders.join('\n')}`,
+      ).toEqual([]);
+    },
+  );
 
   it.runIf(built)('built CSP locks default-src and connect-src to self', () => {
-    const html = readFileSync(join(distDir, 'index.html'), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
-    const meta = /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i.exec(html);
+    const html = readFileSync(join(distDir, 'index.html'), 'utf8').replace(
+      /<!--[\s\S]*?-->/g,
+      '',
+    );
+    const meta =
+      /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i.exec(html);
     expect(meta, 'CSP <meta> must exist in built index.html').not.toBeNull();
     const content = /content="([^"]+)"/i.exec(meta![0])![1]!;
     const directive = (name: string): string =>
@@ -79,18 +106,25 @@ describe('zero third-party requests (built output)', () => {
         .find((d) => d.startsWith(`${name} `) || d === name) ?? '';
     expect(directive('default-src')).toBe("default-src 'self'");
     expect(directive('connect-src')).toBe("connect-src 'self'");
-    expect(directive('script-src')).not.toMatch(/'unsafe-inline'|'unsafe-eval'/);
+    expect(directive('script-src')).not.toMatch(
+      /'unsafe-inline'|'unsafe-eval'/,
+    );
   });
 
   it.runIf(built)('bundles KaTeX fonts locally (no CDN font requests)', () => {
     const files = walk(distDir);
     const css = files.filter((f) => f.endsWith('.css'));
-    const usesKatex = css.some((f) => /\.katex|katex-html|KaTeX_/.test(readFileSync(f, 'utf8')));
+    const usesKatex = css.some((f) =>
+      /\.katex|katex-html|KaTeX_/.test(readFileSync(f, 'utf8')),
+    );
     if (!usesKatex) {
       return;
     }
     const fonts = files.filter((f) => /KaTeX_[^/]+\.(woff2?|ttf)$/.test(f));
-    expect(fonts.length, 'KaTeX font files should be bundled into dist').toBeGreaterThan(0);
+    expect(
+      fonts.length,
+      'KaTeX font files should be bundled into dist',
+    ).toBeGreaterThan(0);
     for (const file of css) {
       const text = readFileSync(file, 'utf8');
       if (!/KaTeX_/.test(text)) {

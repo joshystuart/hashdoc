@@ -43,27 +43,47 @@ export function decode(payload: string): string {
   try {
     compressed = base64urlToBytes(body);
   } catch (cause) {
-    throw new DecodeError('malformed-base64', 'Payload is not valid base64url.', { cause });
+    throw new DecodeError(
+      'malformed-base64',
+      'Payload is not valid base64url.',
+      { cause },
+    );
   }
 
   if (compressed.length > MAX_COMPRESSED_BYTES) {
-    throw new DecodeError('too-large', 'Payload is too large to decode safely.');
+    throw new DecodeError(
+      'too-large',
+      'Payload is too large to decode safely.',
+    );
   }
 
   let bytes: Uint8Array;
   try {
-    bytes = inflateSync(compressed, { out: new Uint8Array(MAX_DECOMPRESSED_BYTES + 1) });
+    bytes = inflateSync(compressed, {
+      out: new Uint8Array(MAX_DECOMPRESSED_BYTES + 1),
+    });
   } catch (cause) {
-    throw new DecodeError('corrupt-deflate', 'Payload data is corrupt or truncated.', { cause });
+    throw new DecodeError(
+      'corrupt-deflate',
+      'Payload data is corrupt or truncated.',
+      { cause },
+    );
   }
 
   if (bytes.length > MAX_DECOMPRESSED_BYTES) {
-    throw new DecodeError('too-large', 'Decoded Document exceeds the maximum supported size.');
+    throw new DecodeError(
+      'too-large',
+      'Decoded Document exceeds the maximum supported size.',
+    );
   }
 
   try {
     return utf8Decoder.decode(bytes);
   } catch (cause) {
-    throw new DecodeError('invalid-utf8', 'Decoded Document is not valid UTF-8.', { cause });
+    throw new DecodeError(
+      'invalid-utf8',
+      'Decoded Document is not valid UTF-8.',
+      { cause },
+    );
   }
 }

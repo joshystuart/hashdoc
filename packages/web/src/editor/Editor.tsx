@@ -13,13 +13,24 @@ import {
   Unlock,
   type LucideProps,
 } from 'lucide-preact';
-import { encode, encodeSecure, buildLink, linkSizeWarning } from '@hashdoc/core';
+import {
+  encode,
+  encodeSecure,
+  buildLink,
+  linkSizeWarning,
+} from '@hashdoc/core';
 import { render, enhance } from '../render.js';
 import { createSourceEditor, type SourceEditor } from './codemirror.js';
 import { TOOLBAR_ACTIONS } from './commands.js';
 import { classifyImages } from './images.js';
 import { EXAMPLE_DOC } from './example.js';
-import { AppHeader, HeaderButton, HeaderToolbar, ThemeToggleButton, HEADER_ICON_SIZE } from '../chrome.js';
+import {
+  AppHeader,
+  HeaderButton,
+  HeaderToolbar,
+  ThemeToggleButton,
+  HEADER_ICON_SIZE,
+} from '../chrome.js';
 import { SplitButton, type SplitButtonMenuItem } from '../SplitButton.js';
 import { PasswordDialog } from '../PasswordDialog.js';
 import type { SecureMode, SecureSession } from '../secureSession.js';
@@ -40,7 +51,10 @@ export interface EditorProps {
   initialSession?: SecureSession;
 }
 
-export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): preact.JSX.Element {
+export function Editor({
+  initialMarkdown,
+  initialSession,
+}: EditorProps = {}): preact.JSX.Element {
   const initialDoc = initialMarkdown ?? EXAMPLE_DOC;
   const initialPassword = initialSession?.password ?? null;
   const rootRef = useRef<HTMLDivElement>(null);
@@ -48,10 +62,16 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
   const previewHost = useRef<HTMLElement>(null);
   const editorRef = useRef<SourceEditor | null>(null);
   const [markdown, setMarkdown] = useState<string>(initialDoc);
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
-  const [securePassword, setSecurePassword] = useState<string | null>(initialPassword);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>(
+    'idle',
+  );
+  const [securePassword, setSecurePassword] = useState<string | null>(
+    initialPassword,
+  );
   const [mode, setMode] = useState<SecureMode>(
-    initialPassword !== null && initialSession?.mode === 'secure' ? 'secure' : 'plain',
+    initialPassword !== null && initialSession?.mode === 'secure'
+      ? 'secure'
+      : 'plain',
   );
   const [secureLink, setSecureLink] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -184,19 +204,36 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
   const hasPassword = securePassword !== null;
   const secured = mode === 'secure';
   const primary = secured
-    ? { label: copiedLabel ?? 'Copy secure link', icon: Lock, onClick: copySecure }
+    ? {
+        label: copiedLabel ?? 'Copy secure link',
+        icon: Lock,
+        onClick: copySecure,
+      }
     : { label: copiedLabel ?? 'Copy Link', icon: Link2, onClick: copyPlain };
   const menuItems: SplitButtonMenuItem[] = secured
     ? [
         { label: 'Copy Link', icon: Link2, onClick: copyPlain },
-        { label: 'Change password…', icon: KeyRound, onClick: openChangeDialog },
-        { label: 'Remove password', icon: Unlock, onClick: removePassword, destructive: true },
+        {
+          label: 'Change password…',
+          icon: KeyRound,
+          onClick: openChangeDialog,
+        },
+        {
+          label: 'Remove password',
+          icon: Unlock,
+          onClick: removePassword,
+          destructive: true,
+        },
       ]
     : [
         { label: 'Copy secure link', icon: Lock, onClick: chooseSecure },
         ...(hasPassword
           ? [
-              { label: 'Change password…', icon: KeyRound, onClick: openChangeDialog },
+              {
+                label: 'Change password…',
+                icon: KeyRound,
+                onClick: openChangeDialog,
+              },
               {
                 label: 'Remove password',
                 icon: Unlock,
@@ -224,7 +261,11 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
       <AppHeader
         class="editor__bar"
         leading={
-          <HeaderToolbar class="editor__toolbar" role="toolbar" aria-label="Formatting">
+          <HeaderToolbar
+            class="editor__toolbar"
+            role="toolbar"
+            aria-label="Formatting"
+          >
             {TOOLBAR_ACTIONS.map((action) => {
               const Icon = TOOLBAR_ICONS[action.id];
               return (
@@ -249,7 +290,12 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
         }
       >
         <div class="editor__actions">
-          <SplitButton class="editor__copy" primary={primary} items={menuItems} locked={secured} />
+          <SplitButton
+            class="editor__copy"
+            primary={primary}
+            items={menuItems}
+            locked={secured}
+          />
           <HeaderButton class="editor__view" onClick={openView}>
             <Eye size={HEADER_ICON_SIZE} />
             View
@@ -258,7 +304,9 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
         </div>
       </AppHeader>
       <div class="editor__status">
-        <span class="editor__size">{characters.toLocaleString()} characters</span>
+        <span class="editor__size">
+          {characters.toLocaleString()} characters
+        </span>
         {copyState === 'failed' ? (
           <span class="editor__copy-status" role="alert">
             Copy failed — your browser blocked clipboard access.
@@ -271,7 +319,8 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
         ) : null}
         {images.any ? (
           <p class="editor__image-warning editor__warning" role="status">
-            This Document embeds {images.data && !images.remote ? 'an image' : 'images'}.{' '}
+            This Document embeds{' '}
+            {images.data && !images.remote ? 'an image' : 'images'}.{' '}
             {images.data
               ? 'Inline (data-URI) images are stored inside the Link, so they inflate its size quickly. '
               : 'Images add to the size of the Link. '}
@@ -282,7 +331,11 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
         ) : null}
       </div>
       <div class="editor__panes">
-        <div class="editor__source" ref={sourceHost} aria-label="Markdown source" />
+        <div
+          class="editor__source"
+          ref={sourceHost}
+          aria-label="Markdown source"
+        />
         <article
           class="editor__preview document"
           aria-label="Preview"
@@ -292,7 +345,7 @@ export function Editor({ initialMarkdown, initialSession }: EditorProps = {}): p
       </div>
       <PasswordDialog
         open={dialogOpen}
-        initialPassword={dialogMode === 'save' ? securePassword ?? '' : ''}
+        initialPassword={dialogMode === 'save' ? (securePassword ?? '') : ''}
         submitLabel={dialogMode === 'save' ? 'Save' : 'Copy secure link'}
         onSubmit={(password) => void handleDialogSubmit(password)}
         onClose={() => setDialogOpen(false)}

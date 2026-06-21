@@ -17,7 +17,10 @@ async function clickEditAndWaitForEditor(root: HTMLElement): Promise<void> {
 
 function getView(root: HTMLElement): EditorView {
   const content = root.querySelector('.cm-content');
-  expect(content, 'CodeMirror content element should be mounted').not.toBeNull();
+  expect(
+    content,
+    'CodeMirror content element should be mounted',
+  ).not.toBeNull();
   const view = EditorView.findFromDOM(content as HTMLElement);
   expect(view, 'a live CodeMirror view should be attached').not.toBeNull();
   return view!;
@@ -64,17 +67,21 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     const view = getView(root);
     expect(view.state.doc.toString()).toBe(ORIGINAL_MD);
 
-    expect(root.querySelector('.editor__preview')!.innerHTML).toContain('Shared note</h1>');
+    expect(root.querySelector('.editor__preview')!.innerHTML).toContain(
+      'Shared note</h1>',
+    );
   });
 
   it('view -> Edit -> change -> Copy Link: new Link reflects the edit; original is unaffected', async () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-
-    const editedMd = '# Shared note\n\nFrom the **sender**, with my reply added.\n';
+    const editedMd =
+      '# Shared note\n\nFrom the **sender**, with my reply added.\n';
     const view = getView(root);
-    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: editedMd } });
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: editedMd },
+    });
     await flush();
 
     (root.querySelector('.split-button__primary') as HTMLButtonElement).click();
@@ -83,10 +90,8 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     expect(copied).toHaveLength(1);
     const newLink = copied[0]!;
 
-
     expect(newLink).not.toBe(originalLink);
     expect(decode(payloadFromUrl(newLink)!)).toBe(editedMd);
-
 
     expect(decode(payloadFromUrl(originalLink)!)).toBe(ORIGINAL_MD);
   });
@@ -95,7 +100,9 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-    const copyButton = root.querySelector('.split-button__primary') as HTMLButtonElement;
+    const copyButton = root.querySelector(
+      '.split-button__primary',
+    ) as HTMLButtonElement;
     copyButton.click();
     await flush();
 
@@ -118,16 +125,21 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
 
     expect(root.querySelector('.viewer__chrome')).not.toBeNull();
     expect(root.querySelector('.cm-content')).toBeNull();
-    expect(root.querySelector('.document')!.textContent).toContain('Shared note');
+    expect(root.querySelector('.document')!.textContent).toContain(
+      'Shared note',
+    );
   });
 
   it('View reflects in-Editor edits in the rendered Document', async () => {
     mountViewer(root, originalLink);
     await clickEditAndWaitForEditor(root);
 
-    const editedMd = '# Shared note\n\nFrom the **sender**, plus a fresh paragraph.\n';
+    const editedMd =
+      '# Shared note\n\nFrom the **sender**, plus a fresh paragraph.\n';
     const view = getView(root);
-    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: editedMd } });
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: editedMd },
+    });
     await flush();
 
     (root.querySelector('.editor__view') as HTMLButtonElement).click();
@@ -135,6 +147,8 @@ describe('Reader edits & forks a viewed Document (issue-03)', () => {
       await flush();
     }
 
-    expect(root.querySelector('.document')!.textContent).toContain('fresh paragraph');
+    expect(root.querySelector('.document')!.textContent).toContain(
+      'fresh paragraph',
+    );
   });
 });

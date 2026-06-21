@@ -94,8 +94,8 @@ export function PasswordDialog({
           autocomplete="new-password"
         />
         <p class="password-dialog__note">
-          Share this password separately from the Link — never send both in the same message. If the
-          password is lost, the Document is unrecoverable.
+          Share this password separately from the Link — never send both in the
+          same message. If the password is lost, the Document is unrecoverable.
         </p>
         <button
           type="submit"

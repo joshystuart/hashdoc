@@ -2,7 +2,12 @@ import { Fragment } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Copy, Link2, Lock, SquarePen } from 'lucide-preact';
 import { encode, encodeSecure, buildLink } from '@hashdoc/core';
-import { AppHeader, HeaderButton, ThemeToggleButton, HEADER_ICON_SIZE } from './chrome.js';
+import {
+  AppHeader,
+  HeaderButton,
+  ThemeToggleButton,
+  HEADER_ICON_SIZE,
+} from './chrome.js';
 import { copyText } from './render.js';
 import { SplitButton, type SplitButtonMenuItem } from './SplitButton.js';
 import { PasswordDialog } from './PasswordDialog.js';
@@ -14,7 +19,9 @@ interface ViewerChromeProps {
   session?: SecureSession | undefined;
 }
 
-function useFlashingLabel(original: string): [string, (message: string) => void] {
+function useFlashingLabel(
+  original: string,
+): [string, (message: string) => void] {
   const [label, setLabel] = useState(original);
 
   return [
@@ -30,15 +37,22 @@ function useFlashingLabel(original: string): [string, (message: string) => void]
 
 export function ViewerChrome({ markdown, onEdit, session }: ViewerChromeProps) {
   const [sourceLabel, flashSource] = useFlashingLabel('Copy source');
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>(
+    'idle',
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [sessionPassword, setSessionPassword] = useState<string | null>(session?.password ?? null);
+  const [sessionPassword, setSessionPassword] = useState<string | null>(
+    session?.password ?? null,
+  );
   const [originalPayload] = useState<string | undefined>(session?.payload);
   const [encryptedLink, setEncryptedLink] = useState<string | null>(null);
-  const [mode, setMode] = useState<SecureMode>(session?.mode === 'secure' ? 'secure' : 'plain');
+  const [mode, setMode] = useState<SecureMode>(
+    session?.mode === 'secure' ? 'secure' : 'plain',
+  );
 
   const base = location.origin + location.pathname;
-  const reemitLink = originalPayload !== undefined ? buildLink(originalPayload, base) : null;
+  const reemitLink =
+    originalPayload !== undefined ? buildLink(originalPayload, base) : null;
   const secureLink = reemitLink ?? encryptedLink;
 
   useEffect(() => {
@@ -103,7 +117,11 @@ export function ViewerChrome({ markdown, onEdit, session }: ViewerChromeProps) {
   const copiedLabel = copyState === 'copied' ? 'Link copied' : null;
   const secured = mode === 'secure';
   const primary = secured
-    ? { label: copiedLabel ?? 'Copy secure link', icon: Lock, onClick: copySecure }
+    ? {
+        label: copiedLabel ?? 'Copy secure link',
+        icon: Lock,
+        onClick: copySecure,
+      }
     : { label: copiedLabel ?? 'Copy Link', icon: Link2, onClick: copyPlain };
   const menuItems: SplitButtonMenuItem[] = secured
     ? [{ label: 'Copy Link', icon: Link2, onClick: copyPlain }]
@@ -124,7 +142,12 @@ export function ViewerChrome({ markdown, onEdit, session }: ViewerChromeProps) {
           <Copy size={HEADER_ICON_SIZE} />
           {sourceLabel}
         </HeaderButton>
-        <SplitButton class="viewer__copy" primary={primary} items={menuItems} locked={secured} />
+        <SplitButton
+          class="viewer__copy"
+          primary={primary}
+          items={menuItems}
+          locked={secured}
+        />
         <HeaderButton
           class="viewer__action viewer__edit"
           title="Edit a copy — your changes make a new link; this one stays unchanged"

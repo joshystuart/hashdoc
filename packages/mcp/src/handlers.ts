@@ -31,7 +31,9 @@ export async function createMarkdownLink(
   const url = buildLink(payload, baseUrl);
   const characters = url.length;
   const warning = linkSizeWarning(characters);
-  return warning === undefined ? { url, characters } : { url, characters, warning };
+  return warning === undefined
+    ? { url, characters }
+    : { url, characters, warning };
 }
 
 export async function readMarkdownLink(args: {

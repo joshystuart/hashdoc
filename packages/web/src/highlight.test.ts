@@ -21,7 +21,9 @@ describe('enhance — syntax highlighting', () => {
   });
 
   it('highlights ts and python blocks', async () => {
-    const el = mount('```ts\ntype A = number;\n```\n\n```python\ndef f():\n    return 1\n```\n');
+    const el = mount(
+      '```ts\ntype A = number;\n```\n\n```python\ndef f():\n    return 1\n```\n',
+    );
     await enhance(el);
     const blocks = el.querySelectorAll('pre > code');
     expect(blocks).toHaveLength(2);
@@ -69,8 +71,6 @@ describe('enhance — sanitization holds (no DOMPurify bypass)', () => {
   });
 
   it('a malicious language name cannot inject attributes or tags', async () => {
-
-
     const el = mount('```js" onload="alert(1)\nconst x = 1;\n```\n');
     await enhance(el);
     expect(el.innerHTML).not.toMatch(/onload/i);
@@ -88,7 +88,8 @@ describe('enhance — sanitization holds (no DOMPurify bypass)', () => {
 
 describe('enhance — Viewer and Editor preview produce identical output', () => {
   it('two independently-enhanced containers of the same markdown match', async () => {
-    const md = '# Doc\n\n```js\nfunction greet(name) {\n  return `hi ${name}`;\n}\n```\n';
+    const md =
+      '# Doc\n\n```js\nfunction greet(name) {\n  return `hi ${name}`;\n}\n```\n';
     const viewerLike = mount(md);
     const previewLike = mount(md);
     await enhance(viewerLike);

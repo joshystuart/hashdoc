@@ -43,7 +43,10 @@ export function UnlockPrompt({ onSubmit }: UnlockPromptProps): JSX.Element {
           inputClass="unlock__password"
           inputRef={inputRef}
         />
-        <button type="submit" class="unlock__submit app-button app-button--primary">
+        <button
+          type="submit"
+          class="unlock__submit app-button app-button--primary"
+        >
           Unlock
         </button>
         <p class="unlock__error" hidden={error === null}>

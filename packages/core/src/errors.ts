@@ -12,7 +12,11 @@ export type DecodeErrorReason =
 export class DecodeError extends Error {
   readonly reason: DecodeErrorReason;
 
-  constructor(reason: DecodeErrorReason, message: string, options?: { cause?: unknown }) {
+  constructor(
+    reason: DecodeErrorReason,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
     super(message, options);
     this.name = 'DecodeError';
     this.reason = reason;

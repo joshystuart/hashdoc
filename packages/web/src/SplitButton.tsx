@@ -89,14 +89,23 @@ export function SplitButton({
   }
 
   const PrimaryIcon = locked ? Lock : primary.icon;
-  const buttonClass = ['app-button', locked ? 'app-button--secure' : 'app-button--primary'].join(' ');
+  const buttonClass = [
+    'app-button',
+    locked ? 'app-button--secure' : 'app-button--primary',
+  ].join(' ');
 
   return (
     <div
-      class={['split-button', locked ? 'split-button--secure' : '', className].filter(Boolean).join(' ')}
+      class={['split-button', locked ? 'split-button--secure' : '', className]
+        .filter(Boolean)
+        .join(' ')}
       ref={rootRef}
     >
-      <button type="button" class={`split-button__primary ${buttonClass}`} onClick={primary.onClick}>
+      <button
+        type="button"
+        class={`split-button__primary ${buttonClass}`}
+        onClick={primary.onClick}
+      >
         {PrimaryIcon ? <PrimaryIcon size={HEADER_ICON_SIZE} /> : null}
         {primary.label}
       </button>

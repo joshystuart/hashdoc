@@ -32,7 +32,7 @@ Crucially, this is **additive and opt-in**:
   AES-GCM), then base64url-encoded into the fragment behind the `2` tag.
 
 The password is **never** placed in the Link. The Link still contains everything
-needed to *attempt* decryption (the random salt and IV), but not the secret, so
+needed to _attempt_ decryption (the random salt and IV), but not the secret, so
 the Link alone is useless without the out-of-band password. Encryption happens
 entirely in the browser via the native Web Crypto API — no backend (ADR 0001
 preserved) and no third-party code or requests (ADR 0002 preserved).

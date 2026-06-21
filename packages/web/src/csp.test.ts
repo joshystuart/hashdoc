@@ -3,7 +3,12 @@ import { createHash } from 'node:crypto';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildCsp, inlineScriptBodies, renderNetlifyHeaders, securityHeaders } from './csp.js';
+import {
+  buildCsp,
+  inlineScriptBodies,
+  renderNetlifyHeaders,
+  securityHeaders,
+} from './csp.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const distIndex = join(here, '..', 'dist', 'index.html');
@@ -12,10 +17,14 @@ const built = existsSync(distIndex);
 
 function extractCsp(rawHtml: string): string {
   const html = rawHtml.replace(/<!--[\s\S]*?-->/g, '');
-  const meta = /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i.exec(html);
+  const meta =
+    /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i.exec(html);
   expect(meta, 'a CSP <meta http-equiv> must be present').not.toBeNull();
   const content = /content="([^"]+)"/i.exec(meta![0]);
-  expect(content, 'the CSP <meta> must have a content attribute').not.toBeNull();
+  expect(
+    content,
+    'the CSP <meta> must have a content attribute',
+  ).not.toBeNull();
   return content![1]!;
 }
 
@@ -44,14 +53,20 @@ describe('buildCsp (pure)', () => {
 
   it('adds supplied inline-script hashes to script-src', () => {
     const csp = parseCsp(buildCsp(["'sha256-AAAA'", "'sha256-BBBB'"]));
-    expect(csp.get('script-src')).toEqual(["'self'", "'sha256-AAAA'", "'sha256-BBBB'"]);
+    expect(csp.get('script-src')).toEqual([
+      "'self'",
+      "'sha256-AAAA'",
+      "'sha256-BBBB'",
+    ]);
   });
 });
 
 describe('securityHeaders (response headers — clickjacking & sniffing defenses)', () => {
   it('denies framing via both frame-ancestors and X-Frame-Options', () => {
     const headers = securityHeaders();
-    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'none'");
+    expect(headers['Content-Security-Policy']).toContain(
+      "frame-ancestors 'none'",
+    );
     expect(headers['X-Frame-Options']).toBe('DENY');
   });
 
@@ -107,7 +122,10 @@ describe.runIf(built)('CSP meta in built dist/index.html', () => {
   });
 
   it('emits a static-host _headers file with clickjacking + sniffing defenses', () => {
-    expect(existsSync(distHeaders), 'dist/_headers must be emitted by the build').toBe(true);
+    expect(
+      existsSync(distHeaders),
+      'dist/_headers must be emitted by the build',
+    ).toBe(true);
     const text = readFileSync(distHeaders, 'utf8');
     expect(text).toMatch(/X-Frame-Options: DENY/);
     expect(text).toMatch(/X-Content-Type-Options: nosniff/);
@@ -116,7 +134,10 @@ describe.runIf(built)('CSP meta in built dist/index.html', () => {
 
   it("every inline script's SHA-256 is present in script-src (no-flash script allowed)", () => {
     const bodies = inlineScriptBodies(html);
-    expect(bodies.length, 'the no-flash inline script must exist in built HTML').toBeGreaterThan(0);
+    expect(
+      bodies.length,
+      'the no-flash inline script must exist in built HTML',
+    ).toBeGreaterThan(0);
     const scriptSrc = csp.get('script-src') ?? [];
     for (const body of bodies) {
       const digest = createHash('sha256').update(body, 'utf8').digest('base64');
@@ -130,8 +151,13 @@ describe.runIf(built)('CSP meta in built dist/index.html', () => {
 
   it('the no-flash theme script is genuinely inline (sets data-theme synchronously)', () => {
     const bodies = inlineScriptBodies(html);
-    const themeScript = bodies.find((b) => b.includes('documentElement.dataset.theme'));
-    expect(themeScript, 'the no-flash theme script must be inline in <head>').toBeDefined();
+    const themeScript = bodies.find((b) =>
+      b.includes('documentElement.dataset.theme'),
+    );
+    expect(
+      themeScript,
+      'the no-flash theme script must be inline in <head>',
+    ).toBeDefined();
     expect(themeScript).toContain('prefers-color-scheme: dark');
   });
 });

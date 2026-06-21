@@ -6,9 +6,13 @@ import { createServer, resolveBaseUrl, DEFAULT_BASE_URL } from './server.js';
 
 async function connectedClient(baseUrl?: string): Promise<Client> {
   const server = createServer(baseUrl);
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'test', version: '0.0.0' });
-  await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
+  await Promise.all([
+    client.connect(clientTransport),
+    server.connect(serverTransport),
+  ]);
   return client;
 }
 
@@ -27,9 +31,9 @@ describe('resolveBaseUrl', () => {
   });
 
   it('honours HASHDOC_BASE_URL', () => {
-    expect(resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.ghost7.org/' })).toBe(
-      'https://hashdoc.ghost7.org/',
-    );
+    expect(
+      resolveBaseUrl({ HASHDOC_BASE_URL: 'https://hashdoc.ghost7.org/' }),
+    ).toBe('https://hashdoc.ghost7.org/');
   });
 });
 
@@ -131,13 +135,14 @@ describe('MCP server', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0]!.text.length).toBeGreaterThan(0);
 
-
     const created = parseJsonResult<{ url: string }>(
       (await client.callTool({
         name: 'create_markdown_link',
         arguments: { markdown: 'still alive' },
       })) as TextResult,
     );
-    expect(decode(created.url.slice(created.url.indexOf('#') + 1))).toBe('still alive');
+    expect(decode(created.url.slice(created.url.indexOf('#') + 1))).toBe(
+      'still alive',
+    );
   });
 });

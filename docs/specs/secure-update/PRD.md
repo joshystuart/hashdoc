@@ -4,7 +4,7 @@
 
 Today an author turns on encryption through a "Protect with password" checkbox
 that sits on its own row in the Editor, below the action bar. Ticking it reveals
-a password field and a confirm field; once they match, the Editor *silently*
+a password field and a confirm field; once they match, the Editor _silently_
 swaps what "Copy Link" copies from a plain Link to a Secure Link. This has three
 problems from the author's point of view:
 
@@ -34,7 +34,7 @@ the copy control itself, shared by both the Editor and the Viewer.
   native modal). The author types one password (with a show/hide reveal to catch
   typos) and submits; the dialog saves the password, copies the Secure Link, and
   closes in one step.
-- Once a password is set, the primary segment *becomes* "Copy secure link" with a
+- Once a password is set, the primary segment _becomes_ "Copy secure link" with a
   closed-lock icon and copies the Secure Link immediately using the remembered
   session password. The caret menu now offers the plain "Copy Link", plus
   "Change password…" and "Remove password".

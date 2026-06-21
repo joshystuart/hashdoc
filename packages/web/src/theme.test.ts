@@ -43,7 +43,6 @@ describe('resolveTheme — pure resolution (OS pref + override)', () => {
   });
 
   it('a valid stored override wins over the OS preference', () => {
-
     expect(resolveTheme('light', true)).toBe('light');
 
     expect(resolveTheme('dark', false)).toBe('dark');
@@ -120,7 +119,6 @@ describe('no-flash inline script (index.html)', () => {
     const head = html.slice(html.indexOf('<head'), html.indexOf('</head>'));
 
     expect(head).toMatch(/<script>/);
-
 
     expect(head).toContain(THEME_STORAGE_KEY);
     expect(head).toContain('prefers-color-scheme: dark');

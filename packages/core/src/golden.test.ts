@@ -31,11 +31,13 @@ const GOLDEN_FIXTURES: readonly GoldenFixture[] = [
   {
     name: 'fenced code block',
     markdown: '```ts\nconst answer: number = 42;\nconsole.log(answer);\n```\n',
-    payload: '1S0hIKCnmSs7PKy5RSMwrLk8tslLIK81NSi1SsFUwMbIGS-XnpOrl5KdrQBRoWnMBdXEBAA',
+    payload:
+      '1S0hIKCnmSs7PKy5RSMwrLk8tslLIK81NSi1SsFUwMbIGS-XnpOrl5KdrQBRoWnMBdXEBAA',
   },
   {
     name: 'inline HTML',
-    markdown: '<div class="note">\n  <strong>Heads up.</strong> Inline <em>HTML</em>.\n</div>\n',
+    markdown:
+      '<div class="note">\n  <strong>Heads up.</strong> Inline <em>HTML</em>.\n</div>\n',
     payload:
       '1s0nJLFNIzkksLrZVyssvSVWy41JQsCkuKcrPS7fzSE1MKVYoLdCz0YeKKHjm5WTmpSrYpObaeYT4-tjoAxl6XDb6QGPsuAA',
   },

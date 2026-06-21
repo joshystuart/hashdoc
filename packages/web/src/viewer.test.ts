@@ -26,7 +26,11 @@ async function waitFor(predicate: () => boolean): Promise<void> {
 }
 
 async function waitForDialogOpen(root: HTMLElement): Promise<void> {
-  await waitFor(() => (root.querySelector('.password-dialog') as HTMLDialogElement)?.open === true);
+  await waitFor(
+    () =>
+      (root.querySelector('.password-dialog') as HTMLDialogElement)?.open ===
+      true,
+  );
 }
 
 describe('resolveView — fragment routing', () => {
@@ -61,7 +65,9 @@ describe('resolveView — fragment routing', () => {
   });
 
   it('sanitizes script content carried in a Link', () => {
-    const state = resolveView(buildLink(encode('<script>window.x=1</script>ok'), ORIGIN));
+    const state = resolveView(
+      buildLink(encode('<script>window.x=1</script>ok'), ORIGIN),
+    );
     expect(state.kind).toBe('document');
     if (state.kind === 'document') {
       expect(state.html).not.toMatch(/<script/i);
@@ -76,7 +82,10 @@ describe('mountViewer — DOM mounting', () => {
   });
 
   it('mounts a rendered Document and executes no scripts', () => {
-    const link = buildLink(encode('# Doc\n\n<script>globalThis.__pwned = true</script>'), ORIGIN);
+    const link = buildLink(
+      encode('# Doc\n\n<script>globalThis.__pwned = true</script>'),
+      ORIGIN,
+    );
     mountViewer(root, link);
 
     expect(root.querySelector('h1')?.textContent).toBe('#Doc');
@@ -86,8 +95,6 @@ describe('mountViewer — DOM mounting', () => {
 
   it('resolves to the Editor with no fragment (lazy-loaded)', () => {
     const state = mountViewer(root, ORIGIN);
-
-
 
     expect(state.kind).toBe('editor');
   });
@@ -125,7 +132,9 @@ describe('mountViewer — DOM mounting', () => {
     const logo = leading.querySelector('.app-header__logo')!;
     expect(logo).not.toBeNull();
     expect(leading.firstElementChild).toBe(logo);
-    expect(logo.querySelector('img')?.getAttribute('src')).toContain('hashdoc-logo.svg');
+    expect(logo.querySelector('img')?.getAttribute('src')).toContain(
+      'hashdoc-logo.svg',
+    );
   });
 });
 
@@ -136,8 +145,6 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
   });
 
   function corruptLink(): string {
-
-
     const full = buildLink(
       encode('# A document long enough to compress '.repeat(20)),
       ORIGIN,
@@ -150,7 +157,6 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
 
     expect(state.kind).toBe('error');
     if (state.kind === 'error') expect(state.errorKind).toBe('corrupt');
-
 
     expect(root.querySelector('section.error')).not.toBeNull();
     const text = root.textContent ?? '';
@@ -187,9 +193,9 @@ describe('mountViewer — graceful decode failures (issue-05)', () => {
 
     expect(window.location.hash).toBe('');
 
-    expect(resolveView(window.location.pathname + window.location.search).kind).toBe(
-      'editor',
-    );
+    expect(
+      resolveView(window.location.pathname + window.location.search).kind,
+    ).toBe('editor');
   });
 
   it('an empty fragment still routes to the Editor, not an error', () => {
@@ -221,14 +227,12 @@ describe('Viewer reading niceties (issue-09)', () => {
   it('heading anchor click scrolls into view and PRESERVES the payload fragment', () => {
     const md = '# Top\n\n## Deep Section\n\nbody';
 
-
     const link = buildLink(encode(md), location.origin + location.pathname);
     const fragment = link.slice(link.indexOf('#'));
     window.location.hash = fragment;
 
     const state = mountViewer(root, window.location.href);
     expect(state.kind).toBe('document');
-
 
     const scrolled: string[] = [];
     for (const h of Array.from(root.querySelectorAll<HTMLElement>('h1,h2'))) {
@@ -244,10 +248,8 @@ describe('Viewer reading niceties (issue-09)', () => {
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     anchor!.dispatchEvent(event);
 
-
     expect(event.defaultPrevented).toBe(true);
     expect(scrolled).toContain('deep-section');
-
 
     const payload = payloadFromUrl(window.location.href);
     expect(payload).not.toBeNull();
@@ -259,7 +261,9 @@ describe('Viewer reading niceties (issue-09)', () => {
     const md = '# Doc\n\nraw **markdown** body';
     mountViewer(root, buildLink(encode(md), 'https://md.example/'));
 
-    const button = root.querySelector<HTMLButtonElement>('.viewer__copy-source');
+    const button = root.querySelector<HTMLButtonElement>(
+      '.viewer__copy-source',
+    );
     expect(button).not.toBeNull();
     button!.click();
     await Promise.resolve();
@@ -271,7 +275,9 @@ describe('Viewer reading niceties (issue-09)', () => {
     const md = '# Doc\n\nbody';
     mountViewer(root, buildLink(encode(md), 'https://md.example/'));
 
-    const button = root.querySelector<HTMLButtonElement>('.split-button__primary');
+    const button = root.querySelector<HTMLButtonElement>(
+      '.split-button__primary',
+    );
     expect(button).not.toBeNull();
     button!.click();
     await Promise.resolve();
@@ -285,19 +291,29 @@ describe('Viewer reading niceties (issue-09)', () => {
   });
 
   it('sets the tab title from the first H1', () => {
-    mountViewer(root, buildLink(encode('# Quarterly Report\n\nbody'), 'https://md.example/'));
+    mountViewer(
+      root,
+      buildLink(encode('# Quarterly Report\n\nbody'), 'https://md.example/'),
+    );
     expect(document.title).toBe('Quarterly Report');
   });
 
   it('falls back to "HashDoc" when the document has no H1', () => {
-    mountViewer(root, buildLink(encode('## sub only\n\nbody'), 'https://md.example/'));
+    mountViewer(
+      root,
+      buildLink(encode('## sub only\n\nbody'), 'https://md.example/'),
+    );
     expect(document.title).toBe('HashDoc');
   });
 
   it('renders Copy source and Copy Link actions in the chrome', () => {
     mountViewer(root, buildLink(encode('# x'), 'https://md.example/'));
-    expect(root.querySelector('.viewer__copy-source')?.textContent).toBe('Copy source');
-    expect(root.querySelector('.split-button__primary')?.textContent).toBe('Copy Link');
+    expect(root.querySelector('.viewer__copy-source')?.textContent).toBe(
+      'Copy source',
+    );
+    expect(root.querySelector('.split-button__primary')?.textContent).toBe(
+      'Copy Link',
+    );
     expect(root.querySelector('.viewer__edit')?.textContent).toBe('Edit');
   });
 
@@ -308,20 +324,22 @@ describe('Viewer reading niceties (issue-09)', () => {
 
     (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
     await flush();
-    const item = Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
-      el.textContent?.includes('Copy secure link'),
+    const item = Array.from(root.querySelectorAll('.split-button__item')).find(
+      (el) => el.textContent?.includes('Copy secure link'),
     ) as HTMLButtonElement;
     expect(item).not.toBeNull();
     item.click();
     await waitForDialogOpen(root);
 
-    const input = root.querySelector('.password-dialog__input') as HTMLInputElement;
+    const input = root.querySelector(
+      '.password-dialog__input',
+    ) as HTMLInputElement;
     input.value = 'hunter2';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await flush();
-    (root.querySelector('.password-dialog__form') as HTMLFormElement).dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    );
+    (
+      root.querySelector('.password-dialog__form') as HTMLFormElement
+    ).dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     await waitFor(() => writes.length === 1);
 
     const payload = payloadFromUrl(writes[0]!)!;
@@ -362,13 +380,16 @@ describe('Viewer unlock flow (secure Links)', () => {
   function submitPassword(password: string): void {
     const input = root.querySelector<HTMLInputElement>('.unlock__password')!;
     input.value = password;
-    root.querySelector<HTMLFormElement>('.unlock__form')!.dispatchEvent(
-      new Event('submit', { bubbles: true, cancelable: true }),
-    );
+    root
+      .querySelector<HTMLFormElement>('.unlock__form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
   }
 
   it('routes a secure Link to a locked state synchronously', async () => {
-    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const link = buildLink(
+      await encodeSecure('# Secret\n\nbody', PASSWORD),
+      ORIGIN,
+    );
     const state = resolveView(link);
     expect(state.kind).toBe('locked');
     if (state.kind === 'locked') {
@@ -377,7 +398,10 @@ describe('Viewer unlock flow (secure Links)', () => {
   });
 
   it('renders a password prompt for a locked Link', async () => {
-    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const link = buildLink(
+      await encodeSecure('# Secret\n\nbody', PASSWORD),
+      ORIGIN,
+    );
     const state = mountViewer(root, link);
 
     expect(state.kind).toBe('locked');
@@ -388,7 +412,8 @@ describe('Viewer unlock flow (secure Links)', () => {
   });
 
   it('renders the Document after the correct password, sanitizing scripts', async () => {
-    const md = '# Quarterly Report\n\n<script>globalThis.__pwnedUnlock = true</script>body';
+    const md =
+      '# Quarterly Report\n\n<script>globalThis.__pwnedUnlock = true</script>body';
     const link = buildLink(await encodeSecure(md, PASSWORD), ORIGIN);
     mountViewer(root, link);
 
@@ -398,11 +423,16 @@ describe('Viewer unlock flow (secure Links)', () => {
     expect(root.querySelector('h1')?.textContent).toContain('Quarterly Report');
     expect(document.title).toBe('Quarterly Report');
     expect(root.querySelector('script')).toBeNull();
-    expect((globalThis as Record<string, unknown>).__pwnedUnlock).toBeUndefined();
+    expect(
+      (globalThis as Record<string, unknown>).__pwnedUnlock,
+    ).toBeUndefined();
   });
 
   it('keeps the prompt and shows an error on a wrong password, then unlocks on retry', async () => {
-    const link = buildLink(await encodeSecure('# Secret\n\nbody', PASSWORD), ORIGIN);
+    const link = buildLink(
+      await encodeSecure('# Secret\n\nbody', PASSWORD),
+      ORIGIN,
+    );
     mountViewer(root, link);
 
     submitPassword('wrong password');
@@ -411,9 +441,9 @@ describe('Viewer unlock flow (secure Links)', () => {
       return message !== null && !message.hidden;
     });
 
-    expect((root.querySelector('.unlock__error')?.textContent ?? '').toLowerCase()).toContain(
-      'incorrect password',
-    );
+    expect(
+      (root.querySelector('.unlock__error')?.textContent ?? '').toLowerCase(),
+    ).toContain('incorrect password');
     expect(root.querySelector('.unlock__password')).not.toBeNull();
     expect(root.querySelector('.document')).toBeNull();
 
@@ -424,7 +454,10 @@ describe('Viewer unlock flow (secure Links)', () => {
 
   it('shows the corrupt-Link error view for a truncated secure Link', async () => {
     const full = buildLink(
-      await encodeSecure('# A secure document long enough '.repeat(20), PASSWORD),
+      await encodeSecure(
+        '# A secure document long enough '.repeat(20),
+        PASSWORD,
+      ),
       ORIGIN,
     );
     const truncated = full.slice(0, Math.floor(full.length / 2));
@@ -441,7 +474,10 @@ describe('Viewer unlock flow (secure Links)', () => {
   it('Copy Link re-emits the original secure Link, not a re-encoded plaintext Link', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nbody';
-    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
+    const link = buildLink(
+      await encodeSecure(md, PASSWORD),
+      location.origin + location.pathname,
+    );
     mountViewer(root, link);
 
     submitPassword(PASSWORD);
@@ -462,7 +498,10 @@ describe('Viewer unlock flow (secure Links)', () => {
   it('after unlock the menu offers a plain Copy Link that downgrades to a tag 1 Link', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nbody';
-    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
+    const link = buildLink(
+      await encodeSecure(md, PASSWORD),
+      location.origin + location.pathname,
+    );
     mountViewer(root, link);
 
     submitPassword(PASSWORD);
@@ -470,8 +509,8 @@ describe('Viewer unlock flow (secure Links)', () => {
 
     (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const item = Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
-      el.textContent?.includes('Copy Link'),
+    const item = Array.from(root.querySelectorAll('.split-button__item')).find(
+      (el) => el.textContent?.includes('Copy Link'),
     ) as HTMLButtonElement;
     expect(item).not.toBeNull();
     item.click();
@@ -485,7 +524,10 @@ describe('Viewer unlock flow (secure Links)', () => {
   it('secure copy/plain copy mode is sticky after unlock and toggles without re-prompting', async () => {
     const writes = mockClipboard();
     const md = '# Secret\n\nbody';
-    const link = buildLink(await encodeSecure(md, PASSWORD), location.origin + location.pathname);
+    const link = buildLink(
+      await encodeSecure(md, PASSWORD),
+      location.origin + location.pathname,
+    );
     mountViewer(root, link);
 
     submitPassword(PASSWORD);
@@ -494,21 +536,27 @@ describe('Viewer unlock flow (secure Links)', () => {
 
     (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    (Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
-      el.textContent?.includes('Copy Link'),
-    ) as HTMLButtonElement).click();
+    (
+      Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+        el.textContent?.includes('Copy Link'),
+      ) as HTMLButtonElement
+    ).click();
     await waitFor(() => writes.length === 1);
     expect(payloadFromUrl(writes[0]!)!.startsWith('1')).toBe(true);
     expect(root.querySelector('.split-button--secure')).toBeNull();
 
     (root.querySelector('.split-button__caret') as HTMLButtonElement).click();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    (Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
-      el.textContent?.includes('Copy secure link'),
-    ) as HTMLButtonElement).click();
+    (
+      Array.from(root.querySelectorAll('.split-button__item')).find((el) =>
+        el.textContent?.includes('Copy secure link'),
+      ) as HTMLButtonElement
+    ).click();
     await waitFor(() => writes.length === 2);
 
-    expect(root.querySelector('.password-dialog')?.matches('[open]')).not.toBe(true);
+    expect(root.querySelector('.password-dialog')?.matches('[open]')).not.toBe(
+      true,
+    );
     expect(root.querySelector('.split-button--secure')).not.toBeNull();
     const payload = payloadFromUrl(writes[1]!)!;
     expect(payload.startsWith('2')).toBe(true);
@@ -539,7 +587,9 @@ describe('Viewer unlock flow (secure Links)', () => {
     await waitFor(() => root.querySelector('.cm-content') !== null);
 
     const { EditorView } = await import('@codemirror/view');
-    const view = EditorView.findFromDOM(root.querySelector('.cm-content') as HTMLElement);
+    const view = EditorView.findFromDOM(
+      root.querySelector('.cm-content') as HTMLElement,
+    );
     expect(view).not.toBeNull();
     expect(view!.state.doc.toString()).toBe(md);
   });

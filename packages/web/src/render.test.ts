@@ -30,7 +30,9 @@ describe('render — GFM constructs', () => {
   });
 
   it('linkifies bare URLs', () => {
-    expect(render('see https://example.com here')).toContain('href="https://example.com"');
+    expect(render('see https://example.com here')).toContain(
+      'href="https://example.com"',
+    );
   });
 });
 
@@ -136,12 +138,18 @@ describe('enhanceCopyCode (issue-09)', () => {
 
     const writes: string[] = [];
     Object.assign(navigator, {
-      clipboard: { writeText: (t: string) => { writes.push(t); return Promise.resolve(); } },
+      clipboard: {
+        writeText: (t: string) => {
+          writes.push(t);
+          return Promise.resolve();
+        },
+      },
     });
 
     enhanceCopyCode(container);
 
-    const button = container.querySelector<HTMLButtonElement>('.code-block__copy');
+    const button =
+      container.querySelector<HTMLButtonElement>('.code-block__copy');
     expect(button).not.toBeNull();
     expect(button!.getAttribute('aria-label')).toBe('Copy code');
     button!.click();
